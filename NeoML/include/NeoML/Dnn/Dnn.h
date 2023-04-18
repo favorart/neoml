@@ -197,6 +197,11 @@ public:
 	int GetRunOnceCount() const { return runOnceCount; }
 	// Returns total time of RunOnce calls (in milliseconds) since last Reshape
 	IPerformanceCounters::CCounter::TCounterType GetRunOnceTime() const { return runOnceTime / 1000000; }
+	
+	const CArray<CBlobDesc>& GetInputDescs() const { return inputDescs; }
+	const CArray<CBlobDesc>& GetOutputDescs() const { return outputDescs; }
+	const CObjectArray<CDnnBlob>& GetInputBlobs() const { return inputBlobs; }
+	const CObjectArray<CDnnBlob>& GetOutputBlobs() const { return outputBlobs; }
 
 protected:
 	// A virtual method that creates output blobs using the input blobs
@@ -589,6 +594,10 @@ public:
 	// Enables profiling for all the layers in the network
 	void EnableProfile( bool profile );
 
+	CArray<CBaseLayer*>& GetSourceLayers() { return sourceLayers; }
+	CArray<CBaseLayer*>& GetSinkLayers() { return sinkLayers; }
+
+	void Reshape() { return reshape(); }
 private:
 	// Adds or deletes a layer
 	void AddLayerImpl(CBaseLayer& layer) override;

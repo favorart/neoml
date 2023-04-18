@@ -79,6 +79,7 @@ CConvolutionDesc* CAvxMathEngine::InitBlobConvolution( const CBlobDesc& source, 
 	const CBlobDesc& result ) const
 {
 	if( !CCPUInfo::IsAvx512Available()
+		//&& paddingHeight <= filter.Height() && paddingWidth <= filter.Width()
 		&& CBlobConvolutionFabric::IsBlobConvolutionAvailable( filter.BatchWidth() , filter.Height(), filter.Width() ) )
 	{
 		return new CAvxConvolutionDesc( mathEngine, source, result, filter, paddingHeight, paddingWidth, strideHeight, strideWidth, dilationHeight, dilationWidth );
@@ -90,9 +91,7 @@ void CAvxMathEngine::BlobConvolution( const CConvolutionDesc& convDesc, const fl
 	const float* filter, const float* freeTerm, float* result ) const
 {
 	const CAvxConvolutionDesc& desc = static_cast<const CAvxConvolutionDesc&>( convDesc );
-	
 	desc.BlobConvolution->ProcessConvolution( threadCount, source, filter, freeTerm, result );
-
 }
 
 SgemmFunc CAvxMathEngine::GetSgemmFunction() const
