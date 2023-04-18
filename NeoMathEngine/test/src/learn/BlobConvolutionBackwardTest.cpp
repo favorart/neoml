@@ -153,8 +153,39 @@ static void blobConvolutionBackwardImpl( const CTestParams& params, int seed )
 		paddingHeight, paddingWidth, filterCount, filterHeight, filterWidth,
 		dilationHeight, dilationWidth, strideHeight, strideWidth );
 
+	int w = inputBlob.GetDesc().ObjectSize() / inputBlob.GetDesc().Height();
+	//std::cout << "w=" << w << std::endl;
+	bool fail = false;
 	for( int i = 0; i < inputSize; ++i ) {
+		if( fabs( actualData[i] - expectedData[i] ) >= 1e-3f ) {
+			std::cout << "i=" << i << "\th=" << ( i / w ) << "\tw=" << ( i % w ) << "\t" << actualData[i] << "\t" << expectedData[i] << std::endl;
+			fail = true;
+		}
 		ASSERT_NEAR( expectedData[i], actualData[i], 1e-3f );
+	}
+	if( fail ) {
+		printf( "seed=%d\n\n", seed );
+		printf( "inputLength=%d\n", inputLength );
+		printf( "inputBatch=%d\n", inputBatch );
+		printf( "inputHeight=%d\n", inputHeight );
+		printf( "inputWidth=%d\n", inputWidth );
+		printf( "inputDepth=%d\n", inputDepth );
+		printf( "inputChannels=%d\n", inputChannels );
+		printf( "filterCount=%d\n", filterCount );
+		printf( "filterHeight=%d\n", filterHeight );
+		printf( "filterWidth=%d\n", filterWidth );
+		printf( "paddingHeight=%d\n", paddingHeight );
+		printf( "paddingWidth=%d\n", paddingWidth );
+		printf( "dilationHeight=%d\n", dilationHeight );
+		printf( "dilationWidth=%d\n", dilationWidth );
+		printf( "strideHeight=%d\n", strideHeight );
+		printf( "strideWidth=%d\n", strideWidth );
+		printf( "outputHeight=%d\n", outputHeight );
+		printf( "outputWidth=%d\n", outputWidth );
+		printf( "isZeroFreeTerm=%d\n", isZeroFreeTerm );
+		printf( "FAILED\n\n" );
+		ASSERT_EQ( 0, 1 );
+		//std::exit( 1 );
 	}
 }
 
