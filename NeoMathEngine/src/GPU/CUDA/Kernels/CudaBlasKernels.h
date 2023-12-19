@@ -231,6 +231,8 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 
 		for(int i = 0; i < count; ++i) {
 			*acc += *matrix;
+			assert( isfinite( *acc ) );
+			assert( isfinite( *matrix ) );
 			matrix += step;
 		}
 	}
@@ -247,6 +249,8 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 					break;
 				}
 				*acc += acc[index];
+				assert( isfinite( *acc ) );
+				assert( isfinite( acc[index] ) );
 			}
 		}
 		partial = nextPartial;
@@ -263,6 +267,8 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 		} else {
 			*result = isNeg ? -*acc : *acc;
 		}
+		assert( isfinite( *acc ) );
+		assert( isfinite( *result ) );
 	}
 }
 
@@ -298,6 +304,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix, in
 	}
 
 	const float maxVal = ReduceMaxXSharedBuffer(buffer);
+	assert( isfinite( maxVal ) );
 
 	// Add up the needed part
 	if(yPos < height && count > 0) {
@@ -305,6 +312,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix, in
 		for(int i = 1; i < count; ++i) {
 			my += ExponentFunc(matrix[index + i * step] - maxVal);
 		}
+		assert( isfinite( my ) );
 	} else {
 		my = 0.f;
 	}
@@ -312,7 +320,13 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix, in
 	const float sumVal = ReduceSumXSharedBuffer(buffer);
 
 	if(yPos < height && threadIdx.x == 0) {
+		if( !isfinite( sumVal ) ) {
+			printf( "MatrixLogSumExpByRowsKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( isfinite( sumVal ) );
 		result[yPos] = maxVal + log(sumVal);
+		assert( isfinite( result[yPos] ) );
 	}
 }
 
@@ -351,6 +365,7 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	}
 
 	const float maxVal = ReduceMaxXSharedBuffer(buffer);
+	assert( isfinite( maxVal ) );
 
 	// Put the exponent into result and add up the needed part
 	if(yPos < height && count > 0) {
@@ -360,6 +375,7 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 			result[index + i * step] = val;
 			my += val;
 		}
+		assert( isfinite( my ) );
 	} else {
 		my = 0.f;
 	}
@@ -369,10 +385,17 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	if(yPos < height && count > 0) {
 		assert( reduce != 0.f );
 		const float sumVal = 1.f / reduce;
+		if( !isfinite( reduce ) || !isfinite( sumVal ) ) {
+			printf( "MatrixSoftmaxByRowsKernel: ReduceSumXSharedBuffer=%f sumVal=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				reduce, sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( isfinite( reduce ) );
+		assert( isfinite( sumVal ) );
 
 		// Divide the needed part by the total
 		for(int i = 0; i < count; ++i) {
 			result[index + i * step] *= sumVal;
+			assert( isfinite( result[index + i * step] ) );
 		}
 	}
 }
@@ -404,15 +427,23 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
 		for(int i = 0; i < count; ++i) {
 			my += first[index + i * step] * second[index + i * step];
 		}
+		assert( isfinite( my ) );
 	}
 
 	const float dotProd = ReduceSumXSharedBuffer(buffer);
 
 	// Store the result and add up the needed part
 	if(yPos < height && count > 0) {
+		if( !isfinite( dotProd ) ) {
+			printf( "MatrixSoftmaxDiffOpByRowsKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				dotProd, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( isfinite( dotProd ) );
+
 		for(int i = 0; i < count; ++i) {
 			result[index + i * step] =
 				first[index + i * step] * (second[index + i * step] - dotProd);
+			assert( isfinite( result[index + i * step] ) );
 		}
 	}
 }
@@ -455,6 +486,7 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 	}
 
 	const float maxVal = ReduceMaxXSharedBuffer(buffer);
+	assert( isfinite( maxVal ) );
 
 	// Put the exponent into result and add up the needed part
 	if(xPos < width && count > 0) {
@@ -464,6 +496,7 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 			result[index + i * step] = val;
 			my += val;
 		}
+		assert( isfinite( my ) );
 	} else {
 		my = 0.f;
 	}
@@ -471,12 +504,18 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 	const float reduce = ReduceSumXSharedBuffer( buffer );
 
 	if(xPos < width && count > 0) {
-		assert( reduce != 0.f );
 		const float sumVal = 1.f / reduce;
+		if( !isfinite( reduce ) || !isfinite( sumVal ) ) {
+			printf( "MatrixSoftmaxByColumnsKernel: ReduceSumXSharedBuffer=%f sumVal=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				reduce, sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( reduce != 0.f );
+		assert( isfinite( sumVal ) );
 
 		// Divide the needed part by the total
 		for(int i = 0; i < count; ++i) {
 			result[index + i * step] *= sumVal;
+			assert( isfinite( result[index + i * step] ) );
 		}
 	}
 }
@@ -510,15 +549,23 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ fir
 		for(int i = 0; i < count; ++i) {
 			my += first[index + i * step] * second[index + i * step];
 		}
+		assert( isfinite( my ) );
 	}
 
 	const float dotProd = ReduceSumXSharedBuffer(buffer);
 
 	// Store the result and add up the needed part
 	if(xPos < width && count > 0) {
+		if( !isfinite( dotProd ) ) {
+			printf( "MatrixSoftmaxDiffOpByColumnsKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				dotProd, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( isfinite( dotProd ) );
+
 		for(int i = 0; i < count; ++i) {
 			result[index + i * step] =
 				first[index + i * step] * (second[index + i * step] - dotProd);
+			assert( isfinite( result[index + i * step] ) );
 		}
 	}
 }
@@ -558,6 +605,7 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 	}
 
 	const CValueWithIndex maxVal = ReduceMaxWithIndexXSharedBuffer(threadBuffer);
+	assert( isfinite( maxVal.Value ) );
 
 	if(yPos < matrixHeight && threadIdx.x == 0) {
 		result[yPos] = maxVal.Value;
@@ -596,6 +644,7 @@ __global__ void FindMaxValueInRowsKernel(const float* __restrict__ matrix,
 	}
 
 	const float maxVal = ReduceMaxXSharedBuffer( buffer );
+	assert( isfinite( maxVal ) );
 
 	if(yPos < matrixHeight && threadIdx.x == 0) {
 		result[yPos] = maxVal;
@@ -635,6 +684,7 @@ __global__ void FindMaxValueInColumnsKernel( int batchSize, const float* __restr
 	}
 
 	const CValueWithIndex maxVal = ReduceMaxWithIndexXSharedBuffer( threadBuffer );
+	assert( isfinite( maxVal.Value ) );
 
 	if( batchIndex < batchSize && colIndex < width && threadIdx.x == 0 ) {
 		result[batchIndex * width + colIndex] = maxVal.Value;
@@ -789,6 +839,7 @@ __global__ void EnumBinarizationKernel(int batchSize, const T* __restrict__ inpu
 			break;
 		}
 		result[index] = ((int)input[batch] == pos) ? 1 : 0;
+		assert( isfinite( result[index] ) );
 		index += step;
 	}
 }
@@ -812,6 +863,7 @@ __global__ void BitSetBinarizationKernel(int batchSize, int bitSetElementCount,
 		const int bitIndex = globalBitIndex % 32;
 
 		result[index] = inputElement & ( 1 << bitIndex ) ? 1.0f : 0.0f;
+		assert( isfinite( result[index] ) );
 	}
 }
 
@@ -843,11 +895,18 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 			my += matrixTable[matrixBaseIndex + index] * vectorTable[vectorBaseIndex + index];
 			index += step;
 		}
+		assert( isfinite( my ) );
 	}
 
 	const float sum = ReduceSumXSharedBuffer(buffer);
 
 	if(yPos < totalY && threadIdx.x == 0) {
+		if( !isfinite( sum ) ) {
+			printf( "MultiplyLookupMatrixByLookupVectorKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d totalY=%d yPos=%d \n",
+				sum, threadIdx.x, threadIdx.y, threadIdx.z, totalY, yPos );
+		}
+		assert( isfinite( sum ) );
+
 		// Store the result
 		if(gridDim.x > 0) {
 			// Several GPUs are adding in the same row, atomic operations needed
@@ -855,6 +914,7 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 		} else {
 			result[yPos] = sum;
 		}
+		assert( isfinite( result[yPos] ) );
 	}
 }
 
@@ -897,6 +957,12 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 	const float sum = ReduceSumXSharedBuffer(buffer);
 
 	if(batch < batchSize && yPos < heightNorm && threadIdx.x == 0) {
+		if( !isfinite( sum ) ) {
+			printf( "MultiplyTransposedLookupMatrixByVectorKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d height=%d yPos=%d \n",
+				sum, threadIdx.x, threadIdx.y, threadIdx.z, height, yPos );
+		}
+		assert( isfinite( sum ) );
+
 		if(gridDim.x > 1) {
 			// Several GPUs are adding in the same column, atomic operations needed
 			atomicAdd(result + resultIndex, sum);
@@ -905,6 +971,7 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 		} else {
 			result[resultIndex] = sum;
 		}
+		assert( isfinite( result[resultIndex] ) );
 	}
 }
 
@@ -1033,6 +1100,12 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 	const float sum = ReduceSumXSharedBuffer( buffer );
 
 	if( isValidZY && threadIdx.x == 0 ) {
+		if( !isfinite( sum ) ) {
+			printf( "MultiplyDiagMatrixByMatrixAndSumKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d row=%d firstSize=%d column=%d secondWidth=%d batch=%d \n",
+				sum, threadIdx.x, threadIdx.y, threadIdx.z, row, firstSize, column, secondWidth, batch );
+		}
+		assert( isfinite( sum ) );
+
 		float* const currResult = result + row * secondWidth + column;
 		if( gridDim.x > 1 ) {
 			atomicAdd( currResult, sum );
@@ -1186,6 +1259,7 @@ __global__ void MultiplyMatrixByDiagMatrixKernel( int batchSize, const float* __
 		const int row = ( index % matrixSize ) / width;
 		const int col = ( index % matrixSize ) % width;
 		result[index] = first[b * firstMatrixOffset + row * width + col] * second[b * secondMatrixOffset + col];
+		assert( isfinite( result[index] ), "MultiplyMatrixByDiagMatrixKernel.result" );
 		index += step;
 	}
 }

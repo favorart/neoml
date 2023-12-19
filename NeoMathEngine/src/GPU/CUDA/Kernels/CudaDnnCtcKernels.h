@@ -81,7 +81,14 @@ __global__ void CtcMatrixLogSumExpByColumnsKernel(int batchSize, const float* __
 	const float sumVal = ReduceSumXSharedBuffer(buffer);
 
 	if(xPos < width && zPos < batchSize && threadIdx.x == 0) {
+		if( !isfinite( sumVal ) ) {
+			printf( "CtcMatrixLogSumExpByColumnsKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
+				sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+		}
+		assert( isfinite( sumVal ) );
+
 		result[xPos] = maxVal + log(sumVal);
+		assert( isfinite( result[xPos] ) );
 	}
 }
 
