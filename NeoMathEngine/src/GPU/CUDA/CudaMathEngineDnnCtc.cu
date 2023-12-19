@@ -119,6 +119,8 @@ void CCudaMathEngine::CtcLossForward( int resultLen, int batchSize, int classCou
 		CFloatHandleStackVar logBeta( *this, resultLen * padLabelLen * batchSize );
 		ctcCalcBackwardVariables( resultLen, batchSize, classCount, padLabelLen, skipBlanks,
 			blankSkipMask, resultLogProbMask, resultLens, labelLens, logBeta );
+		assert( isfinite( logAlpha.GetValueAt( 0 ) ) );
+		assert( isfinite( logBeta.GetValueAt( 0 ) ) );
 		VectorAdd( logAlpha, logBeta, logAlphaBeta, resultLen * padLabelLen * batchSize );
 	}
 
@@ -164,6 +166,8 @@ void CCudaMathEngine::ctcCalcForwardVariables( int resultLen, int batchSize, int
 	VectorFill( logAlpha, 0.f, batchSize * 2 );
 	VectorFill( logAlpha + batchSize * 2, logZero, batchSize * ( U - 2 ) );
 	// Add the logarithm of probability of label recognition
+	assert( isfinite( logAlpha.GetValueAt( 0 ) ) );
+	assert( isfinite( resultLogProbMask.GetValueAt( 0 ) ) );
 	VectorAdd( logAlpha, resultLogProbMask, logAlpha, batchSize * U );
 
 	// Align the result sequence T elements long with the labels and spaces sequence U elements long

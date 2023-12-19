@@ -16,6 +16,10 @@ limitations under the License.
 #pragma once
 
 #include <cuda_runtime.h>
+#include <math.h>
+#include <assert.h>
+#include <stdio.h>
+#include <float.h>
 
 namespace NeoML {
 
@@ -42,12 +46,21 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 	int baseIndex = (threadIdx.z * blockDim.y +  threadIdx.y) * blockDim.x + indexInWarp;
 	for(int i = 0; (indexInWarp + i) < blockDim.x; i += xWarp) {
 		sum += buffer[baseIndex + i];
+		assert( isfinite( buffer[baseIndex + i] ) );
 	}
+	assert( isfinite( sum ) );
 
 	// Add up inside the warp (butterfly reduction)
 	for(int laneMask = xWarp >> 1; laneMask >= 1; laneMask >>= 1) {
-		sum += __shfl_xor_sync(0xffffffff, sum, laneMask);
+		const float res = __shfl_xor_sync( 0xffffffff, sum, laneMask );
+		if( !isfinite( sum ) || !isfinite( res ) /*|| !isfinite( sum + res )*/ ) {
+			printf( "ReduceSumXSharedBuffer: sum=%f res=%f laneMask=%d xWarp=%d threadIdx.x=%d threadIdx.y=%d threadIdx.z=%d blockDim.x=%d blockDim.y=%d\n",
+				sum, res, laneMask, xWarp, threadIdx.x, threadIdx.y, threadIdx.z, blockDim.x, blockDim.y );
+			assert( !isnan( sum ) && !isnan( res ) );
+		}
+		sum += res;
 	}
+	assert( isfinite( sum ) );
 
 	return sum;
 }
@@ -69,15 +82,19 @@ inline __device__ float ReduceMaxXSharedBuffer(float* buffer)
 	int indexInWarp = threadIdx.x % xWarp;
 	int baseIndex = (threadIdx.z * blockDim.y +  threadIdx.y) * blockDim.x + indexInWarp;
 	float maxVal = buffer[baseIndex];
+	assert( isfinite( buffer[baseIndex] ) );
 	for(int i = xWarp; (indexInWarp + i) < blockDim.x; i += xWarp) {
+		assert( isfinite( buffer[baseIndex + i] ) );
 		if(buffer[baseIndex + i] > maxVal) {
 			maxVal = buffer[baseIndex + i];
 		}
 	}
+	assert( isfinite( maxVal ) );
 
 	// Find maximum inside the warp (butterfly reduction)
 	for(int laneMask = xWarp >> 1; laneMask >= 1; laneMask >>= 1) {
 		float otherVal = __shfl_xor_sync(0xffffffff, maxVal, laneMask);
+		assert( isfinite( otherVal ) );
 		if(otherVal > maxVal) {
 			maxVal = otherVal;
 		}
@@ -108,7 +125,9 @@ inline __device__ CValueWithIndex ReduceMaxWithIndexXSharedBuffer(CValueWithInde
 	int indexInWarp = threadIdx.x % xWarp;
 	int baseIndex = (threadIdx.z * blockDim.y +  threadIdx.y) * blockDim.x + indexInWarp;
 	CValueWithIndex maxVal = buffer[baseIndex];
+	assert( isfinite( buffer[baseIndex].Value ) );
 	for(int i = xWarp; (indexInWarp + i) < blockDim.x; i += xWarp) {
+		assert( isfinite( buffer[baseIndex + i].Value ) );
 		if(buffer[baseIndex + i].Value > maxVal.Value) {
 			maxVal = buffer[baseIndex + i];
 		}
@@ -119,6 +138,7 @@ inline __device__ CValueWithIndex ReduceMaxWithIndexXSharedBuffer(CValueWithInde
 		long long maxValWarp = reinterpret_cast<const long long&>(maxVal);
 		long long otherValWarp = __shfl_xor_sync(0xffffffff, maxValWarp, laneMask);
 		const CValueWithIndex& otherVal = reinterpret_cast<const CValueWithIndex&>(otherValWarp);
+		assert( isfinite( otherVal.Value ) );
 		if(otherVal.Value > maxVal.Value) {
 			maxVal = otherVal;
 		}
