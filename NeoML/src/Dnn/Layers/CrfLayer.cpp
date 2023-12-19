@@ -16,6 +16,7 @@ limitations under the License.
 #include <common.h>
 #pragma hdrstop
 
+#include <cmath>
 #include <NeoML/Dnn/Layers/CrfLayer.h>
 #include <NeoML/Dnn/Layers/SequenceSumLayer.h>
 #include <NeoML/Dnn/Layers/SubSequenceLayer.h>
@@ -269,11 +270,29 @@ void CCrfCalculationLayer::Serialize( CArchive& archive )
 ///////////////////////////////////////////////////////////////////////////////////
 // CCrfInternalLossLayer
 
+unsigned long long myEpoch = 0;
+
 void CCrfInternalLossLayer::BatchCalculateLossAndGradient(int batchSize, CConstFloatHandle data, int vectorSize,
 	CConstFloatHandle label,  int labelSize, CFloatHandle lossValue, CFloatHandle dataLossGradient,
 	CFloatHandle labelLossGradient)
 {
 	NeoAssert(labelSize == 1);
+
+	++myEpoch;
+
+	bool nonFinite = false;
+	for( int i = 0; i < batchSize * vectorSize; ++i ) {
+		float v = data.GetValueAt( i );
+		if( !std::isfinite( v ) ) {
+			fprintf( stderr, "CrfInternalLoss data[%d]=%f  myEpoch=%llu\n", i, v, myEpoch );
+			nonFinite = true;
+		}
+	}
+	if( nonFinite ) {
+		fflush( stderr );
+		fprintf( stderr, "myEpoch=%llu\n", myEpoch );
+		NeoAssert( nonFinite == false );
+	}
 
 	// The loss function is the correct sequence logarithm with the minus sign
 	CFloatHandleStackVar logZ(MathEngine(), batchSize);
