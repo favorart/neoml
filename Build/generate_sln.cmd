@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set ARCH=x64
-set ENABLE_TEST=ON
+set ENABLE_TEST=OFF
 set DIR=
 
 :parseArgs
@@ -54,7 +54,7 @@ if not defined CMAKE_GENERATOR (
 )
 
 if not defined CMAKE_GENERATOR_TOOLSET (
-	set "CMAKE_GENERATOR_TOOLSET=v143,version=14.33,host=x64"
+	set "CMAKE_GENERATOR_TOOLSET=v143,host=x64"
 )
 
 if "%CMAKE_GENERATOR_TOOLSET:cuda=%" == "%CMAKE_GENERATOR_TOOLSET%" (
