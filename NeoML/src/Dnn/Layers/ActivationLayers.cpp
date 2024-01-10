@@ -528,6 +528,8 @@ CLayerWrapper<CAbsLayer> Abs()
 
 //---------------------------------------------------------------------------------------------------
 
+//extern unsigned long long myEpoch;
+
 static const int SigmoidLayerVersion = 2000;
 
 void CSigmoidLayer::Serialize( CArchive& archive )
@@ -543,11 +545,42 @@ CActivationDesc CSigmoidLayer::GetDesc() const
 
 void CSigmoidLayer::RunOnce()
 {
+	//for( int j = 0; j < inputBlobs.Size(); ++j ) {
+	//	if( inputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// inputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[j]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !isfinite( v ) ) {
+	//			printf( "CSigmoidLayer.RunOnce (%s) in[%d][%d]=%f\n", GetName(), j, i, v );
+	//			assert( !isnan( v ) );
+	//		}
+	//	}
+	//}
+
 	MathEngine().VectorSigmoid(inputBlobs[0]->GetData(), outputBlobs[0]->GetData(), outputBlobs[0]->GetDataSize());
 }
 
 void CSigmoidLayer::BackwardOnce()
 {
+	//if( outputBlobs[0]->GetDesc().GetDataType() == CT_Float ) {
+	//	const int sz = 10;// outputBlobs[0]->GetDataSize();
+	//	CConstFloatHandle out = outputBlobs[0]->GetData();
+	//	CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = out.GetValueAt( i );
+	//		float vDiff = outDiff.GetValueAt( i );
+	//		if( !isfinite( v ) || !isfinite( vDiff ) ) {
+	//			printf( "CSigmoidLayer.BackwardOnce (%s) out[%d]=%f diff=%f\n", GetName(), i, v, vDiff );
+	//			assert( !isnan( v ) );
+	//		}
+	//	}
+	//}
+
 	MathEngine().VectorSigmoidDiffOp(outputBlobs[0]->GetData(), outputDiffBlobs[0]->GetData(),
 		inputDiffBlobs[0]->GetData(), inputDiffBlobs[0]->GetDataSize());
 }
@@ -574,11 +607,39 @@ CActivationDesc CTanhLayer::GetDesc() const
 
 void CTanhLayer::RunOnce()
 {
+	//if( inputBlobs[0]->GetDesc().GetDataType() != CT_Float ) {
+	//	const int sz = 10;// inputBlobs[0]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !isfinite( v ) ) {
+	//			printf( "CTanhLayer.RunOnce (%s) in[%d]=%f\n", GetName(), i, v );
+	//			assert( !isnan( v ) );
+	//		}
+	//	}
+	//}
+
 	MathEngine().VectorTanh(inputBlobs[0]->GetData(), outputBlobs[0]->GetData(), outputBlobs[0]->GetDataSize());
 }
 
 void CTanhLayer::BackwardOnce()
 {
+	//if( outputBlobs[0]->GetDesc().GetDataType() == CT_Float ) {
+	//	const int sz = 10;// outputBlobs[0]->GetDataSize();
+	//	CConstFloatHandle out = outputBlobs[0]->GetData();
+	//	CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = out.GetValueAt( i );
+	//		float vDiff = outDiff.GetValueAt( i );
+	//		if( !isfinite( v ) || !isfinite( vDiff ) ) {
+	//			printf( "CSigmoidLayer.BackwardOnce (%s) out[%d]=%f diff=%f\n", GetName(), i, v, vDiff );
+	//			assert( !isnan( v ) );
+	//		}
+	//	}
+	//}
+
 	MathEngine().VectorTanhDiffOp(outputBlobs[0]->GetData(), outputDiffBlobs[0]->GetData(),
 		inputDiffBlobs[0]->GetData(), inputDiffBlobs[0]->GetDataSize());
 }
