@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+    CXX: g++-10
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: seanmiddleditch/gha-setup-ninja@master
+    - name: configure
+      run: cmake -G Ninja /home/runner/work/neoml/neoml/NeoML -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/runner/work/neoml/build
+    - name: make
+      run: cmake --build . --target install

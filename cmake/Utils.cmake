@@ -101,6 +101,11 @@ macro(add_gtest_target)
             FetchContent_Populate(GoogleTest)
             add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
         endif()
+        if(NOT WIN32)
+            # https://github.com/google/googletest/issues/1943
+            # https://stackoverflow.com/a/75379860
+            # target_compile_options(gtest PUBLIC "-w")  # -w inhibits all warnings 
+        endif()
     else()
         set(CMAKE_CXX_STANDARD 14)
         add_subdirectory(${FINE_ROOT}/FineObjects/FineGTest/gmock-1.7.0/gtest ${CMAKE_BINARY_DIR}/gmock-1.7.0/gtest EXCLUDE_FROM_ALL)
