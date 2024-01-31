@@ -97,6 +97,8 @@ void CBinaryCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize,
 	MathEngine().VectorLog( temp4, temp4, batchSize );
 
 	// l * (log(1 + exp(-abs(x))) + max(-x, 0))
+	assert( isfinite( temp3.GetValueAt( 0 ) ) );
+	assert( isfinite( temp4.GetValueAt( 0 ) ) );
 	MathEngine().VectorAdd( temp3, temp4, lossValue, batchSize );
 	MathEngine().VectorEltwiseMultiply( lossValue, temp2, lossValue, batchSize );
 

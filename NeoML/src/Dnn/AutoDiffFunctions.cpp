@@ -162,6 +162,8 @@ CPtr<CDnnBlob> CTapeAdd::Jacobian( const CTapeBlob* var ) const
 		return firstJacobian;
 	}
 
+	assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+	assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 	firstJacobian->GetMathEngine().VectorAdd(firstJacobian->GetData(), secondJacobian->GetData(), firstJacobian->GetData(), firstJacobian->GetDataSize());
 	return firstJacobian;
 }
@@ -189,6 +191,8 @@ CPtr<const CDnnBlob> Add( const CDnnBlob* first, const CDnnBlob* second )
 	IGradientTape* tape = tape1 != 0 ? tape1 : tape2;
 
 	CPtr<CTapeBlob> result( new CTapeBlob( tape, firstBlob->GetMathEngine(), firstBlob->GetDesc() ) );
+	assert( isfinite( firstBlob->GetData().GetValueAt( 0 ) ) );
+	assert( isfinite( secondBlob->GetData().GetValueAt( 0 ) ) );
 	mathEngine.VectorAdd( firstBlob->GetData(), secondBlob->GetData(), result->GetData(), result->GetDataSize() );
 
 	if( tape != 0 ) {
@@ -272,6 +276,8 @@ CPtr<CDnnBlob> CTapeSub::Jacobian( const CTapeBlob* var ) const
 		return firstJacobian;
 	}
 
+	assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+	assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 	firstJacobian->GetMathEngine().VectorAdd(firstJacobian->GetData(), secondJacobian->GetData(), firstJacobian->GetData(), firstJacobian->GetDataSize());
 	return firstJacobian;
 }
@@ -417,6 +423,8 @@ CPtr<CDnnBlob> CTapeMul::Jacobian( const CTapeBlob* var ) const
 		return firstJacobian;
 	}
 
+	assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+	assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 	firstJacobian->GetMathEngine().VectorAdd(firstJacobian->GetData(), secondJacobian->GetData(), firstJacobian->GetData(), firstJacobian->GetDataSize());
 	return firstJacobian;
 }
@@ -561,6 +569,8 @@ CPtr<CDnnBlob> CTapeDiv::Jacobian( const CTapeBlob* var ) const
 				secondSquare.GetHandle(), firstJacobian->GetData() );
 			return firstJacobian;
 		}
+		assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+		assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 		// secondJacobian = firstJacobian + secondJacobian
 		mathEngine.VectorAdd(firstJacobian->GetData(), secondJacobian->GetData(), secondJacobian->GetData(), secondJacobian->GetDataSize());
 	}
@@ -1565,6 +1575,8 @@ CPtr<CDnnBlob> CTapePower::Jacobian( const CTapeBlob* var ) const
 	}
 
 	if( firstJacobian->GetObjectCount() == 1 && secondJacobian->GetObjectCount() == 1 ) {
+		assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+		assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 		mathEngine.VectorAdd( firstJacobian->GetData(), secondJacobian->GetData(), firstJacobian->GetData(), firstJacobian->GetDataSize() );
 		mathEngine.VectorEltwiseMultiply( temp->GetData(), firstJacobian->GetData(),
 			firstJacobian->GetData(), firstJacobian->GetDataSize() );
@@ -1584,6 +1596,8 @@ CPtr<CDnnBlob> CTapePower::Jacobian( const CTapeBlob* var ) const
 			firstJacobian->GetDataSize() );
 		return firstJacobian;
 	} else {
+		assert( isfinite( firstJacobian->GetData().GetValueAt( 0 ) ) );
+		assert( isfinite( secondJacobian->GetData().GetValueAt( 0 ) ) );
 		mathEngine.VectorAdd( firstJacobian->GetData(), secondJacobian->GetData(), secondJacobian->GetData(),
 			secondJacobian->GetDataSize() );
 		mathEngine.MultiplyDiagMatrixByMatrix( temp->GetData(), temp->GetDataSize(),

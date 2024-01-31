@@ -182,6 +182,8 @@ void CCrfCalculationLayer::RunOnce()
 			}
 		}
 		// Add unary estimates at current step (log sum exp will take place at the next step)
+		assert( isfinite( currentProbabilities.GetValueAt( 0 ) ) );
+		assert( isfinite( outputBlobs[O_ClassSeqLogProb]->GetData().GetValueAt( 0 ) ) );
 		MathEngine().VectorAdd( currentProbabilities, outputBlobs[O_ClassSeqLogProb]->GetData(),
 			outputBlobs[O_ClassSeqLogProb]->GetData(), outputBlobs[O_ClassSeqLogProb]->GetDataSize() );
 	}

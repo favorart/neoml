@@ -59,8 +59,16 @@ static void eltwiseSumRunOnce( const CObjectArray<CDnnBlob>& inputBlobs, const C
 	CTypedMemoryHandle<T> output = outputBlobs[0]->GetData<T>();
 	const int dataSize = outputBlobs[0]->GetDataSize();
 
+	if constexpr( std::is_same_v<T, float> ) {
+		assert( isfinite( inputBlobs[0]->GetData<T>().GetValueAt( 0 ) ) );
+		assert( isfinite( inputBlobs[1]->GetData<T>().GetValueAt( 0 ) ) );
+	}
 	mathEngine.VectorAdd( inputBlobs[0]->GetData<T>(), inputBlobs[1]->GetData<T>(), output, dataSize );
 	for( int i = 2; i < inputBlobs.Size(); ++i ) {
+		if constexpr( std::is_same_v<T, float> ) {
+			assert( isfinite( output.GetValueAt( 0 ) ) );
+			assert( isfinite( inputBlobs[i]->GetData<T>().GetValueAt( 0 ) ) );
+		}
 		mathEngine.VectorAdd( output, inputBlobs[i]->GetData<T>(), output, dataSize );
 	}
 }

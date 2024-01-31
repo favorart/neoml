@@ -43,6 +43,8 @@ static void softplus( const CConstFloatHandle& first, const CFloatHandle& result
 	mathEngine.VectorReLU( first, result, size, zero );
 
 	// result = max( 0, x ) + log( 1 + e^-|x| )
+	assert( isfinite( result.GetValueAt( 0 ) ) );
+	assert( isfinite( temp.GetValueAt( 0 ) ) );
 	mathEngine.VectorAdd( result, temp, result, size );
 }
 

@@ -456,6 +456,8 @@ void CDnnSimpleGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjec
 			MathEngine().VectorMultiplyAndAdd( paramBlobs[i]->GetData(), gradientHistory[i]->GetData(),
 				paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( { TV_RateVar } ) );
 		} else {
+			assert( isfinite( paramBlobs[i]->GetData().GetValueAt( 0 ) ) );
+			assert( isfinite( gradientHistory[i]->GetData().GetValueAt( 0 ) ) );
 			MathEngine().VectorAdd( paramBlobs[i]->GetData(), gradientHistory[i]->GetData(),
 				paramBlobs[i]->GetData(), dataSize );
 		}
