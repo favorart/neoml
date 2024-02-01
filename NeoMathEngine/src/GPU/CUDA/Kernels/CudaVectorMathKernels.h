@@ -68,6 +68,11 @@ __global__ void VectorConvertKernel( const From* from, To* to, int count )
 
 	for( int i = 0; i < actionCount; ++i ) {
 		*to = static_cast<To>( *from );
+		if constexpr( std::is_same_v<To, float> ) {
+			assert( isfinite( *to ) );
+			assert( *to > -18002376725743890449408517795774411571.f );
+			assert( *to < 18002376725743890449408517795774411571.f );
+		}
 		from += step;
 		to += step;
 	}
@@ -175,12 +180,18 @@ __global__ void VectorSumKernel(const float* __restrict__ mem, int count, float*
 	if(setZero) {
 		*result = sum;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 	} else if(gridDim.x == 1) {
 		*result += sum;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 	} else {
 		atomicAdd(result, sum);
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -196,6 +207,8 @@ __global__ void VectorSumAlongDimensionKernel( const float* __restrict__ input, 
 		for( int i = 0; i < dims; i++ ) {
 			*result += *input;
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			input += precedingDims;
 		}
 	}
@@ -220,7 +233,11 @@ __global__ void VectorCumSumAlongDimensionKernel( const T* __restrict__ input, i
 			result += step;
 			curSum += *input;
 			*result = curSum;
-			assert( isfinite( *result ) );
+			if constexpr( std::is_same_v<T, float> ) {
+				assert( isfinite( *result ) );
+				assert( *result > -18002376725743890449408517795774411571.f );
+				assert( *result < 18002376725743890449408517795774411571.f );
+			}
 		}
 	}
 }
@@ -238,6 +255,8 @@ __global__ void VectorSumAlongDimensionDiagKernel( const float* __restrict__ inp
 		for( int i = 0; i < dims; i++ ) {
 			*result += *input;
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			input += precedingDims;
 			result += precedingDims;
 		}
@@ -258,6 +277,8 @@ __global__ void VectorCumSumAlongDimensionDiagKernel( const float* __restrict__ 
 		for( int i = 0; i <= cumDim; i++ ) {
 			*result += *input;
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			input += precedingDims;
 			result += precedingDims;
 		}
@@ -316,6 +337,8 @@ __global__ void VectorELUKernel( const float* __restrict__ first, float* result,
 	for( int action = 0; action < actionCount; ++action ) {
 		*result = ( *first >= 0 ) ? *first : ( *alpha * ( ExponentFunc( *first ) - 1. ) );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -335,6 +358,8 @@ __global__ void VectorELUDiffKernel( const float* __restrict__ first, const floa
 	for( int i = 0; i < actionCount; ++i ) {
 		*result = ( *first >= 0 ) ? *second : ( *second * ExponentFunc( *first ) * *alpha );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -354,6 +379,8 @@ __global__ void VectorELUDiffOpKernel( const float* __restrict__ first, const fl
 	for( int i = 0; i < actionCount; ++i ) {
 		*result = ( *first >= 0 ) ? *second : ( *second * ( *first + *alpha ) );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -373,6 +400,8 @@ __global__ void VectorReLUKernel(const float* first, float* result,
 		for(int i = 0; i < actionCount; ++i) {
 			float value = min(*first, *threshold);
 			assert( isfinite( value ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			*result = value > 0 ? value : 0;
 			first += step;
 			result += step;
@@ -381,6 +410,8 @@ __global__ void VectorReLUKernel(const float* first, float* result,
 		for(int i = 0; i < actionCount; ++i) {
 			float value = *first;
 			assert( isfinite( value ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			*result = value > 0 ? value : 0;
 			first += step;
 			result += step;
@@ -402,6 +433,8 @@ __global__ void VectorReLUDiffKernel(const float* __restrict__ first,
 		for(int i = 0; i < actionCount; ++i) {
 			*result = (*first > 0 && *first < *threshold) ? *second : 0;
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			first += step;
 			second += step;
 			result += step;
@@ -410,6 +443,8 @@ __global__ void VectorReLUDiffKernel(const float* __restrict__ first,
 		for(int i = 0; i < actionCount; ++i) {
 			*result = ( *first > 0 ) ? *second : 0;
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 			first += step;
 			second += step;
 			result += step;
@@ -430,6 +465,8 @@ __global__ void VectorLeakyReLUKernel( const float* __restrict__ first, float* r
 		float value = *first;
 		*result = ( value > 0 ) ? value : ( *alpha * value );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -449,6 +486,8 @@ __global__ void VectorLeakyReLUDiffKernel( const float* __restrict__ first, cons
 	for( int i = 0; i < actionCount; ++i ) {
 		*result = ( *first > 0 ) ? *second : ( *second * *alpha );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -474,6 +513,8 @@ __global__ void VectorHSwishKernel( const float* first, float* result, int count
 			*result = value * ( value + 3.f ) / 6.f;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -500,6 +541,8 @@ __global__ void VectorHSwishDiffKernel( const float* __restrict__ first, const f
 			*result = ( value / 3.f + 0.5f ) * *second;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -521,7 +564,14 @@ __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
 		float value1 = *first;
 		float value2 = *second;
 		*result = ( value1 > value2 ) ? value1 : value2;
-		assert( isfinite( *result ) );
+
+		if( !isfinite( *result ) ||
+			*result < -18002376725743890449408517795774411571.f ||
+			*result > 18002376725743890449408517795774411571.f ) {
+			printf( "VectorEltwiseMaxKernel: first=%f second=%f result=%f i=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+				*first, *second, *result, i, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+		}
+		//assert( isfinite( *result ) );
 		first += step;
 		second += step;
 		result += step;
@@ -544,7 +594,14 @@ __global__ void VectorEltwiseMinKernel(const float* first, const float* second,
 		float value1 = *first;
 		float value2 = *second;
 		*result = ( value1 < value2 ) ? value1 : value2;
-		assert( isfinite( *result ) );
+
+		if( !isfinite( *result ) ||
+			*result < -18002376725743890449408517795774411571.f ||
+			*result > 18002376725743890449408517795774411571.f ) {
+			printf( "VectorEltwiseMinKernel: first=%f second=%f result=%f i=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+				*first, *second, *result, i, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+		}
+		//assert( isfinite( *result ) );
 		first += step;
 		second += step;
 		result += step;
@@ -602,6 +659,8 @@ __global__ void VectorHingeKernel(const float* __restrict__ first, float* result
 		float value = 1 - *first;
 		*result = ( value > 0 ) ? value : 0;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -621,6 +680,8 @@ __global__ void VectorHingeDiffKernel(const float* __restrict__ first,
 	for(int i = 0; i < actionCount; ++i) {
 		*result = ( *first < 1 ) ? -*second : 0;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -645,6 +706,8 @@ __global__ void VectorSquaredHingeKernel(const float* __restrict__ first, float*
 			*result = ( value < 0 ) ? 0 : ( value * value );
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -670,6 +733,8 @@ __global__ void VectorSquaredHingeDiffKernel(const float* __restrict__ first,
 			*result = ( value < 0 ) ? 0 : ( -2 * value * ( *second ) );
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -694,6 +759,8 @@ __global__ void VectorHuberKernel(const float* __restrict__ first, float* result
 			*result = *first * (*first) * 0.5f;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -718,6 +785,8 @@ __global__ void VectorHuberDiffKernel(const float* __restrict__ first,
 			*result = *first;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -742,6 +811,8 @@ __global__ void VectorHardTanhKernel(const float* __restrict__ first, float* res
 			*result = value;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -766,6 +837,8 @@ __global__ void VectorHardTanhDiffKernel(const float* __restrict__ first, const 
 			*result = *second;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -791,6 +864,8 @@ __global__ void VectorHardSigmoidKernel(const float* __restrict__ first, float* 
 			*result = value;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -818,6 +893,8 @@ __global__ void VectorHardSigmoidDiffKernel(const float* __restrict__ first, con
 			*result = *second * *slope;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -843,6 +920,8 @@ __global__ void VectorHardSigmoidDiffOpKernel(const float* __restrict__ first,
 			*result = *second * *slope;
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -855,6 +934,8 @@ __global__ void VectorExpKernel(const float* __restrict__ first, float* result, 
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = ExponentFunc(first[index]);
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -864,6 +945,8 @@ __global__ void VectorLogKernel( const float* __restrict__ first, float* result,
 	if( GetCudaTaskIndex( count, index ) ) {
 		result[index] = logf(min(max(first[index], FLT_MIN), FLT_MAX));
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -873,6 +956,8 @@ __global__ void VectorNegLogKernel(const float* __restrict__ first, float* resul
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = -logf(min(max(first[index], FLT_MIN), FLT_MAX));
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -882,6 +967,8 @@ __global__ void VectorErfKernel(const float* __restrict__ first, float* result, 
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = erff(first[index]);
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -899,6 +986,8 @@ __global__ void VectorBernulliKLDerivativeKernel(const float* __restrict__ first
 		}
 		result[index] = klDer;
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -919,8 +1008,15 @@ __global__ void VectorAddKernel(const T* __restrict__ first,
 		*result = *first + *second;
 
 		if constexpr( std::is_same_v<T, float> ) {
-			if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ) {
-				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n", *first, *second, *result, i, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+			if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ||
+				*result < -18002376725743890449408517795774411571.f ||
+				*result > 18002376725743890449408517795774411571.f ) {
+
+				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+				if( index != 0 ) {
+					printf( "VectorAddKernel: fail\n" );
+				}
 			}
 			assert( !isnan( *first ) );
 			assert( !isnan( *second ) );
@@ -956,6 +1052,8 @@ __global__ void VectorAddValueKernel(
 			}
 			assert( isfinite( *first ) );
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 		}
 		first += step;
 		result += step;
@@ -978,6 +1076,8 @@ __global__ void VectorSubKernel( const T* __restrict__ first, const T* __restric
 		*result = *first - *second;
 		if constexpr( std::is_same_v<T, float> ) {
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 		}
 		first += step;
 		second += step;
@@ -998,6 +1098,8 @@ __global__ void VectorSubKernel( const float* __restrict__ first,
 	for( int i = 0; i < actionCount; ++i ) {
 		*result = *first - second;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -1016,6 +1118,8 @@ __global__ void VectorSubKernel( float first,
 	for( int i = 0; i < actionCount; ++i ) {
 		*result = first - *second;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		second += step;
 		result += step;
 	}
@@ -1029,6 +1133,9 @@ __global__ void VectorMultiplyAndSubKernel(const float* __restrict__ first,
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = first[index] - *mult * second[index];
 		assert( isfinite( result[index] ) );
+
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1056,6 +1163,9 @@ __global__ void VectorMultiplyKernel(const T* __restrict__ first,
 			}
 			assert( isfinite( *first ) );
 			assert( isfinite( *result ) );
+
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 		}
 		first += step;
 		result += step;
@@ -1078,6 +1188,9 @@ __global__ void VectorNegMultiplyKernel(const float* __restrict__ first,
 	for(int i = 0; i < actionCount; ++i) {
 		*result = *first * mul;
 		assert( isfinite( *result ) && isfinite( *first ) );
+
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -1100,8 +1213,13 @@ __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
 		*result = *first * (*second);
 
 		if constexpr( std::is_same_v<T, float> ) {
-			if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ) {
-				printf( "VectorEltwiseMultiplyKernel: first=%f second=%f result=%f i=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n", *first, *second, *result, i, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+			if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ||
+				*first < -18002376725743890449408517795774411571.f ||
+				*first >  18002376725743890449408517795774411571.f ) {
+
+				printf( "VectorEltwiseMultiplyKernel: first=%f second=%f result=%f i=%d index=%d count=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+					   /* blockCount=%d threadCount=%d */
+					*first, *second, *result, i, index, count, step, blockIdx.x, blockDim.x, threadIdx.x/*, blockCount, threadCount*/ );
 			}
 			assert( isfinite( *first ) );
 			assert( isfinite( *second ) );
@@ -1134,6 +1252,8 @@ __global__ void VectorEltwiseMultiplyAddKernel(const float* __restrict__ first,
 		assert( isfinite( *first ) );
 		assert( isfinite( *second ) );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -1161,6 +1281,8 @@ __global__ void VectorEltwiseNegMultiplyKernel(const float* __restrict__ first,
 		assert( isfinite( *first ) );
 		assert( isfinite( *second ) );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -1187,9 +1309,11 @@ __global__ void VectorEltwiseDivideKernel(const T* __restrict__ first,
 			if( !isfinite( *second ) || !isfinite( *first ) ) {
 				printf( "VectorEltwiseDivideKernel: first=%f second=%f result=%f i=%d index=%d step=%d\n", *first, *second, *result, i, index, step );
 			}
-			assert( isfinite( *first ) );
-			assert( isfinite( *second ) );
+			//assert( isfinite( *first ) );
+			//assert( isfinite( *second ) );
 			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 		}
 		first += step;
 		second += step;
@@ -1210,6 +1334,8 @@ __global__ void VectorEltwisePowerKernel(const float* __restrict__ first,
 		assert( isfinite( first[index] ) );
 		assert( isfinite( second[index] ) );
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1244,6 +1370,8 @@ __global__ void VectorInvKernel(const float* __restrict__ first, float* result, 
 			*result = 1.f / (*first);
 		}
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		result += step;
 	}
@@ -1262,7 +1390,9 @@ __global__ void VectorMinMaxKernel(const float* __restrict__ first, float* resul
 
 	for(int i = 0; i < actionCount; ++i) {
 		*result = min(max(*first, *minValue), *maxValue);
-		if( !isfinite( *result ) ) {
+		if( !isfinite( *result ) ||
+			*result < -18002376725743890449408517795774411571.f ||
+			*result >  18002376725743890449408517795774411571.f ) {
 			printf( "VectorMinMaxKernel: first=%f result=%f minValue=%f maxValue=%f i=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
 				*first, *result, *minValue, *maxValue, i, index, step, blockIdx.x, blockDim.x, threadIdx.x );
 		}
@@ -1282,6 +1412,8 @@ __global__ void VectorSigmoidKernel(const float* __restrict__ first, float* resu
 			printf( "VectorSigmoidKernel: first=%f result=%f index=%d \n", first[index], result[index], index );
 		}
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1300,6 +1432,8 @@ __global__ void VectorSigmoidDiffKernel(const float* __restrict__ first,
 			printf( "VectorSigmoidDiffKernel: first=%f second=%f result=%f index=%d \n", first[index], second[index], result[index], index );
 		}
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1324,6 +1458,8 @@ __global__ void VectorSigmoidDiffOpKernel(const float* __restrict__ first, const
 		assert( isfinite( *first ) );
 		assert( isfinite( *second ) );
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		first += step;
 		second += step;
 		result += step;
@@ -1339,6 +1475,8 @@ __global__ void VectorTanhKernel(const float* __restrict__ first, float* result,
 			printf( "VectorTanhKernel: first=%f result=%f index=%d \n", first[index], result[index], index );
 		}
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1353,6 +1491,8 @@ __global__ void VectorTanhDiffKernel(const float* __restrict__ first,
 			printf( "VectorTanhDiffKernel: first=%f second=%f result=%f index=%d \n", first[index], second[index], result[index], index );
 		}
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1373,7 +1513,10 @@ __global__ void VectorTanhDiffOpKernel(const float* __restrict__ first, const fl
 		assert( isfinite( *second ) );
 		*result = (1.f - *first * *first) * *second;
 
-		if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ) {
+		if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) 
+			|| *result < -18002376725743890449408517795774411571.f
+			|| *result > 18002376725743890449408517795774411571.f
+			) {
 			printf( "VectorTanhDiffOpKernel: first=%f second=%f result=%f i=%d index=%d step=%d\n", *first, *second, *result, i, index, step );
 		}
 		assert( isfinite( *result ) );
@@ -1389,6 +1532,8 @@ __global__ void VectorPowerKernel(float exponent, const float* __restrict__ firs
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = powf(first[index], exponent);
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1399,6 +1544,8 @@ __global__ void VectorPowerDiffKernel(float exponent, const float* __restrict__ 
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = second[index] * exponent * powf(first[index], exponent - 1);
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1409,6 +1556,8 @@ __global__ void VectorPowerDiffOpKernel(float exponent, const float* __restrict_
 	if(GetCudaTaskIndex(count, index)) {
 		result[index] = second[index] * exponent * powf(first[index], (exponent - 1.f) / exponent);
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -1437,6 +1586,8 @@ __global__ void VectorL1DiffAddKernel(const float* __restrict__ first, const flo
 
 		*result = *first + mulVal * x;
 		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 
 		first += step;
 		second += step;
@@ -1523,6 +1674,7 @@ __global__ void VectorFindMaxValueInSetKernel( CCudaConstVectorArray vectors,
 			}
 		}
 		result[index] = res;
+		assert( isfinite( result[index] ) );
 	}
 }
 
@@ -1542,6 +1694,7 @@ __global__ void VectorFindMaxValueInSetWithIndicesKernel( CCudaConstVectorArray 
 		}
 		rowIndices[index] = resIndex;
 		result[index] = res;
+		assert( isfinite( result[index] ) );
 	}
 }
 
@@ -1553,6 +1706,7 @@ __global__ void VectorSpreadValuesKernel(const float* __restrict__ source,
 	if(GetCudaTaskIndex(vectorSize, index)) {
 		if( startVectorIndex <= rowIndices[index] && rowIndices[index] < startVectorIndex + vectors.VectorCount ) {
 			*(vectors.Vectors[rowIndices[index] - startVectorIndex] + index ) = source[index];
+			assert( isfinite( source[index] ) );
 		}
 	}
 }
@@ -1564,6 +1718,7 @@ __global__ void VectorTopKDiffKernel( const float* __restrict__ source,
 	if( GetCudaTaskIndex( height, k ) ) {
 		int index = indices[k];
 		result[k * width + index] = source[index];
+		assert( isfinite( source[index] ) );
 	}
 }
 
@@ -1573,6 +1728,7 @@ __global__ void VectorNegKernel( const float* __restrict__ first,
 	int index;
 	if( GetCudaTaskIndex( vectorSize, index ) ) {
 		second[index] = -first[index];
+		assert( isfinite( second[index] ) );
 	}
 }
 
@@ -1598,6 +1754,8 @@ __global__ void VectorLogDiffKernel( const float* __restrict__ sourceGrad,
 		} else {
 			*resultGrad = *sourceGrad / div;
 			assert( isfinite( *resultGrad ) );
+			assert( *resultGrad > -18002376725743890449408517795774411571.f );
+			assert( *resultGrad < 18002376725743890449408517795774411571.f );
 		}
 		resultGrad++;
 		sourceGrad++;
@@ -1650,6 +1808,9 @@ __global__ void VectorMinMaxDiffKernel( const float* sourceGrad,
 			*resultGrad = 0;
 		} else {
 			*resultGrad = *sourceGrad;
+			assert( isfinite( *resultGrad ) );
+			assert( *resultGrad > -18002376725743890449408517795774411571.f );
+			assert( *resultGrad <  18002376725743890449408517795774411571.f );
 		}
 		resultGrad++;
 		sourceGrad++;
@@ -1669,6 +1830,14 @@ __global__ void VectorMaxKernel( const float* __restrict__ first,
 
 	for( int action = 0; action < actionCount; ++action ) {
 		*result = ( *first >= value ) ? *first : value;
+
+		if( !isfinite( *result ) ||
+			*result < -18002376725743890449408517795774411571.f ||
+			*result > 18002376725743890449408517795774411571.f ) {
+			printf( "VectorEltwiseMaxKernel: first=%f result=%f index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+				*first,*result, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+		}
+		//assert( isfinite( *result ) );
 		first += step;
 		result += step;
 	}

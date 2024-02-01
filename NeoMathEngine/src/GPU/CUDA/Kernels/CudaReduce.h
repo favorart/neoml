@@ -61,6 +61,8 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 		sum += res;
 	}
 	assert( isfinite( sum ) );
+	assert( sum > -18002376725743890449408517795774411571.f );
+	assert( sum < 18002376725743890449408517795774411571.f );
 
 	return sum;
 }
@@ -99,6 +101,7 @@ inline __device__ float ReduceMaxXSharedBuffer(float* buffer)
 			maxVal = otherVal;
 		}
 	}
+	assert( isfinite( maxVal ) );
 
 	return maxVal;
 }
@@ -132,6 +135,7 @@ inline __device__ CValueWithIndex ReduceMaxWithIndexXSharedBuffer(CValueWithInde
 			maxVal = buffer[baseIndex + i];
 		}
 	}
+	assert( isfinite( maxVal.Value ) );
 
 	// Find maximum inside the warp (butterfly reduction)
 	for(int laneMask = xWarp >> 1; laneMask >= 1; laneMask >>= 1) {
@@ -143,6 +147,7 @@ inline __device__ CValueWithIndex ReduceMaxWithIndexXSharedBuffer(CValueWithInde
 			maxVal = otherVal;
 		}
 	}
+	assert( isfinite( maxVal.Value ) );
 
 	return maxVal;
 }
