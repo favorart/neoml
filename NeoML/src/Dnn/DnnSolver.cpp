@@ -260,13 +260,15 @@ void CDnnSolver::clip( const CObjectArray<CDnnBlob>& paramDiffBlobs )
 	}
 }
 
+extern unsigned long long myEpoch;
+
 void CDnnSolver::clipGradients(const CObjectArray<CDnnBlob>& paramDiffBlobs)
 {
 	if(paramDiffBlobs.Size() == 0) {
 		return;
 	}
 
-	clip( paramDiffBlobs );
+	//clip( paramDiffBlobs );
 
 	if( maxGradientNorm < 0 ) {
 		return;
@@ -280,6 +282,17 @@ void CDnnSolver::clipGradients(const CObjectArray<CDnnBlob>& paramDiffBlobs)
 	for(int i = 1; i < paramDiffBlobs.Size(); ++i) {
 		MathEngine().VectorDotProduct(paramDiffBlobs[i]->GetData(), paramDiffBlobs[i]->GetData(),
 			paramDiffBlobs[i]->GetDataSize(), tempVar.GetHandle());
+
+		assert( !isnan( gradVar.GetValue() ) );
+		assert( !isnan( tempVar.GetValue() ) );
+
+		if( gradVar.GetValue() > (  18002376725743890449408517795774411571.f ) || tempVar.GetValue() > (  18002376725743890449408517795774411571.f ) ||
+			gradVar.GetValue() < ( -18002376725743890449408517795774411571.f ) || tempVar.GetValue() < ( -18002376725743890449408517795774411571.f ) )
+		{
+			printf( "clipGradients: epoch=%llu grad=%f temp=%f 101\n\n", myEpoch, gradVar.GetValue(), tempVar.GetValue() );
+			fflush( stdout );
+		}
+
 		MathEngine().VectorAdd(gradVar.GetHandle(), tempVar.GetHandle(), gradVar.GetHandle(), 1);
 	}
 	NeoPresume( std::isfinite( gradVar.GetValue() ) );
