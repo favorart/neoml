@@ -34,7 +34,7 @@ const int BuildTempMatrixCombine = 16;
 
 __launch_bounds__(1024, 1)
 __global__ void BuildTempMatrixKernel( const CCuda3dConvolutionDescInternal desc,
-	const float* __restrict__ input, int matrixHeight, int matrixWidth, float* __restrict__ matrix,
+	const float* input, int matrixHeight, int matrixWidth, float* matrix,
 	int matrixWidthNorm, int heightOffset )
 {
 	const int filterSize = desc.Filter.ObjectSize();
@@ -116,7 +116,7 @@ enum TBackwardOperationType {
 
 // One thread processes no more than combine elements of one temporary matrix row
 const int BuildInputFromTempMatrixCombine = 16;
-__global__ void BuildInputFromTempMatrixKernel( const CCuda3dConvolutionDescInternal desc, const float* __restrict__ tempMatrix,
+__global__ void BuildInputFromTempMatrixKernel( const CCuda3dConvolutionDescInternal desc, const float* tempMatrix,
 	int matrixHeight, int matrixWidth, float* result, TBackwardOperationType operation, int widthNorm, int heightOffset )
 {
 	int tempRow;

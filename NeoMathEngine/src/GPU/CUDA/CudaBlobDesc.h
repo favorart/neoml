@@ -90,7 +90,7 @@ inline __device__ int GetBlobPos( const CCudaBlobDesc& blob, int b, int h, int w
 }
 
 template<class T>
-inline __device__ T* GetBlobPtr( const CCudaBlobDesc& __restrict__ blob, T* data, int b, int h, int w, int c )
+inline __device__ T* GetBlobPtr( const CCudaBlobDesc& blob, T* data, int b, int h, int w, int c )
 {
 	return data + GetBlobPos(blob, b, h, w, c);
 }

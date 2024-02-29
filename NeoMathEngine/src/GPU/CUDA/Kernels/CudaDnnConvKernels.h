@@ -29,7 +29,7 @@ namespace NeoML {
 // Each row of this matrix contains the values that will be affected by the filter on the step equal to the row index
 // Then the convolution consists of multiplying the temporary matrix by the transposed filter
 __global__ void BuildTempMatrixKernel( const CCudaConvolutionDescInternal desc,
-	const float* __restrict__ sourceData, int resultOffset, int resultSize, float* __restrict__ resultData )
+	const float* sourceData, int resultOffset, int resultSize, float* resultData )
 {
 	const int strideHeight = desc.StrideHeight;
 	const int strideWidth = desc.StrideWidth;
@@ -133,8 +133,8 @@ inline __device__ void load3Floats( float3& res, const float* from, int coord, c
 
 __launch_bounds__(512, 2)
 __global__ void Conv3x3s1d1Kernel1x8( const CCudaConvolutionDescInternal desc,
-	const float* __restrict__ input, const float* __restrict__ filter, const float* __restrict__ freeTerm,
-	float* __restrict__ result, int widthNorm )
+	const float* input, const float* filter, const float* freeTerm,
+	float* result, int widthNorm )
 {
 	const int filterCount = desc.Result.Channels();
 	const int objectCount = desc.Result.ObjectCount();
@@ -240,7 +240,7 @@ enum TBackwardOperationType {
 // One thread processes no more than combine elements of one temporary matrix row
 const int BuildInputFromTempMatrixCombine = 16;
 __global__ void BuildInputFromTempMatrixKernel( const CCudaConvolutionDescInternal desc,
-	const float* __restrict__ tempMatrix, int matrixHeight, int matrixWidth, float* result,
+	const float* tempMatrix, int matrixHeight, int matrixWidth, float* result,
 	TBackwardOperationType operation, int widthNorm, int heightOffset )
 {
 	int matrixRow;
