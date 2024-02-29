@@ -184,7 +184,7 @@ void CGELULayer::backwardPrecise()
 	MathEngine().VectorEltwiseMultiply( inputDiff, input, inputDiff, dataSize );
 
 	// inputDiff = inputDiff + 0.5( 1 + erf( x / sqrt(2) ) )
-	MathEngine().VectorAdd( inputDiff, erfMemoization->GetData(), inputDiff, dataSize );
+	MathEngine().VectorAdd( inputDiff, erfMemoization->GetData(), inputDiff, dataSize, 12 );
 
 	// inputDiff *= outputDiff
 	MathEngine().VectorEltwiseMultiply( inputDiff, outputDiffBlobs[0]->GetData(), inputDiff, dataSize );
@@ -214,7 +214,7 @@ void CGELULayer::backwardFastApproximate()
 	MathEngine().VectorMultiply( inputDiff, inputDiff, dataSize, approxScaleVar );
 
 	// inputDiff = sigmoid(1.702 * input) + input * sigmoid_diff(1.702 * input) * 1.702
-	MathEngine().VectorAdd( inputDiff, sigmoidMultipliedInput, inputDiff, dataSize );
+	MathEngine().VectorAdd( inputDiff, sigmoidMultipliedInput, inputDiff, dataSize, 13 );
 
 	// inputDiff *= outputDiff
 	 MathEngine().VectorEltwiseMultiply( inputDiff, outputDiffBlobs[0]->GetData(), inputDiff, dataSize );

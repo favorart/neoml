@@ -140,7 +140,7 @@ void CCenterLossLayer::updateCenters(const CFloatHandle& tempDiffHandle)
 	assert( isfinite( classCenters.GetValueAt( 0 ) ) );
 	assert( isfinite( classCentersUpdatesNumerator.GetValueAt( 0 ) ) );
 	MathEngine().VectorAdd( classCenters, classCentersUpdatesNumerator.GetHandle(), classCenters,
-		classCentersBlob->GetDataSize() );
+		classCentersBlob->GetDataSize(), 9 );
 }
 
 CLayerWrapper<CCenterLossLayer> CenterLoss(

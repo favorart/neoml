@@ -994,7 +994,7 @@ __global__ void VectorBernulliKLDerivativeKernel(const float* first,
 const int VectorAddCombineCount = 8;
 template<class T>
 __global__ void VectorAddKernel(const T* first,
-	const T* second, T* result, int count)
+	const T* second, T* result, int count, const T* name, int num )
 {
 	int index = 0;
 	int step = 0;
@@ -1012,8 +1012,8 @@ __global__ void VectorAddKernel(const T* first,
 				*result < -18002376725743890449408517795774411571.f ||
 				*result > 18002376725743890449408517795774411571.f ) {
 
-				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
-					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u !%d! %s \n",
+					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num, ( const char* )name );
 				if( index != 0 ) {
 					printf( "VectorAddKernel: fail\n" );
 				}
@@ -1199,7 +1199,7 @@ __global__ void VectorNegMultiplyKernel(const float* first,
 const int VectorEltwiseMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseMultiplyKernel(const T* first,
-	const T* second, T* result, int count)
+	const T* second, T* result, int count, int blockCount, int threadCount )
 {
 	int index = 0;
 	int step = 0;

@@ -185,7 +185,7 @@ void CCrfCalculationLayer::RunOnce()
 		assert( isfinite( currentProbabilities.GetValueAt( 0 ) ) );
 		assert( isfinite( outputBlobs[O_ClassSeqLogProb]->GetData().GetValueAt( 0 ) ) );
 		MathEngine().VectorAdd( currentProbabilities, outputBlobs[O_ClassSeqLogProb]->GetData(),
-			outputBlobs[O_ClassSeqLogProb]->GetData(), outputBlobs[O_ClassSeqLogProb]->GetDataSize() );
+			outputBlobs[O_ClassSeqLogProb]->GetData(), outputBlobs[O_ClassSeqLogProb]->GetDataSize(), 10 );
 	}
 
 	// Calculate the correct class probability

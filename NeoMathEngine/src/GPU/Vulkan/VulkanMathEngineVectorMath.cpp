@@ -523,8 +523,8 @@ void CVulkanMathEngine::VectorBernulliKLDerivative(const CConstFloatHandle& esti
 		0, 0, 0, 0, 0, 0, bufs, sizes, 3, Ceil(vectorSize, VectorCombine));
 }
 
-void CVulkanMathEngine::VectorAdd(const CConstFloatHandle& firstHandle,
-	const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize)
+bool CVulkanMathEngine::VectorAdd(const CConstFloatHandle& firstHandle,
+	const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize, int, const CConstFloatHandle*)
 {
 	
 	int countQuad = ( vectorSize / 16 ) * 4;
@@ -543,6 +543,7 @@ void CVulkanMathEngine::VectorAdd(const CConstFloatHandle& firstHandle,
 		runVectorShader( shaderLoader->GET_SHADER_DATA( VectorAddFloat1, false, 0, 0, 3 ),
 			0, 0, 0, 0, 0, 0, bufs, sizes, 3, countSingle );
 	}
+	return true;
 }
 
 void CVulkanMathEngine::VectorAdd(const CConstIntHandle& firstHandle,

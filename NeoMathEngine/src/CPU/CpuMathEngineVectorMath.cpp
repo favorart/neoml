@@ -122,8 +122,8 @@ void CCpuMathEngine::BroadcastCopy( const CFloatHandle& toHandle, const CConstFl
 
 //------------------------------------------------------------------------------------------------------------
 
-void CCpuMathEngine::VectorAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-	const CFloatHandle& resultHandle, int vectorSize )
+bool CCpuMathEngine::VectorAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
+	const CFloatHandle& resultHandle, int vectorSize, int, const CConstFloatHandle* )
 {
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
@@ -131,6 +131,7 @@ void CCpuMathEngine::VectorAdd( const CConstFloatHandle& firstHandle, const CCon
 	CCpuExecutionScope scope;
 
 	NeoML::vectorAdd( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ), vectorSize );
+	return true;
 }
 
 void CCpuMathEngine::VectorSum( const CConstFloatHandle& firstHandle, int vectorSize, const CFloatHandle& resultHandle )

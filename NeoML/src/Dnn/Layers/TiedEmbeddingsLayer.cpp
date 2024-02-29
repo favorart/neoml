@@ -125,7 +125,7 @@ void CTiedEmbeddingsLayer::LearnOnce()
 			vectorSize, diffBlob->GetData(), diffBlob->GetDataSize() );
 
 		MathEngine().VectorAdd( totalDiffBlob->GetData(), diffBlob->GetData(),
-			totalDiffBlob->GetData(), totalDiffBlob->GetDataSize() );
+			totalDiffBlob->GetData(), totalDiffBlob->GetDataSize(), 6 );
 		diffBlob->Clear();
 	}
 

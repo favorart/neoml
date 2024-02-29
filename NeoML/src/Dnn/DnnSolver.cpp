@@ -190,7 +190,7 @@ void CDnnSolver::AddDiff( CBaseLayer* layer, const CObjectArray<CDnnBlob>& param
 	} else {
 		NeoAssert( paramDiffBlobsSum.Sum.Size() == paramDiffBlobs.Size() );
 		for( int i = 0; i < paramDiffBlobs.Size(); i++ ) {
-			paramDiffBlobsSum.Sum[i]->Add( paramDiffBlobs[i] );
+			paramDiffBlobsSum.Sum[i]->Add( paramDiffBlobs[i], 300 );
 		}
 	}
 }
@@ -317,7 +317,7 @@ void CDnnSolver::clipGradients(const CObjectArray<CDnnBlob>& paramDiffBlobs)
 			printf( "clipGradients: epoch=%llu grad=%f temp=%f 101\n\n", myEpoch, gradVar.GetValue(), tempVar.GetValue() );
 		}
 
-		MathEngine().VectorAdd(gradVar.GetHandle(), tempVar.GetHandle(), gradVar.GetHandle(), 1);
+		MathEngine().VectorAdd(gradVar.GetHandle(), tempVar.GetHandle(), gradVar.GetHandle(), 1, 27);
 	}
 	NeoPresume( std::isfinite( gradVar.GetValue() ) );
 	MathEngine().VectorSqrt(gradVar.GetHandle(), gradVar.GetHandle(), 1);
@@ -471,7 +471,7 @@ void CDnnSimpleGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjec
 			assert( isfinite( paramBlobs[i]->GetData().GetValueAt( 0 ) ) );
 			assert( isfinite( gradientHistory[i]->GetData().GetValueAt( 0 ) ) );
 			MathEngine().VectorAdd( paramBlobs[i]->GetData(), gradientHistory[i]->GetData(),
-				paramBlobs[i]->GetData(), dataSize );
+				paramBlobs[i]->GetData(), dataSize, 28 );
 		}
 	}
 }

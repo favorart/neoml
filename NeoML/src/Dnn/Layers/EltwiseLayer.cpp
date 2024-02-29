@@ -62,14 +62,18 @@ static void eltwiseSumRunOnce( const CObjectArray<CDnnBlob>& inputBlobs, const C
 	if constexpr( std::is_same_v<T, float> ) {
 		assert( isfinite( inputBlobs[0]->GetData<T>().GetValueAt( 0 ) ) );
 		assert( isfinite( inputBlobs[1]->GetData<T>().GetValueAt( 0 ) ) );
+		mathEngine.VectorAdd( inputBlobs[0]->GetData<T>(), inputBlobs[1]->GetData<T>(), output, dataSize, 29 );
+	} else {
+		mathEngine.VectorAdd( inputBlobs[0]->GetData<T>(), inputBlobs[1]->GetData<T>(), output, dataSize );
 	}
-	mathEngine.VectorAdd( inputBlobs[0]->GetData<T>(), inputBlobs[1]->GetData<T>(), output, dataSize );
 	for( int i = 2; i < inputBlobs.Size(); ++i ) {
 		if constexpr( std::is_same_v<T, float> ) {
 			assert( isfinite( output.GetValueAt( 0 ) ) );
 			assert( isfinite( inputBlobs[i]->GetData<T>().GetValueAt( 0 ) ) );
+			mathEngine.VectorAdd( output, inputBlobs[i]->GetData<T>(), output, dataSize, 30 );
+		} else {
+			mathEngine.VectorAdd( output, inputBlobs[i]->GetData<T>(), output, dataSize );
 		}
-		mathEngine.VectorAdd( output, inputBlobs[i]->GetData<T>(), output, dataSize );
 	}
 }
 

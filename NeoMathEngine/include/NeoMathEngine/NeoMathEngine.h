@@ -237,8 +237,8 @@ public:
 
 	// Vector addition
 	// result = first + second
-	virtual void VectorAdd(const CConstFloatHandle& firstHandle,
-		const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize) = 0;
+	virtual bool VectorAdd( const CConstFloatHandle& firstHandle,
+		const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize, int num=-1, const CConstFloatHandle* name = nullptr ) = 0;
 	virtual void VectorAdd( const CConstIntHandle& firstHandle,
 		const CConstIntHandle& secondHandle, const CIntHandle& resultHandle, int vectorSize ) = 0;
 	virtual void VectorAddValue(const CConstFloatHandle& firstHandle,

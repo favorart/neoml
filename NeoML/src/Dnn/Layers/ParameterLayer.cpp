@@ -86,7 +86,7 @@ void CParameterLayer::RunOnce()
 void CParameterLayer::LearnOnce()
 {
 	// Layer's derivative is one => equal to outputDiff
-	paramDiffBlobs[0]->Add( outputDiffBlobs[0] );
+	paramDiffBlobs[0]->Add( outputDiffBlobs[0], 400 );
 }
 
 void CParameterLayer::BackwardOnce()

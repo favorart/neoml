@@ -174,8 +174,8 @@ public:
 	void VectorErf( const CConstFloatHandle& firstHandle, const CFloatHandle& resultHandle, int vectorSize ) override;
 	void VectorBernulliKLDerivative( const CConstFloatHandle& estimationHandle,
 		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& target ) override;
-	void VectorAdd( const CConstFloatHandle& firstHandle,
-		const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize ) override;
+	bool VectorAdd( const CConstFloatHandle& firstHandle,
+		const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize, int num, const CConstFloatHandle* name = nullptr ) override;
 	void VectorAdd( const CConstIntHandle& firstHandle,
 		const CConstIntHandle& secondHandle, const CIntHandle& resultHandle, int vectorSize ) override;
 	void VectorAddValue( const CConstFloatHandle& firstHandle,

@@ -213,7 +213,7 @@ float CLossLayer::testImpl(int batchSize, CConstFloatHandle data, int vectorSize
 
 	assert( isfinite( data.GetValueAt( 0 ) ) );
 	assert( isfinite( dataDelta.GetValueAt( 0 ) ) );
-	MathEngine().VectorAdd(data, dataDelta, dataShift.GetHandle(), totalSize);
+	MathEngine().VectorAdd(data, dataDelta, dataShift.GetHandle(), totalSize, 31);
 	BatchCalculateLossAndGradient(batchSize, dataShift.GetHandle(), vectorSize,
 		label, labelSize, lossValueShift.GetHandle(), CFloatHandle());
 
@@ -224,7 +224,7 @@ float CLossLayer::testImpl(int batchSize, CConstFloatHandle data, int vectorSize
 	assert( isfinite( lossValueShiftApp.GetValueAt( 0 ) ) );
 	assert( isfinite( lossValue.GetValueAt( 0 ) ) );
 	MathEngine().VectorAdd(lossValueShiftApp.GetHandle(), lossValue.GetHandle(),
-		lossValueShiftApp.GetHandle(), batchSize);
+		lossValueShiftApp.GetHandle(), batchSize, 32);
 	MathEngine().VectorSub(lossValueShiftApp.GetHandle(), lossValueShift.GetHandle(),
 		lossValueShiftApp.GetHandle(), batchSize);
 	MathEngine().VectorDotProduct(lossValueShiftApp.GetHandle(), lossValueShiftApp.GetHandle(),

@@ -166,7 +166,7 @@ void CBaseConvLayer::ApplyBatchNormalization(CBatchNormalizationLayer& batchNorm
 	CFloatHandle freeTermData = newFreeTerm->GetData();
 
 	MathEngine().VectorEltwiseMultiply(freeTermData, gamma, freeTermData, filterCount);
-	MathEngine().VectorAdd(freeTermData, beta, freeTermData, filterCount);
+	MathEngine().VectorAdd(freeTermData, beta, freeTermData, filterCount, 23);
 
 	if(IsFilterTransposed()) {
 		MathEngine().MultiplyMatrixByDiagMatrix(filterData,

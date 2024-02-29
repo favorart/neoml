@@ -677,7 +677,7 @@ void CKMeansVectorMultichannelLookupAndAddToTableThreadTask::Run( int /*threadIn
 			NeoPresume( 0 <= index && index < LookupItemCount );
 			const CConstFloatHandle matrix = LookupMatrix + b * LookupItemSize;
 			const CFloatHandle pos = Result + index * LookupItemSize;
-			MathEngine.VectorAdd( pos, matrix, pos, LookupItemSize );
+			MathEngine.VectorAdd( pos, matrix, pos, LookupItemSize, 4 );
 		}
 	}
 }
@@ -710,7 +710,7 @@ void CKMeansVectorAddToMatrixRowsThreadTask::Run( int /*threadIndex*/, const int
 	auto result = Result + offset;
 
 	for( int h = 0; h < counts[TMatrixHeight]; ++h ) {
-		MathEngine.VectorAdd( matrix, vector, result, counts[TMatrixWidth] );
+		MathEngine.VectorAdd( matrix, vector, result, counts[TMatrixWidth], 5 );
 		matrix += MatrixWidth;
 		result += MatrixWidth;
 	}

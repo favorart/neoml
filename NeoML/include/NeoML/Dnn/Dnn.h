@@ -359,6 +359,8 @@ private:
 	// and do no calculations if it is still the same run
 	int lastRunNumber;
 
+	const CConstFloatHandle strName;
+
 	// The number of output diffs ready for backpropagation
 	// When the ready diffs and the outputs numbers become the same, the layer is ready for backpropagation
 	// (BackwardRunAndLearnOnce method may be called for this layer)
@@ -421,7 +423,7 @@ private:
 	void runOnce();
 	void recheckBackwardNeeded();
 	void backwardRunAndLearnOnce();
-	void transferDiffBlob( CDnnBlob* diffBlob, int outputNum );
+	void transferDiffBlob( int i, CDnnBlob* diffBlob, int outputNum );
 
 	// Indicates if the layer may be used for in-place processing (the output blobs replace the input blobs)
 	bool isInPlaceProcessAvailable() const;
