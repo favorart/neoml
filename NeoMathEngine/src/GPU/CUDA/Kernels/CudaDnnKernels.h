@@ -105,7 +105,7 @@ __global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, 
 	}
 }
 
-__global__ void BlobResizeImageKernel( const CCudaBlobDesc from, const float* fromData, int deltaLeft,
+__global__ void BlobResizeImageKernel( const CCudaBlobDesc from, const float* __restrict__ fromData, int deltaLeft,
 	int deltaTop, int padding, float defaultValue, const CCudaBlobDesc to, float* toData )
 {
 	const int geom = to.Height() * to.Width();

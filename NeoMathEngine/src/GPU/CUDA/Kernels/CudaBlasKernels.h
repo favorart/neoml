@@ -22,7 +22,7 @@ limitations under the License.
 namespace NeoML {
 
 __global__ void SetVectorToMatrixRowsKernel(float* result,
-	int matrixHeight, int matrixWidth, const float* vector)
+	int matrixHeight, int matrixWidth, const float* __restrict__ vector)
 {
 	int index;
 	if( GetCudaTaskIndex( matrixHeight * matrixWidth, index ) ) {
@@ -33,7 +33,7 @@ __global__ void SetVectorToMatrixRowsKernel(float* result,
 
 const int AddVectorToMatrixElementsCombine = 4;
 __global__ void AddVectorToMatrixElementsKernel( float* matrix, int height, int width,
-	const int* indices, const float* vector )
+	const int* __restrict__ indices, const float* __restrict__ vector )
 {
 	int jPos;
 	int step;
@@ -85,8 +85,8 @@ __global__ void SetVectorToMatrixElementsKernel(
 }
 
 const int AddMatrixElementsToVectorCombine = 4;
-__global__ void AddMatrixElementsToVectorKernel( const float* matrix, int height, int width,
-	const int* indices, float* result )
+__global__ void AddMatrixElementsToVectorKernel( const float* __restrict__ matrix, int height, int width,
+	const int* __restrict__ indices, float* result )
 {
 	int jPos;
 	int step;
@@ -105,8 +105,8 @@ __global__ void AddMatrixElementsToVectorKernel( const float* matrix, int height
 }
 
 const int AddMatrixElementsToVectorMulCombine = 4;
-__global__ void AddMatrixElementsToVectorKernel(const float* matrix, int /*height*/, int width,
-	const int* rowIndices, const int* columnIndices, float* result, int vectorSize)
+__global__ void AddMatrixElementsToVectorKernel(const float* __restrict__ matrix, int /*height*/, int width,
+	const int* __restrict__ rowIndices, const int* __restrict__ columnIndices, float* result, int vectorSize)
 {
 	int index;
 	int step;
@@ -122,8 +122,8 @@ __global__ void AddMatrixElementsToVectorKernel(const float* matrix, int /*heigh
 }
 
 const int AddMatrixElementsToMatrixCombine = 4;
-__global__ void AddMatrixElementsToMatrixKernel(const float* matrix, int height, int width,
-	float* result, const int* indices)
+__global__ void AddMatrixElementsToMatrixKernel(const float* __restrict__ matrix, int height, int width,
+	float* result, const int* __restrict__ indices)
 {
 	int jPos;
 	int step;
@@ -143,8 +143,8 @@ __global__ void AddMatrixElementsToMatrixKernel(const float* matrix, int height,
 
 const int BatchAddVectorToMatrixRowsCombine = 4;
 __global__ void AddVectorToMatrixRowsKernel(int batchSize,
-	const float* matrix, float* result, int matrixHeight,
-	int matrixWidth, const float* vector)
+	const float* __restrict__ matrix, float* result, int matrixHeight,
+	int matrixWidth, const float* __restrict__ vector)
 {
 	const int yPos = blockIdx.y * blockDim.y + threadIdx.y;
 	if(yPos < batchSize * matrixHeight) {
@@ -168,8 +168,8 @@ __global__ void AddVectorToMatrixRowsKernel(int batchSize,
 }
 
 template<class T>
-__global__ void AddVectorToMatrixColumnsKernel( const T* matrix, T* result,
-	int matrixHeight, int matrixWidth, const T* vector )
+__global__ void AddVectorToMatrixColumnsKernel( const T* __restrict__ matrix, T* result,
+	int matrixHeight, int matrixWidth, const T* __restrict__ vector )
 {
 	int i;
 	int j;
@@ -184,8 +184,8 @@ __global__ void AddVectorToMatrixColumnsKernel( const T* matrix, T* result,
 	}
 }
 
-__global__ void SubVectorFromMatrixColumnsKernel(const float* matrix, float* result,
-	int matrixHeight, int matrixWidth, const float* vector)
+__global__ void SubVectorFromMatrixColumnsKernel(const float* __restrict__ matrix, float* result,
+	int matrixHeight, int matrixWidth, const float* __restrict__ vector)
 {
 	int i;
 	int j;
@@ -201,7 +201,7 @@ __global__ void SubVectorFromMatrixColumnsKernel(const float* matrix, float* res
 const int SumMatrixRowsAddCombineCount = 128;
 template<class T>
 __global__ void SumMatrixRowsAddKernel(
-	int batchSize, T* result, const T* matrix,
+	int batchSize, T* result, const T* __restrict__ matrix,
 	int matrixHeight, int matrixWidth )
 {
 	const int height = ( matrixHeight + SumMatrixRowsAddCombineCount - 1 ) / SumMatrixRowsAddCombineCount;
@@ -313,7 +313,7 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 }
 
 const int MatrixLogSumExpByRowsCombine = 2;
-__global__ void MatrixLogSumExpByRowsKernel(const float* matrix, int height, int width, float* result, int widthNorm)
+__global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix, int height, int width, float* result, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
 
@@ -374,7 +374,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* matrix, int height, int
 }
 
 const int MatrixSoftmaxByRowsCombine = 2;
-__global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
+__global__ void MatrixSoftmaxByRowsKernel(const float* __restrict__ matrix,
 	int height, int width, float* result, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
@@ -446,8 +446,8 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 }
 
 const int MatrixSoftmaxDiffOpByRowsCombine = 2;
-__global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* first,
-	const float* second, int height, int width, float* result, int widthNorm)
+__global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
+	const float* __restrict__ second, int height, int width, float* result, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
 
@@ -499,7 +499,7 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* first,
 }
 
 const int MatrixSoftmaxByColumnsCombine = 2;
-__global__ void MatrixSoftmaxByColumnsKernel(const float* matrix,
+__global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 	int height, int width, float* result, int heightNorm)
 {
 	assert( threadIdx.z == 0 );
@@ -574,8 +574,8 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* matrix,
 }
 
 const int MatrixSoftmaxDiffOpByColumnsCombine = 2;
-__global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* first,
-	const float* second, int height, int width, float* result, int heightNorm)
+__global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ first,
+	const float* __restrict__ second, int height, int width, float* result, int heightNorm)
 {
 	assert( threadIdx.z == 0 );
 
@@ -626,7 +626,7 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* first,
 }
 
 const int FindMaxValueInRowsCombine = 4;
-__global__ void FindMaxValueWithIndicesInRowsKernel(const float* matrix,
+__global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ matrix,
 	int matrixHeight, int matrixWidth, float* result, int* indices, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
@@ -672,7 +672,7 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* matrix,
 	}
 }
 
-__global__ void FindMaxValueInRowsKernel(const float* matrix,
+__global__ void FindMaxValueInRowsKernel(const float* __restrict__ matrix,
 	int matrixHeight, int matrixWidth, float* result, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
@@ -719,7 +719,7 @@ __global__ void FindMaxValueInRowsKernel(const float* matrix,
 }
 
 const int FindMaxValueInColumnsCombine = 16;
-__global__ void FindMaxValueInColumnsKernel( int batchSize, const float* matrix,
+__global__ void FindMaxValueInColumnsKernel( int batchSize, const float* __restrict__ matrix,
 	int height, int width, float* result, int* indices, int heightNorm )
 {
 	extern __shared__ CValueWithIndex threadBuffer[];
@@ -785,8 +785,8 @@ static __global__ void FindMinValueInColumnsKernel( const float* matrixHandle, i
 
 const int BatchVectorLookupAndCopyCombineBatch = 4;
 template<class TInput, class TLookup>
-__global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* input, int inputChannels,
-	const TLookup* lookup, int vectorSize, TLookup* output, int outputChannels, int batchNorm)
+__global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __restrict__ input, int inputChannels,
+	const TLookup* __restrict__ lookup, int vectorSize, TLookup* output, int outputChannels, int batchNorm)
 {
 	int b;
 	int index;
@@ -814,7 +814,7 @@ __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* in
 }
 
 template<class TInput, class TLookup>
-__global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* input,
+__global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* __restrict__ input,
 	int inputChannels, int vectorSize, TLookup* output, int outputChannels, int batchNorm)
 {
 	int b;
@@ -842,8 +842,8 @@ __global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* input,
 
 const int BatchVectorLookupAndAddToTableCombine = 8;
 template<class T>
-__global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* input, int inputChannel,
-	float* lookup, int vectorSize, float mult, const float* matrix, int outputChannel, int batchNorm)
+__global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* __restrict__ input, int inputChannel,
+	float* lookup, int vectorSize, float mult, const float* __restrict__ matrix, int outputChannel, int batchNorm)
 {
 	int b;
 	int index;
@@ -869,8 +869,8 @@ __global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* i
 	}
 }
 
-__global__ void LookupAndSumKernel( const int* indices, int batchSize, int indexCount,
-	const float* table, int vectorSize, float* result )
+__global__ void LookupAndSumKernel( const int* __restrict__ indices, int batchSize, int indexCount,
+	const float* __restrict__ table, int vectorSize, float* result )
 {
 	int batch;
 	int elem;
@@ -892,8 +892,8 @@ __global__ void LookupAndSumKernel( const int* indices, int batchSize, int index
 	}
 }
 
-__global__ void LookupAndAddToTableKernel( const int* indices, int batchSize, int indexCount,
-	const float* additions, int vectorSize, float* table )
+__global__ void LookupAndAddToTableKernel( const int* __restrict__ indices, int batchSize, int indexCount,
+	const float* __restrict__ additions, int vectorSize, float* table )
 {
 	int indexCoord;
 	int batch;
@@ -909,7 +909,7 @@ __global__ void LookupAndAddToTableKernel( const int* indices, int batchSize, in
 
 const int EnumBinarizationCombine = 16;
 template<class T>
-__global__ void EnumBinarizationKernel(int batchSize, const T* input, int enumSize, float* result)
+__global__ void EnumBinarizationKernel(int batchSize, const T* __restrict__ input, int enumSize, float* result)
 {
 	int index;
 	int step;
@@ -930,7 +930,7 @@ __global__ void EnumBinarizationKernel(int batchSize, const T* input, int enumSi
 }
 
 __global__ void BitSetBinarizationKernel(int batchSize, int bitSetElementCount,
-	const int* input, int outputVectorSize, float* result)
+	const int* __restrict__ input, int outputVectorSize, float* result)
 {
 	const int BitsPerElement = sizeof(int) * CHAR_BIT;
 
@@ -955,9 +955,9 @@ __global__ void BitSetBinarizationKernel(int batchSize, int bitSetElementCount,
 }
 
 const int MultiplyLookupMatrixByLookupVectorCombine = 4;
-__global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const float* matrixTable,
-	int /*matrixVectorCount*/, int vectorSize, const int* rows, int rowCount,
-	const float* vectorTable, int /*vectorVectorCount*/, const int* vector,
+__global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const float* __restrict__ matrixTable,
+	int /*matrixVectorCount*/, int vectorSize, const int* __restrict__ rows, int rowCount,
+	const float* __restrict__ vectorTable, int /*vectorVectorCount*/, const int* __restrict__ vector,
 	float* result, int /*resultSize*/, int widthNorm)
 {
 	assert( threadIdx.z == 0 );
@@ -1011,9 +1011,9 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 }
 
 const int MultiplyTransposedLookupMatrixByVectorCombine = 4;
-__global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, const float* matrixTable,
-	int /*matrixVectorCount*/, int width, const int* rows, int height,
-	const float* vector, float* result, bool isAdd, int heightNorm)
+__global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, const float* __restrict__ matrixTable,
+	int /*matrixVectorCount*/, int width, const int* __restrict__ rows, int height,
+	const float* __restrict__ vector, float* result, bool isAdd, int heightNorm)
 {
 	assert( threadIdx.z == 0 );
 
@@ -1073,9 +1073,9 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 
 const int MultiplyVectorByTransposedLookupVectorAndAddToTableCombine = 8;
 __global__ void MultiplyVectorByTransposedLookupVectorAndAddToTableKernel(int batchSize,
-	float* table, int /*vectorCount*/, int vectorSize, const int* tableIndices,
-	const float* first, int firstSize,
-	const float* secondTable, const int* secondIndices, int vectorSizeNorm)
+	float* table, int /*vectorCount*/, int vectorSize, const int* __restrict__ tableIndices,
+	const float* __restrict__ first, int firstSize,
+	const float* __restrict__ secondTable, const int* __restrict__ secondIndices, int vectorSizeNorm)
 {
 	int yPos;
 	int xPos;
@@ -1100,8 +1100,8 @@ __global__ void MultiplyVectorByTransposedLookupVectorAndAddToTableKernel(int ba
 	}
 }
 
-__global__ void MultiplyDiagMatrixByMatrixKernel(const float* first, int firstSize,
-	const float* second, int secondWidth, float* result)
+__global__ void MultiplyDiagMatrixByMatrixKernel(const float* __restrict__ first, int firstSize,
+	const float* __restrict__ second, int secondWidth, float* result)
 {
 	int i;
 	int j;
@@ -1115,8 +1115,8 @@ __global__ void MultiplyDiagMatrixByMatrixKernel(const float* first, int firstSi
 }
 
 const int Multiply1DiagMatrixByMatrixCombine = 8;
-__global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* first,
-	int firstSize, const float* second, int secondWidth, float* result, int batchNorm)
+__global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* __restrict__ first,
+	int firstSize, const float* __restrict__ second, int secondWidth, float* result, int batchNorm)
 {
 	int b;
 	int index;
@@ -1151,7 +1151,7 @@ __global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* fi
 
 const int TransposeMatrixCombine = 8;
 template<class T> __global__ void TransposeMatrixKernel(int batchSize,
-	const T* first, int height, int medium, int width, int channels, T* result, int size)
+	const T* __restrict__ first, int height, int medium, int width, int channels, T* result, int size)
 {
 	int index;
 	int step;
@@ -1175,8 +1175,8 @@ template<class T> __global__ void TransposeMatrixKernel(int batchSize,
 }
 
 const int MultiplyDiagMatrixByMatrixAndSumCombine = 16;
-__global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const float* first,
-	int firstSize, const float* second, int secondWidth, float* result, int batchSizeNorm )
+__global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const float* __restrict__ first,
+	int firstSize, const float* __restrict__ second, int secondWidth, float* result, int batchSizeNorm )
 {
 	extern __shared__ float buffer[];
 	float& my = buffer[( threadIdx.z * blockDim.y + threadIdx.y ) * blockDim.x + threadIdx.x];
@@ -1194,8 +1194,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		int step;
 		int count = GetCudaTaskCountAndIndex( batchSize, MultiplyDiagMatrixByMatrixAndSumCombine, batch, step );
 
-		const float* currFirst = first + row + batch * firstSize;
-		const float* currSecond = second + column + row * secondWidth + batch * secondWidth * firstSize;
+		const float* __restrict__ currFirst = first + row + batch * firstSize;
+		const float* __restrict__ currSecond = second + column + row * secondWidth + batch * secondWidth * firstSize;
 
 		my = 0;
 		for( int i = 0; i < count; ++i ) {
@@ -1233,8 +1233,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 
 const int RowMultiplyMatrixByMatrixCombine = 32;
 const int RowMultiplyMatrixByMatrixPartial = 64;
-__global__ void RowMultiplyMatrixByMatrixKernel( const float* first,
-	const float* second, int height, int width, float* result, int widthNorm )
+__global__ void RowMultiplyMatrixByMatrixKernel( const float* __restrict__ first,
+	const float* __restrict__ second, int height, int width, float* result, int widthNorm )
 {
 	assert( threadIdx.z == 0 );
 
@@ -1285,8 +1285,8 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* first,
 
 const int MatrixSpreadRowsCombine = 16;
 template<class T>
-__global__ void MatrixSpreadRowsKernel(const T* source, int height, int width,
-	T* result, const int* indices, int widthNorm)
+__global__ void MatrixSpreadRowsKernel(const T* __restrict__ source, int height, int width,
+	T* result, const int* __restrict__ indices, int widthNorm)
 {
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	if( j >= height || indices[j] < 0 ) {
@@ -1305,8 +1305,8 @@ __global__ void MatrixSpreadRowsKernel(const T* source, int height, int width,
 	}
 }
 
-__global__ void MatrixSpreadRowsAddKernel(const float* source, int height, int width,
-	float* result, const int* indices, int widthNorm)
+__global__ void MatrixSpreadRowsAddKernel(const float* __restrict__ source, int height, int width,
+	float* result, const int* __restrict__ indices, int widthNorm)
 {
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	if( j >= height || indices[j] < 0 ) {
@@ -1329,7 +1329,7 @@ __global__ void MatrixSpreadRowsAddKernel(const float* source, int height, int w
 }
 
 const int AddDiagMatrixToMatrixCombine = 16;
-__global__ void AddDiagMatrixToMatrixKernel( const float* diagMatrix, const float*  matrix,
+__global__ void AddDiagMatrixToMatrixKernel( const float* __restrict__ diagMatrix, const float*  __restrict__ matrix,
 	int height, int width, int widthNorm, float* result )
 {
 	int row;
@@ -1355,9 +1355,9 @@ __global__ void AddDiagMatrixToMatrixKernel( const float* diagMatrix, const floa
 }
 
 const int MatrixColumnsEltwiseDivideCombine = 16;
-__global__ void MatrixColumnsEltwiseDivideKernel( const float* matrix,
+__global__ void MatrixColumnsEltwiseDivideKernel( const float* __restrict__ matrix,
 	int matrixHeight, int matrixWidth, int widthNorm,
-	const float* vector, float* result )
+	const float* __restrict__ vector, float* result )
 {
 	int row;
 	int col;
@@ -1377,8 +1377,8 @@ __global__ void MatrixColumnsEltwiseDivideKernel( const float* matrix,
 }
 
 const int MultiplyMatrixByDiagMatrixCombine = 16;
-__global__ void MultiplyMatrixByDiagMatrixKernel( int batchSize, const float* first, int height,
-	int width, int firstMatrixOffset, const float* second, int secondMatrixOffset, float* result )
+__global__ void MultiplyMatrixByDiagMatrixKernel( int batchSize, const float* __restrict__ first, int height,
+	int width, int firstMatrixOffset, const float* __restrict__ second, int secondMatrixOffset, float* result )
 {
 	const int matrixSize = height * width;
 	const int resultSize = batchSize * matrixSize;

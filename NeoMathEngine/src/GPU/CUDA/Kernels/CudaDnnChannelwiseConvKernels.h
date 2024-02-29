@@ -22,8 +22,8 @@ namespace NeoML {
 
 // Channelwise convolution kernel. Calculates one result element per thread
 __global__ void BlobChannelwiseConvolutionKernel( const CCudaChannelwiseConvolutionDescInternal desc,
-	const float* sourceData, const float* filterData, const float* freeTerm,
-	float* resultData )
+	const float* __restrict__ sourceData, const float* __restrict__ filterData, const float* __restrict__ freeTerm,
+	float* __restrict__ resultData )
 {
 	const CCudaBlobDesc& source = desc.Source;
 	const CCudaBlobDesc& filter = desc.Filter;
@@ -71,7 +71,7 @@ __global__ void BlobChannelwiseConvolutionKernel( const CCudaChannelwiseConvolut
 // The kernel for reverse channelwise convolution
 // Each thread calculates one result element
 __global__ void BlobChannelwiseConvolutionBackwardKernel( const CCudaChannelwiseConvolutionDescInternal desc,
-	const float* sourceData, const float* filterData, float* resultData )
+	const float* __restrict__ sourceData, const float* __restrict__ filterData, float* __restrict__ resultData )
 {
 	const CCudaBlobDesc& outputDiff = desc.Result;
 	const CCudaBlobDesc& filter = desc.Filter;
@@ -118,7 +118,7 @@ __global__ void BlobChannelwiseConvolutionBackwardKernel( const CCudaChannelwise
 // The kernel for calculating channelwise convolution filter gradient
 // Each thread calculates one result element
 __global__ void BlobChannelwiseConvolutionLearnAddKernel( const CCudaChannelwiseConvolutionDescInternal desc,
-	const float* inputData, const float* outputDiffData, float* filterDiffData )
+	const float* __restrict__ inputData, const float* __restrict__ outputDiffData, float* __restrict__ filterDiffData )
 {
 	const CCudaBlobDesc& input = desc.Source;
 	const CCudaBlobDesc& filterDiff = desc.Filter;

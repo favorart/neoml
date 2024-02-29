@@ -31,7 +31,7 @@ __global__ void BlobConvertFromRleKernel( const CCudaConvolutionDescInternal con
 	if(!GetCudaTaskIndex2D(source.ObjectCount(), source.Height(), num, line)) {
 		return;
 	}
-	const CCudaRleImage* image = reinterpret_cast<const CCudaRleImage*>(
+	const CCudaRleImage* __restrict__ image = reinterpret_cast<const CCudaRleImage*>(
 		(const char*)sourceData + num * objectSize);
 	float* output = GetBlobPtr(source, resultData, num, line, 0, 0);
 
@@ -48,7 +48,7 @@ __global__ void BlobConvertFromRleKernel( const CCudaConvolutionDescInternal con
 
 	// Find the needed row in the RLE image
 	int lineToPass = line - imageStart;
-	const CCudaRleStroke* rleStroke = image->Lines;
+	const CCudaRleStroke* __restrict__ rleStroke = image->Lines;
 	while(lineToPass > 0) {
 		if(rleStroke->End < 0) {
 			--lineToPass;

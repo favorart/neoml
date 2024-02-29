@@ -27,7 +27,7 @@ namespace NeoML {
 // It's done because full temp matrix may require a lot of memory
 
 __global__ void BuildTempMatrixKernel( const CCudaTimeConvolutionDescInternal desc,
-	const float* input, int matrixPartHeight, int matrixWidth, float* matrix,
+	const float* __restrict__ input, int matrixPartHeight, int matrixWidth, float* __restrict__ matrix,
 	int firstLineIndex )
 {
 	const int objectSize = desc.Source.ObjectSize();
@@ -124,7 +124,7 @@ __global__ void BlobTimeConvolutionBackwardUnpackKernel( const CCudaTimeConvolut
 }
 
 __global__ void BlobTimeConvolutionLearnFilterKernel( CCudaTimeConvolutionDescInternal desc,
-	const float* input, const float* outputDiff, float* filterDiff )
+	const float* __restrict__ input, const float* __restrict__ outputDiff, float* filterDiff )
 {
 	const int objectSize = desc.Filter.Channels();
 	const int filterHeight = desc.Filter.Height();
