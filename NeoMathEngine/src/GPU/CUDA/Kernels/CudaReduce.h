@@ -47,6 +47,7 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 	for(int i = 0; (indexInWarp + i) < blockDim.x; i += xWarp) {
 		sum += buffer[baseIndex + i];
 		assert( isfinite( buffer[baseIndex + i] ) );
+		//sum = max( -FLT_MIN, min( FLT_MAX, sum + buffer[baseIndex + i] ));
 	}
 	assert( isfinite( sum ) );
 
@@ -105,6 +106,7 @@ inline __device__ float ReduceMaxXSharedBuffer(float* buffer)
 	for(int laneMask = xWarp >> 1; laneMask >= 1; laneMask >>= 1) {
 		float otherVal = __shfl_xor_sync(0xffffffff, maxVal, laneMask);
 		assert( isfinite( otherVal ) );
+		//const float otherVal = __shfl_xor_sync(0xffffffff, maxVal, laneMask);
 		if(otherVal > maxVal) {
 			maxVal = otherVal;
 		}
@@ -147,8 +149,8 @@ inline __device__ CValueWithIndex ReduceMaxWithIndexXSharedBuffer(CValueWithInde
 
 	// Find maximum inside the warp (butterfly reduction)
 	for(int laneMask = xWarp >> 1; laneMask >= 1; laneMask >>= 1) {
-		long long maxValWarp = reinterpret_cast<const long long&>(maxVal);
-		long long otherValWarp = __shfl_xor_sync(0xffffffff, maxValWarp, laneMask);
+		const long long maxValWarp = reinterpret_cast<const long long&>(maxVal);
+		const long long otherValWarp = __shfl_xor_sync(0xffffffff, maxValWarp, laneMask);
 		const CValueWithIndex& otherVal = reinterpret_cast<const CValueWithIndex&>(otherValWarp);
 		assert( isfinite( otherVal.Value ) );
 		if(otherVal.Value > maxVal.Value) {

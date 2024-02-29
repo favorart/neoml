@@ -51,12 +51,14 @@ __global__ void CtcMatrixLogSumExpByColumnsKernel(int batchSize, const float* ma
 	int yPos;
 	int zPos;
 	GetCudaTaskIndex3D(batchSize, width, heightNorm, zPos, xPos, yPos);
+
 	if(xPos < width && zPos < batchSize && count > 0) {
 		matrix += zPos * height * width;
 		result += zPos * width;
 
 		matrix += xPos; // get the correct column
-						// find the maximum
+		
+		// find the maximum
 		my = matrix[index];
 		for(int j = 1; j < count; ++j) {
 			float val = matrix[index + j * step];
@@ -64,9 +66,11 @@ __global__ void CtcMatrixLogSumExpByColumnsKernel(int batchSize, const float* ma
 				my = val;
 			}
 		}
+	} else {
+		my = -FLT_MAX;
 	}
 
-	float maxVal = ReduceMaxXSharedBuffer(buffer);
+	const float maxVal = ReduceMaxXSharedBuffer(buffer);
 
 	// Add up the needed part
 	if(xPos < width && zPos < batchSize && count > 0) {
@@ -78,7 +82,7 @@ __global__ void CtcMatrixLogSumExpByColumnsKernel(int batchSize, const float* ma
 		my = 0.f;
 	}
 
-	float sumVal = ReduceSumXSharedBuffer(buffer);
+	const float sumVal = ReduceSumXSharedBuffer(buffer);
 
 	if(xPos < width && zPos < batchSize && threadIdx.x == 0) {
 		if( !isfinite( sumVal ) ) {

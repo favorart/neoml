@@ -152,25 +152,26 @@ __global__ void VectorSumKernel(const float* mem, int count, float* result, bool
 	assert( threadIdx.z == 0 );
 	assert( threadIdx.y == 0 );
 
-	extern __shared__ float sumData[];
-
-	float sum = 0;
-
 	int index;
 	int step;
 	int actionCount = GetCudaTaskCountAndIndex(count, VectorSumCombineCount, index, step);
+
 	mem += index;
+
+	float sum = 0;
 	for(int i = 0; i < actionCount; ++i) {
 		sum += *mem;
 		mem += step;
 	}
 
+	extern __shared__ float sumData[];
 	sumData[threadIdx.x] = isNeg ? -sum : sum;
 
 	__syncthreads();
 
-	if(threadIdx.x != 0)
+	if( threadIdx.x != 0 ) {
 		return;
+	}
 
 	sum = sumData[0];
 	for(int i = 1; i < blockDim.x; ++i) {

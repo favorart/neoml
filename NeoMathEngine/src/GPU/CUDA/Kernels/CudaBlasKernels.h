@@ -240,7 +240,8 @@ __global__ void SumMatrixRowsAddKernel(
 const int SumMatrixColumnsCombine = 4;
 const int SumMatrixColumnsPartial = 8;
 const int SumMatrixColumnsMaxAtomic = 64;
-__global__ void SumMatrixColumnsKernel(float* result, const float* matrix,
+
+__global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ matrix,
 	int matrixHeight, int matrixWidth, bool isNeg, int widthNorm, int combine)
 {
 	assert( threadIdx.z == 0 );
@@ -252,13 +253,15 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* matrix,
 	int index;
 	int y;
 	GetCudaTaskIndex2D(matrixHeight, widthNorm, y, index);
+
 	if(y < matrixHeight) {
 		// Calculate partial sums
 		result += y;
 		matrix += y * matrixWidth;
 
 		int step;
-		int count = GetCudaTaskCountAndIndex(matrixWidth, combine, index, step);
+		const int count = GetCudaTaskCountAndIndex(matrixWidth, combine, index, step);
+
 		matrix += index;
 
 		for(int i = 0; i < count; ++i) {
@@ -267,13 +270,16 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* matrix,
 			assert( isfinite( *matrix ) );
 			matrix += step;
 		}
+	} else {
+		*acc = 0;
 	}
 
 	int partial = 1;
 	do {
 		// Put the partial sums into buffer[0] (with SumMatrixColumnsPartial stride)
 		__syncthreads();
-		int nextPartial = partial * SumMatrixColumnsPartial;
+
+		const int nextPartial = partial * SumMatrixColumnsPartial;
 		if((threadIdx.x % nextPartial) == 0) {
 			for(int i = 1; i < SumMatrixColumnsPartial; ++i) {
 				int index = i * partial;
@@ -325,7 +331,8 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* matrix, int height, int
 	int yPos;
 	if(GetCudaTaskIndex2D(height, widthNorm, yPos, xPos) && count > 0) {
 		matrix += yPos * width; // get the correct row
-								// find the maximum
+
+		// find the maximum
 		my = matrix[index];
 		for(int i = 1; i < count; ++i) {
 			float val = matrix[index + i * step];
@@ -337,7 +344,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* matrix, int height, int
 		my = -FLT_MAX;
 	}
 
-	float maxVal = ReduceMaxXSharedBuffer(buffer);
+	const float maxVal = ReduceMaxXSharedBuffer(buffer);
 	assert( isfinite( maxVal ) );
 
 	// Add up the needed part
@@ -351,7 +358,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* matrix, int height, int
 		my = 0.f;
 	}
 
-	float sumVal = ReduceSumXSharedBuffer(buffer);
+	const float sumVal = ReduceSumXSharedBuffer(buffer);
 
 	if(yPos < height && threadIdx.x == 0) {
 		if( !isfinite( sumVal ) ) {
@@ -462,10 +469,13 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* first,
 		result += yPos * width;
 
 		// Find the dot product
+		my = 0;
 		for(int i = 0; i < count; ++i) {
 			my += first[index + i * step] * second[index + i * step];
 		}
 		assert( isfinite( my ) );
+	} else {
+		my = 0;
 	}
 
 	float dotProd = ReduceSumXSharedBuffer(buffer);
@@ -503,6 +513,7 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* matrix,
 	int index;
 	int step;
 	int count = GetCudaTaskCountAndIndexX(height, combineCount, index, step);
+
 	index *= width;
 	step *= width;
 
@@ -594,7 +605,7 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* first,
 		assert( isfinite( my ) );
 	}
 
-	float dotProd = ReduceSumXSharedBuffer(buffer);
+	const float dotProd = ReduceSumXSharedBuffer(buffer);
 
 	// Store the result and add up the needed part
 	if(xPos < width && count > 0) {
@@ -649,7 +660,7 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* matrix,
 		}
 	}
 
-	CValueWithIndex maxVal = ReduceMaxWithIndexXSharedBuffer(threadBuffer);
+	const CValueWithIndex maxVal = ReduceMaxWithIndexXSharedBuffer( threadBuffer );
 	assert( isfinite( maxVal.Value ) );
 
 	if(yPos < matrixHeight && threadIdx.x == 0) {
@@ -675,12 +686,14 @@ __global__ void FindMaxValueInRowsKernel(const float* matrix,
 	if(GetCudaTaskIndex2D(matrixHeight, widthNorm, yPos, xPos)) {
 		// Find the maximum in the needed part of the row
 		matrix += yPos * matrixWidth;
-		int combineCount = (matrixWidth + blockDim.x - 1) / blockDim.x;
+
+		const int combineCount = (matrixWidth + blockDim.x - 1) / blockDim.x;
 
 		int index;
 		int step;
-		int count = GetCudaTaskCountAndIndexX(matrixWidth, combineCount, index, step);
+		const int count = GetCudaTaskCountAndIndexX(matrixWidth, combineCount, index, step);
 
+		my = -FLT_MAX;
 		for(int i = 0; i < count; ++i) {
 			float value = matrix[index];
 			if(value > my) {
@@ -690,6 +703,8 @@ __global__ void FindMaxValueInRowsKernel(const float* matrix,
 
 			index += step;
 		}
+	} else {
+		my = -FLT_MAX;
 	}
 
 	float maxVal = ReduceMaxXSharedBuffer( buffer );
@@ -722,8 +737,8 @@ __global__ void FindMaxValueInColumnsKernel( int batchSize, const float* matrix,
 
 		int step;
 		int count = GetCudaTaskCountAndIndexX( height, combineCount, rowIndex, step );
-
 		matrix += rowIndex * width;
+
 		for( int i = 0; i < count; ++i ) {
 			if( *matrix > res.Value ) {
 				res.Value = *matrix;
@@ -955,19 +970,22 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 	int yPos;
 	int xPos;
 	if(GetCudaTaskIndex2D(totalY, widthNorm, yPos, xPos)) {
-		int matrixBaseIndex = rows[yPos] * vectorSize;
-		int vectorBaseIndex = vector[yPos / rowCount] * vectorSize;
+		const int matrixBaseIndex = rows[yPos] * vectorSize;
+		const int vectorBaseIndex = vector[yPos / rowCount] * vectorSize;
 
 		int index;
 		int step;
-		int count = GetCudaTaskCountAndIndexX(vectorSize, MultiplyLookupMatrixByLookupVectorCombine, index, step);
+		const int count = GetCudaTaskCountAndIndexX(vectorSize, MultiplyLookupMatrixByLookupVectorCombine, index, step);
 
+		my = 0;
 		for(int i = 0; i < count; ++i) {
 			my += matrixTable[matrixBaseIndex + index] * vectorTable[vectorBaseIndex + index];
 			assert( my );
 			index += step;
 		}
 		assert( isfinite( my ) );
+	} else {
+		my = 0;
 	}
 
 	float sum = ReduceSumXSharedBuffer(buffer);
@@ -1004,7 +1022,8 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 	my = 0.f; // NOTE: all threads are not used in the current task, should not interfere in the reduce max or sum
 
 	// The X coordinate corresponds to Height
-	int totalX = batchSize * width;
+	const int totalX = batchSize * width;
+
 	int yPos;
 	int xPos;
 	GetCudaTaskIndex2D(totalX, heightNorm, xPos, yPos);
@@ -1015,11 +1034,12 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 
 	if(batch < batchSize && yPos < heightNorm) {
 		// Calculate the needed part of the total
-		int rowBaseIndex = batch * height;
+		const int rowBaseIndex = batch * height;
 
 		int index;
 		int step;
 		int count = GetCudaTaskCountAndIndexX(height, MultiplyTransposedLookupMatrixByVectorCombine, index, step);
+
 		index += rowBaseIndex;
 		for(int i = 0; i < count; ++i) {
 			my += matrixTable[rows[index] * width + xPos] * vector[index];
@@ -1169,6 +1189,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 
 	bool isValidZY = row < firstSize && column < secondWidth;
 
+	const bool isValidZY = row < firstSize && column < secondWidth;
 	if( isValidZY ) {
 		int step;
 		int count = GetCudaTaskCountAndIndex( batchSize, MultiplyDiagMatrixByMatrixAndSumCombine, batch, step );
@@ -1176,6 +1197,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		const float* currFirst = first + row + batch * firstSize;
 		const float* currSecond = second + column + row * secondWidth + batch * secondWidth * firstSize;
 
+		my = 0;
 		for( int i = 0; i < count; ++i ) {
 			my += *currFirst * *currSecond;
 			assert( isfinite( my ) );
@@ -1184,9 +1206,11 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 			currFirst += step * firstSize;
 			currSecond += step * secondWidth * firstSize;
 		}
+	} else {
+		my = 0;
 	}
 
-	float sum = ReduceSumXSharedBuffer( buffer );
+	const float sum = ReduceSumXSharedBuffer( buffer );
 
 	if( isValidZY && threadIdx.x == 0 ) {
 		if( !isfinite( sum ) ) {
@@ -1195,7 +1219,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		}
 		assert( isfinite( sum ) );
 
-		float* currResult = result + row * secondWidth + column;
+		float* const currResult = result + row * secondWidth + column;
 		if( gridDim.x > 1 ) {
 			atomicAdd( currResult, sum );
 		} else {
@@ -1227,9 +1251,12 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* first,
 		second += row * width;
 
 		int step;
-		int count = GetCudaTaskCountAndIndex(width, RowMultiplyMatrixByMatrixCombine, column, step);
+		const int count = GetCudaTaskCountAndIndex(width, RowMultiplyMatrixByMatrixCombine, column, step);
+
 		first += column;
 		second += column;
+
+		*acc = 0;
 		for(int i = 0; i < count; ++i) {
 			*acc += (*first) * (*second);
 			assert( isfinite( *acc ) );
@@ -1238,6 +1265,8 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* first,
 			first += step;
 			second += step;
 		}
+	} else {
+		*acc = 0;
 	}
 
 	__syncthreads();
