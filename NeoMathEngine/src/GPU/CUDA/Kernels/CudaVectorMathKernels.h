@@ -306,8 +306,8 @@ __global__ void VectorEqualKernel( const int* first,
 	}
 }
 
-__global__ void VectorEqualValueKernel( const int* first,
-	float* result, int count, const int* value )
+__global__ void VectorEqualValueKernel( const int* first, 
+	float* result, int count, const int* __restrict__ value )
 {
 	int index;
 	int step;
@@ -389,7 +389,7 @@ __global__ void VectorELUDiffOpKernel( const float* first, const float* second,
 }
 
 __global__ void VectorReLUKernel(const float* first, float* result,
-	int count, const float* threshold)
+	int count, const float* __restrict__ threshold)
 {
 	int index;
 	int step;
