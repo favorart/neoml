@@ -170,7 +170,6 @@ void CEltwiseMulLayer::RunOnce()
 	const int dataSize = outputBlobs[0]->GetDataSize();
 	if( outputBlobs[0]->GetDataType() == CT_Float ) {
 		CFloatHandle output = outputBlobs[0]->GetData();
-
 		MathEngine().VectorEltwiseMultiply( inputBlobs[0]->GetData(), inputBlobs[1]->GetData(), output, dataSize );
 		for( int i = 2; i < inputBlobs.Size(); ++i ) {
 			MathEngine().VectorEltwiseMultiply( output, inputBlobs[i]->GetData(), output, dataSize );
@@ -223,6 +222,7 @@ CLayerWrapper<CEltwiseMulLayer> Mul()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CEltwiseNegMulLayer::Reshape()
 {
 	CEltwiseBaseLayer::Reshape();
@@ -289,6 +289,7 @@ CLayerWrapper<CEltwiseNegMulLayer> NegMul()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CEltwiseMaxLayer::Reshape()
 {
 	CEltwiseBaseLayer::Reshape();

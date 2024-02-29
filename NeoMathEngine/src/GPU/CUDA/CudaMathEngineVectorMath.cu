@@ -32,6 +32,7 @@ void CCudaMathEngine::VectorCopy(const CFloatHandle& first, const CConstFloatHan
 {
 	ASSERT_EXPR(first.GetMathEngine() == this);
 	ASSERT_EXPR(second.GetMathEngine() == this);
+	SetCudaDevice( device->DeviceNumber );
 
 	ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(float), cudaMemcpyDeviceToDevice));
 }
@@ -40,6 +41,7 @@ void CCudaMathEngine::VectorCopy(const CIntHandle& first, const CConstIntHandle&
 {
 	ASSERT_EXPR(first.GetMathEngine() == this);
 	ASSERT_EXPR(second.GetMathEngine() == this);
+	SetCudaDevice( device->DeviceNumber );
 
 	ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(int), cudaMemcpyDeviceToDevice));
 }
@@ -131,6 +133,7 @@ void CCudaMathEngine::VectorConvert(const CConstFloatHandle& from, const CIntHan
 	ASSERT_EXPR(from.GetMathEngine() == this);
 	ASSERT_EXPR(to.GetMathEngine() == this);
 	ASSERT_EXPR(vectorSize >= 0);
+	SetCudaDevice( device->DeviceNumber );
 
 	int blockCount;
 	int threadCount;
@@ -144,6 +147,7 @@ void CCudaMathEngine::VectorConvert(const CConstIntHandle& from, const CFloatHan
 	ASSERT_EXPR(from.GetMathEngine() == this);
 	ASSERT_EXPR(to.GetMathEngine() == this);
 	ASSERT_EXPR(vectorSize >= 0);
+	SetCudaDevice( device->DeviceNumber );
 
 	int blockCount;
 	int threadCount;
