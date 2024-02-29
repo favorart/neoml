@@ -80,6 +80,9 @@ public:
 	CPtr<CDnnBlob> GetTransitions() const;
 	void SetTransitions( const CPtr<CDnnBlob>& newWeights );
 
+protected:
+	void RunOnce() override;
+
 private:
 	CPtr<CFullyConnectedLayer> hiddenLayer;
 	CPtr<CDropoutLayer> dropOutLayer;
@@ -192,6 +195,9 @@ public:
 	// so we don't recommend changing this value
 	float GetMaxGradientValue() const;
 	void SetMaxGradientValue(float maxValue);
+
+protected:
+	void RunOnce();
 
 private:
 	CPtr<CCrfInternalLossLayer> internalLossLayer;

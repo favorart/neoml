@@ -84,6 +84,26 @@ void CEltwiseSumLayer::RunOnce()
 	} else {
 		eltwiseSumRunOnce<int>( inputBlobs, outputBlobs );
 	}
+
+	//for( int j = 0; j < outputBlobs.Size(); ++j ) {
+	//	if( outputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// outputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = outputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CEltwiseSumLayer.RunOnce (%s) out[%d][%d]=%f\n", GetName(), j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
 }
 
 void CEltwiseSumLayer::BackwardOnce()
@@ -185,6 +205,26 @@ void CEltwiseMulLayer::RunOnce()
 			MathEngine().VectorEltwiseMultiply( output, inputBlobs[i]->GetData<int>(), output, dataSize );
 		}
 	}
+
+	//for( int j = 0; j < outputBlobs.Size(); ++j ) {
+	//	if( outputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// outputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = outputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CEltwiseMulLayer.RunOnce (%s) out[%d][%d]=%f\n", GetName(), j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
 }
 
 void CEltwiseMulLayer::BackwardOnce()

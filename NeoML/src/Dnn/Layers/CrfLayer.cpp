@@ -289,6 +289,9 @@ void CCrfInternalLossLayer::BatchCalculateLossAndGradient(int batchSize, CConstF
 			fprintf( stderr, "CrfInternalLoss data[%d]=%f  myEpoch=%llu\n", i, v, myEpoch );
 			nonFinite = true;
 		}
+		//else if( v >= 9999 || v <= -9999 ) {
+		//	printf( "CrfInternalLoss data[%d]=%f\n", i, v );
+		//}
 	}
 	if( nonFinite ) {
 		fflush( stderr );
@@ -301,6 +304,32 @@ void CCrfInternalLossLayer::BatchCalculateLossAndGradient(int batchSize, CConstF
 	// The data vector contains the partial function values for different labels at the end of the sequence
 	// Here we calculate the last total over all labels and get the final value of the partial function
 	MathEngine().MatrixLogSumExpByRows(data, batchSize, vectorSize, logZ, batchSize);
+
+	//nonFinite = false;
+	//printed = false;
+	//for( int i = 0; i < batchSize; ++i ) {
+	//	float v = logZ.GetValueAt( i );
+	//	if( !std::isfinite( v ) ) {
+	//		printf( "CrfInternalLoss logZ[%d]=%f\n", i, v );
+	//		nonFinite = true;
+	//
+	//		printf( "data[%d] = { ", i );
+	//		for( int j = 0; j < vectorSize; ++j ) {
+	//			float d = data.GetValueAt( i * vectorSize + j );
+	//			printf( "%f ", d );
+	//		}
+	//		printf( "}\n" );
+	//
+	//	} else if( v >= 9999 || v <= -9999 ) {
+	//		printf( "CrfInternalLoss logZ[%d]=%f\n", i, v );
+	//		printed = true;
+	//	}
+	//}
+	//if( printed ) {
+	//	printf( "----------\n" );
+	//}
+	//NeoAssert( nonFinite == false );
+
 	// Calculate the loss. Divide the correct sequence probability by the total estimate for all sequences
 	// This will be equivalent to the logarithms difference in the log space
 	MathEngine().VectorSub(logZ, label, lossValue, batchSize);
@@ -368,6 +397,31 @@ void CCrfLossLayer::Serialize( CArchive& archive )
 	}
 }
 
+void CCrfLossLayer::RunOnce()
+{
+	//for( int j = 0; j < inputBlobs.Size(); ++j ) {
+	//	if( inputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = inputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CCrfLossLayer.RunOnce in[%d][%d]=%f\n", j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
+
+	CCompositeLayer::RunOnce();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 CCrfLayer::CCrfLayer( IMathEngine& mathEngine ) :
@@ -423,6 +477,46 @@ void CCrfLayer::buildLayer(float dropOut)
 	SetOutputMapping(O_BestPrevClass, *calculator, CCrfCalculationLayer::O_BestPrevClass);
 	SetOutputMapping(O_ClassSeqLogProb, *calculator, CCrfCalculationLayer::O_ClassSeqLogProb);
 	SetOutputMapping(O_LabelLogProb, *calculator, CCrfCalculationLayer::O_LabelLogProb);
+}
+
+void CCrfLayer::RunOnce()
+{
+	//for( int j = 0; j < inputBlobs.Size(); ++j ) {
+	//	if( inputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = inputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CCrfLayer.RunOnce in[%d][%d]=%f\n", j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
+
+	CRecurrentLayer::RunOnce();
+
+	//const int sz = outputBlobs[O_BestPrevClass]->GetDataSize();
+	//auto data = outputBlobs[O_BestPrevClass]->GetData();
+	//
+	//bool printed = false;
+	//for( int i = 0; i < sz; ++i ) {
+	//	float v = data.GetValueAt( i );
+	//	if( !std::isfinite( v ) ) {
+	//		printf( "CCrfLayer.RunOnce out[%d]=%f\n", i, v );
+	//		printed = true;
+	//	}
+	//}
+	//if( printed ) {
+	//	printf( "----------\n" );
+	//}
 }
 
 void CCrfLayer::SetDropoutRate(float newDropoutRate)

@@ -59,6 +59,14 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 			assert( !isnan( sum ) && !isnan( res ) );
 		}
 		sum += res;
+		//if( ( sum >= FLT_MAX && res >= 0 ) || ( res >= FLT_MAX && sum >= 0 ) ) {
+		//	sum = FLT_MAX;
+		//} else if( ( sum <= -FLT_MAX && res <= 0 ) || ( res <= -FLT_MAX && sum <= 0 ) ) {
+		//	sum = -FLT_MAX;
+		//} else {
+		//	sum += res;
+		//}
+		//sum += __shfl_xor_sync( 0xffffffff, sum, laneMask );
 	}
 	assert( isfinite( sum ) );
 	assert( sum > -18002376725743890449408517795774411571.f );

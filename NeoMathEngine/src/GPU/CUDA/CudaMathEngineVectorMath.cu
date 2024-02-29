@@ -1235,6 +1235,18 @@ void CCudaMathEngine::VectorSigmoidDiffOp(const CConstFloatHandle& firstHandle, 
 		GetRaw(resultHandle), vectorSize);
 }
 
+void CCudaMathEngine::VectorFindNan( const CConstFloatHandle& firstHandle, int vectorSize, const char *layerName )
+{
+	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
+	SetCudaDevice( device->DeviceNumber );
+
+	int blockCount = 0;
+	int threadCount = 0;
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorSigmoidDiffOpCombineCount );
+
+	VectorFindNanKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), vectorSize, layerName );
+}
+
 void CCudaMathEngine::VectorTanh(const CConstFloatHandle& firstHandle, const CFloatHandle& resultHandle, int vectorSize)
 {
 	ASSERT_EXPR(firstHandle.GetMathEngine() == this);

@@ -319,6 +319,7 @@ public:
 	// resultHandle = sigmoid-derivative(sigmoid-opposite(firstHandle)) * secondHandle
 	virtual void VectorSigmoidDiffOp(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 		const CFloatHandle& resultHandle, int vectorSize) = 0;
+	virtual void VectorFindNan( const CConstFloatHandle& /*firstHandle*/, int /*vectorSize*/, const char* /*layerName*/ ) = 0;
 
 	virtual void VectorTanh(const CConstFloatHandle& firstHandle, const CFloatHandle& resultHandle, int vectorSize) = 0;
 	// resultHandle = tanh-derivative(firstHandle) * secondHandle

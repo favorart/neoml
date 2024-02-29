@@ -103,8 +103,44 @@ void CFullyConnectedLayer::Reshape()
 	recreateSmallMatricesMulDescs();
 }
 
+//extern unsigned long long myEpoch;
+
 void CFullyConnectedLayer::RunOnce()
 {
+	for( int j = 0; j < inputBlobs.Size(); ++j ) {
+		if( inputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+			continue;
+		}
+		const int sz = 10;// inputBlobs[j]->GetDataSize();
+		CConstFloatHandle data = inputBlobs[j]->GetData();
+	
+		bool printed = false;
+		for( int i = 0; i < sz; ++i ) {
+			float v = data.GetValueAt( i );
+			if( !isfinite( v ) ) {
+				printf( "CFullyConnectedLayer.RunOnce (%s) in[%d][%d]=%f\n", GetName(), j, i, v );
+				printed = true;
+			}
+		}
+		if( printed ) {
+			printf( "----------\n" );
+		}
+	}
+
+	//if( myEpoch >= 4300 ) {
+	//	printf( "----------\n" );
+	//	printf( "CFullyConnectedLayer.RunOnce (%s) myEpoch=%llu\n", GetName(), myEpoch );
+	//	printf( "----------\n" );
+	//	const int sz = 1000; //inputBlobs[0]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		printf( "in[%d]=%f\n", i, v );
+	//	}
+	//	printf( "----------\n" );
+	//}
+
 	const int inputCount = GetInputCount();
 	const int secondHeight = numberOfElements;
 	const int secondWidth = Weights()->GetObjectSize();
@@ -135,10 +171,63 @@ void CFullyConnectedLayer::RunOnce()
 				outputData, firstHeight, resultWidth, FreeTermsData );
 		}
 	}
+
+	//for( int j = 0; j < outputBlobs.Size(); ++j ) {
+	//	if( outputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// outputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = outputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CFullyConnectedLayer.RunOnce (%s) out[%d][%d]=%f\n", GetName(), j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
 }
 
 void CFullyConnectedLayer::BackwardOnce()
 {
+	if( outputDiffBlobs[0]->GetDesc().GetDataType() == CT_Float ) {
+		const int sz = 10;// outputBlobs[0]->GetDataSize();
+		CConstFloatHandle out = outputBlobs[0]->GetData();
+		CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	
+		bool printed = false;
+		for( int i = 0; i < sz; ++i ) {
+			float v = out.GetValueAt( i );
+			float vDiff = outDiff.GetValueAt( i );
+			if( !isfinite( v ) || !isfinite( vDiff ) ) {
+				printf( "CSigmoidLayer.BackwardOnce (%s) out[%d]=%f diff=%f\n", GetName(), i, v, vDiff );
+				printed = true;
+			}
+		}
+		if( printed ) {
+			printf( "----------\n" );
+		}
+	}
+
+	//if( myEpoch >= 4300 ) {
+	//	printf( "----------\n" );
+	//	printf( "CFullyConnectedLayer.BackwardOnce (%s) myEpoch=%llu\n", GetName(), myEpoch );
+	//	printf( "----------\n" );
+	//	const int sz = 1000; //outputDiffBlobs[0]->GetDataSize();
+	//	CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float vDiff = outDiff.GetValueAt( i );
+	//		printf( "outDiff[%d]=%f\n", i, vDiff );
+	//	}
+	//	printf( "----------\n" );
+	//}
+
 	const int outputDiffCount = outputDiffBlobs.Size();
 	const int secondWidth = Weights()->GetObjectSize();
 
@@ -164,6 +253,25 @@ void CFullyConnectedLayer::BackwardOnce()
 
 void CFullyConnectedLayer::LearnOnce()
 {
+	//if( outputBlobs[0]->GetDesc().GetDataType() == CT_Float ) {
+	//	const int sz = 10;// outputBlobs[0]->GetDataSize();
+	//	CConstFloatHandle out = outputBlobs[0]->GetData();
+	//	CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = out.GetValueAt( i );
+	//		float vDiff = outDiff.GetValueAt( i );
+	//		if( !std::isfinite( v ) || !std::isfinite( vDiff ) ) {
+	//			printf( "CSigmoidLayer.BackwardOnce (%s) out[%d]=%f diff=%f\n", GetName(), i, v, vDiff );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
+
 	const int outputDiffCount = outputDiffBlobs.Size();
 	const int firstWidth = numberOfElements;
 	const int resultWidth = WeightsDiff()->GetObjectSize();
@@ -193,6 +301,22 @@ void CFullyConnectedLayer::LearnOnce()
 				outputDiffData, firstHeight, firstWidth );
 		}
 	}
+	//if( myEpoch >= 4300 ) {
+	//	printf( "----------\n" );
+	//	printf( "CFullyConnectedLayer.LearnOnce (%s) myEpoch=%llu\n", GetName(), myEpoch );
+	//	printf( "----------\n" );
+	//	const int sz = 1000; // outputDiffBlobs[0]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[0]->GetData();
+	//	CConstFloatHandle outDiff = outputDiffBlobs[0]->GetData();
+	//
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		float vDiff = outDiff.GetValueAt( i );
+	//		float w = weightsDiffData.GetValueAt( i );
+	//		printf( "outDiff[%d]=%f in=%f w=%f\n", i, vDiff, v, w );
+	//	}
+	//	printf( "----------\n" );
+	//}
 }
 
 void CFullyConnectedLayer::FilterLayerParams( float threshold )

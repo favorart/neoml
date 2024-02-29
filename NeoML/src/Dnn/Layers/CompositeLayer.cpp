@@ -16,6 +16,8 @@ limitations under the License.
 #include <common.h>
 #pragma hdrstop
 
+#include <cmath>
+#include <cstdio>
 #include <NeoML/Dnn/Dnn.h>
 #include <NeoMathEngine/NeoMathEngine.h>
 #include <NeoML/Dnn/Layers/CompositeLayer.h>
@@ -543,6 +545,26 @@ void CCompositeLayer::RunInternalDnn()
 
 void CCompositeLayer::RunOnce()
 {
+	//for( int j = 0; j < inputBlobs.Size(); ++j ) {
+	//	if( inputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// inputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = inputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CCompositeLayer (%s).RunOnce in[%d][%d]=%f\n", GetName(), j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
+
 	NeoAssert(GetDnn() != 0 && internalDnn != 0);
 	NeoAssert(internalDnn->IsBackwardPerformed() == GetDnn()->IsBackwardPerformed());
 	internalDnn->isReuseMemoryMode = GetDnn()->isReuseMemoryMode;
@@ -580,6 +602,26 @@ void CCompositeLayer::RunOnce()
 			sinks[i]->FreeInputBlob();
 		}
 	}
+
+	//for( int j = 0; j < outputBlobs.Size(); ++j ) {
+	//	if( outputBlobs[j]->GetDesc().GetDataType() != CT_Float ) {
+	//		continue;
+	//	}
+	//	const int sz = 10;// inputBlobs[j]->GetDataSize();
+	//	CConstFloatHandle data = outputBlobs[j]->GetData();
+	//
+	//	bool printed = false;
+	//	for( int i = 0; i < sz; ++i ) {
+	//		float v = data.GetValueAt( i );
+	//		if( !std::isfinite( v ) ) {
+	//			printf( "CCompositeLayer (%s).RunOnce out[%d][%d]=%f\n", GetName(), j, i, v );
+	//			printed = true;
+	//		}
+	//	}
+	//	if( printed ) {
+	//		printf( "----------\n" );
+	//	}
+	//}
 }
 
 // Runs the internal network backward pass as defined in children

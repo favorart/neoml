@@ -22,6 +22,7 @@ limitations under the License.
 #include <NeoML/Dnn/DnnSolver.h>
 #include <NeoML/Dnn/Dnn.h>
 #include <NeoML/Dnn/Layers/CompositeLayer.h>
+#include <NeoML/Dnn/AutoDiffFunctions.h>
 #include <NeoMathEngine/NeoMathEngine.h>
 
 // For LAMB solver init
@@ -302,9 +303,12 @@ void CDnnSolver::clipGradients(const CObjectArray<CDnnBlob>& paramDiffBlobs)
 	// Calculate the parameter gradient norm
 	CFloatHandleStackVar tempVar( MathEngine() );
 	CFloatHandleStackVar gradVar( MathEngine() );
+
+	//Clip( paramDiffBlobs[0], -0.999f, 0.999f );
 	MathEngine().VectorDotProduct(paramDiffBlobs[0]->GetData(), paramDiffBlobs[0]->GetData(),
 		paramDiffBlobs[0]->GetDataSize(), gradVar.GetHandle());
 	for(int i = 1; i < paramDiffBlobs.Size(); ++i) {
+		//Clip( paramDiffBlobs[i], -0.999f, 0.999f );
 		MathEngine().VectorDotProduct(paramDiffBlobs[i]->GetData(), paramDiffBlobs[i]->GetData(),
 			paramDiffBlobs[i]->GetDataSize(), tempVar.GetHandle());
 

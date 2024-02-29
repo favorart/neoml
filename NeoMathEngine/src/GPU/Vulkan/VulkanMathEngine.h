@@ -226,6 +226,8 @@ public:
 		const CFloatHandle& resultHandle, int vectorSize ) override;
 	void VectorSigmoidDiffOp( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 		const CFloatHandle& resultHandle, int vectorSize ) override;
+	void VectorFindNan( const CConstFloatHandle& /*firstHandle*/, const int /*vectorSize*/, const char* /*layerName*/ ) override {}
+
 	void VectorTanh( const CConstFloatHandle& firstHandle, const CFloatHandle& resultHandle, int vectorSize ) override;
 	void VectorTanhDiff( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 		const CFloatHandle& resultHandle, int vectorSize ) override;

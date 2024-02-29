@@ -34,6 +34,21 @@ void CSequenceSumLayer::RunOnce()
 {
 	MathEngine().SumMatrixRows(1, outputBlobs[0]->GetData(), inputBlobs[0]->GetData(),
 		inputBlobs[0]->GetBatchLength(), outputBlobs[0]->GetDataSize());
+
+	//const int outSz = outputBlobs[0]->GetDataSize();
+	//CConstFloatHandle outData = outputBlobs[0]->GetData();
+	//
+	//printed = false;
+	//for( int i = 0; i < outSz; ++i ) {
+	//	float v = outData.GetValueAt( i );
+	//	if( !std::isfinite( v ) ) {
+	//		printf( "CSequenceSumLayer.RunOnce out[%d]=%f\n", i, v );
+	//		printed = true;
+	//	}
+	//}
+	//if( printed ) {
+	//	printf( "----------\n" );
+	//}
 }
 
 void CSequenceSumLayer::BackwardOnce()

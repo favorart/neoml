@@ -137,6 +137,10 @@ void CCudaMathEngine::MultiplyMatrixByMatrix( int batchSize, const CConstFloatHa
 			cudaConstOne, GetRaw( secondHandle ), secondWidth, firstWidth * secondWidth, GetRaw( firstHandle ), firstWidth,
 			firstHeight * firstWidth, cudaConstZero, GetRaw( resultHandle ), secondWidth, secondWidth * firstHeight, batchSize ) );
 	}
+	//const float* result = GetRaw( resultHandle );
+	//for( int i = 0; i < secondWidth * firstHeight; ++i ) {
+	//	MYASSERT( isfinite( result[i] ), "MultiplyMatrixByMatrix.res" );
+	//}
 }
 
 void CCudaMathEngine::multiplyMatrixByTransposedMatrixAndAdd(const CConstFloatHandle& firstHandle,
