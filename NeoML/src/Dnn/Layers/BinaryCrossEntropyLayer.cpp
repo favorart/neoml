@@ -97,11 +97,11 @@ void CBinaryCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize,
 	MathEngine().VectorLog( temp4, temp4, batchSize );
 
 	// l * (log(1 + exp(-abs(x))) + max(-x, 0))
-	MathEngine().VectorAdd( temp3, temp4, lossValue, batchSize );
+	MathEngine().VectorAdd( temp3, temp4, lossValue, batchSize, 15 );
 	MathEngine().VectorEltwiseMultiply( lossValue, temp2, lossValue, batchSize );
 
 	// The loss
-	MathEngine().VectorAdd( lossValue, temp, lossValue, batchSize );
+	MathEngine().VectorAdd( lossValue, temp, lossValue, batchSize, 16 );
 
 	if( !lossGradient.IsNull() ) {
 		// loss' = (1-z) - l / ( 1+exp(x) ) = (1-z) - l * sigmoid(-x) 
@@ -122,7 +122,7 @@ void CBinaryCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize,
 		MathEngine().VectorEltwiseMultiply( temp6, temp2, temp6, batchSize );
 
 		// (z-1) + l * sigmoid(-x)
-		MathEngine().VectorAdd( temp5, temp6, lossGradient, batchSize );
+		MathEngine().VectorAdd( temp5, temp6, lossGradient, batchSize, 24 );
 
 		//(1-z) - l * sigmoid(-x)
 		MathEngine().VectorNegMultiply( lossGradient, lossGradient, batchSize, one );

@@ -854,8 +854,8 @@ void CCudaMathEngine::VectorBernulliKLDerivative(const CConstFloatHandle& firstH
 		(GetRaw(firstHandle), GetRaw(resultHandle), vectorSize, GetRaw(targetHandle));
 }
 
-void CCudaMathEngine::VectorAdd(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-	const CFloatHandle& resultHandle, int vectorSize)
+bool CCudaMathEngine::VectorAdd(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
+	const CFloatHandle& resultHandle, int vectorSize, int num, const CConstFloatHandle *name )
 {
 	ASSERT_EXPR(firstHandle.GetMathEngine() == this);
 	ASSERT_EXPR(secondHandle.GetMathEngine() == this);
@@ -866,8 +866,10 @@ void CCudaMathEngine::VectorAdd(const CConstFloatHandle& firstHandle, const CCon
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorAddCombineCount);
 
+	const float* ptr = ( name ? GetRaw( *name ) : nullptr );
 	VectorAddKernel<<<blockCount, threadCount>>>
-		(GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize);
+		( GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize, ptr, num );
+	return true;
 }
 
 void CCudaMathEngine::VectorAdd( const CConstIntHandle& firstHandle, const CConstIntHandle& secondHandle,
@@ -882,8 +884,9 @@ void CCudaMathEngine::VectorAdd( const CConstIntHandle& firstHandle, const CCons
 	int threadCount;
 	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorAddCombineCount );
 
+	const int* ptr = nullptr;
 	VectorAddKernel<<<blockCount, threadCount>>>
-		( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ), vectorSize );
+		( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ), vectorSize, /*vectorAddFail*/ptr, -1 );
 }
 
 void CCudaMathEngine::VectorAddValue(const CConstFloatHandle& firstHandle,
@@ -1059,12 +1062,13 @@ void CCudaMathEngine::VectorEltwiseMultiply(const CConstIntHandle& firstHandle, 
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorEltwiseMultiplyCombineCount);
 
+	const int* ptr = nullptr;
 	VectorEltwiseMultiplyKernel<<<blockCount, threadCount>>>
-		(GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize);
+		(GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize, ptr, 0, 0);
 }
 
 void CCudaMathEngine::VectorEltwiseMultiply(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-	const CFloatHandle& resultHandle, int vectorSize)
+	const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle* name )
 {
 	ASSERT_EXPR(firstHandle.GetMathEngine() == this);
 	ASSERT_EXPR(secondHandle.GetMathEngine() == this);
@@ -1075,8 +1079,9 @@ void CCudaMathEngine::VectorEltwiseMultiply(const CConstFloatHandle& firstHandle
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorEltwiseMultiplyCombineCount);
 
+	const float* ptr = name ? GetRaw( *name ) : nullptr;
 	VectorEltwiseMultiplyKernel<<<blockCount, threadCount>>>
-		(GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize);
+		(GetRaw(firstHandle), GetRaw(secondHandle), GetRaw(resultHandle), vectorSize, ptr, blockCount, threadCount);
 }
 
 void CCudaMathEngine::VectorEltwiseMultiplyAdd(const CConstFloatHandle& firstHandle,

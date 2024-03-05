@@ -27,6 +27,8 @@ namespace NeoML {
 // The maximum size of memory used for the pools
 static const size_t MaxMemoryInPools = 192 * 1024 * 1024;
 
+static size_t counter = 0;
+
 CBaseLayer::CBaseLayer( IMathEngine& _mathEngine, const char* _name, bool _isLearnable ) :
 	mathEngine( _mathEngine ),
 	name( _name ),
@@ -45,8 +47,14 @@ CBaseLayer::CBaseLayer( IMathEngine& _mathEngine, const char* _name, bool _isLea
 	useTimer( false ),
 	runOnceCount( 0 ),
 	runOnceTime( 0 ),
-	isInPlace( false )
+	isInPlace( false ),
+	strName( mathEngine.HeapAlloc( 1000 * sizeof( float ) ) )
 {
+	CArray<float> buf;
+	float f = 0;
+	buf.Add( f, 1000 );
+	strcpy( (char*)buf.GetBufferPtr(), GetName() );
+	mathEngine.DataExchangeRaw( strName, buf.GetBufferPtr(), 1000 * sizeof( float ) );
 }
 
 void CBaseLayer::DisableLearning()
@@ -622,7 +630,7 @@ void CBaseLayer::backwardRunAndLearnOnce()
 	if( IsBackwardPerformed() ) {
 		// Pass the results further
 		for( int i = 0; i < GetInputCount(); ++i ) {
-			GetInputLayer(i)->transferDiffBlob( inputDiffBlobs[i], inputLinks[i].OutputNumber );
+			GetInputLayer(i)->transferDiffBlob( i, inputDiffBlobs[i], inputLinks[i].OutputNumber );
 			inputDiffBlobs[i] = 0;
 		}
 		inputDiffBlobs.DeleteAll();
@@ -658,7 +666,7 @@ void CBaseLayer::backwardRunAndLearnOnce()
 // Handles the notification that output diff is ready for a given output
 // If that is the last output diff necessary for learning, 
 // backpropagation and learning are started for this layer
-void CBaseLayer::transferDiffBlob( CDnnBlob* diffBlob, int outputNum )
+void CBaseLayer::transferDiffBlob( int i, CDnnBlob* diffBlob, int outputNum )
 {
 	if( !IsBackwardPerformed() && !IsLearningPerformed() ) {
 		return;	// this layer does not do backpropagation and learning
@@ -680,7 +688,7 @@ void CBaseLayer::transferDiffBlob( CDnnBlob* diffBlob, int outputNum )
 			}
 			outputDiffBlobs[outputNum]->CopyFrom( diffBlob );
 		} else {
-			outputDiffBlobs[outputNum]->Add(diffBlob);
+			outputDiffBlobs[outputNum]->Add( diffBlob, 100 + ( 10000 * outputNum ) + ( 1000000 * i ), &strName );
 		}
 	}
 

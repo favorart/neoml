@@ -183,7 +183,7 @@ void CCrfCalculationLayer::RunOnce()
 		}
 		// Add unary estimates at current step (log sum exp will take place at the next step)
 		MathEngine().VectorAdd( currentProbabilities, outputBlobs[O_ClassSeqLogProb]->GetData(),
-			outputBlobs[O_ClassSeqLogProb]->GetData(), outputBlobs[O_ClassSeqLogProb]->GetDataSize() );
+			outputBlobs[O_ClassSeqLogProb]->GetData(), outputBlobs[O_ClassSeqLogProb]->GetDataSize(), 10 );
 	}
 
 	// Calculate the correct class probability

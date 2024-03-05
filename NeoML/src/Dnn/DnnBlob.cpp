@@ -284,12 +284,12 @@ void CDnnBlob::TransferDataToThisThread()
 	mathEngine.TransferHandleToThisThread( data, size );
 }
 
-void CDnnBlob::Add(const CDnnBlob* other)
+bool CDnnBlob::Add(const CDnnBlob* other, int num, const CConstFloatHandle* name )
 {
 	NeoPresume(other->GetDataSize() == GetDataSize());
 	switch(GetDataType()) {
 		case CT_Float:
-			mathEngine.VectorAdd( GetData<float>(), other->GetData<float>(), GetData<float>(), GetDataSize() );
+			return mathEngine.VectorAdd( GetData<float>(), other->GetData<float>(), GetData<float>(), GetDataSize(), 26 + num, name );
 			break;
 		case CT_Int:
 			mathEngine.VectorAdd( GetData<int>(), other->GetData<int>(), GetData<int>(), GetDataSize() );
@@ -297,6 +297,7 @@ void CDnnBlob::Add(const CDnnBlob* other)
 		default:
 			NeoAssert( false );
 	}
+	return true;
 }
 
 void CDnnBlob::Clear()

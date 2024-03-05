@@ -1058,7 +1058,7 @@ __global__ void VectorBernulliKLDerivativeKernel(const float* __restrict__ first
 const int VectorAddCombineCount = 8;
 template<class T>
 __global__ void VectorAddKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count)
+	const T* __restrict__ second, T* result, int count, const T* name, int num )
 {
 	int index = 0;
 	int step = 0;
@@ -1074,9 +1074,10 @@ __global__ void VectorAddKernel(const T* __restrict__ first,
 		if constexpr( std::is_same_v<T, float> ) {
 			if( !isfinite( *second ) || !isfinite( *first ) || !isfinite( *result ) ||
 				*result < -18002376725743890449408517795774411571.f ||
-				*result > 18002376725743890449408517795774411571.f ) {
-				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
-					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+				*result > 18002376725743890449408517795774411571.f )
+			{
+				printf( "VectorAddKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u !%d! %s \n",
+					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num, ( const char* )name );
 			}
 			assert( !isnan( *first ) );
 			assert( !isnan( *second ) );
@@ -1259,7 +1260,7 @@ __global__ void VectorNegMultiplyKernel(const float* __restrict__ first,
 const int VectorEltwiseMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count)
+	const T* __restrict__ second, T* result, int count, const T* name, int blockCount, int threadCount )
 {
 	int index = 0;
 	int step = 0;
@@ -1277,9 +1278,8 @@ __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
 				*first < -18002376725743890449408517795774411571.f ||
 				*first >  18002376725743890449408517795774411571.f ) {
 
-				printf( "VectorEltwiseMultiplyKernel: first=%f second=%f result=%f i=%d index=%d count=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
-					   /* blockCount=%d threadCount=%d */
-					*first, *second, *result, i, index, count, step, blockIdx.x, blockDim.x, threadIdx.x/*, blockCount, threadCount*/ );
+				printf( "VectorEltwiseMultiplyKernel: first=%f second=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  '%s'  blockCount=%d threadCount=%d \n",
+					*first, *second, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, ( const char* )name, blockCount, threadCount );
 			}
 			assert( isfinite( *first ) );
 			assert( isfinite( *second ) );

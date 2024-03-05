@@ -80,7 +80,7 @@ void CCompositeSourceLayer::BackwardOnce()
 	if( diffBlob->GetParent() != 0 ) {
 		diffBlob->SetParentPos(GetDnn()->GetCurrentSequencePos() % diffBlob->GetParent()->GetBatchLength());
 	}
-	diffBlob->Add(outputDiffBlobs[0]);
+	diffBlob->Add(outputDiffBlobs[0], 200);
 }
 
 void CCompositeSourceLayer::AllocateOutputBlobs()

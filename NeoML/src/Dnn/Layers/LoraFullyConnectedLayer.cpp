@@ -229,7 +229,7 @@ void CLoraFullyConnectedLayer::RunOnce()
 		// | OUT |+=|TMP OUT|
 		// +-----+  +-------+
 		NeoPresume( outputBlobs[0]->GetDataSize() == tempAxBSize );
-		MathEngine().VectorAdd( outputData, tempAxB, outputData, tempAxBSize );
+		MathEngine().VectorAdd( outputData, tempAxB, outputData, tempAxBSize, 7 );
 	}
 }
 
@@ -287,7 +287,7 @@ void CLoraFullyConnectedLayer::BackwardOnce()
 		/*second*/weightsData, weightsWidth,
 		/*result*/resultDiff, inputDiffSize );
 
-	MathEngine().VectorAdd( tempInputDiff, inputDiff, inputDiff, inputDiffSize );
+	MathEngine().VectorAdd( tempInputDiff, inputDiff, inputDiff, inputDiffSize, 8 );
 }
 
 void CLoraFullyConnectedLayer::LearnOnce()

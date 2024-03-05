@@ -146,7 +146,7 @@ public:
 	void TransferDataToThisThread();
 
 	// Elementwise adds a blob of the same dimensions
-	void Add(const CDnnBlob* other);
+	bool Add( const CDnnBlob* other, int num, const CConstFloatHandle* name = nullptr);
 	// Clears the contents
 	void Clear();
 	void ClearObject( int num );

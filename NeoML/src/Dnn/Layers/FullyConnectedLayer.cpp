@@ -241,7 +241,7 @@ void CFullyConnectedLayer::ApplyBatchNormalization( CBatchNormalizationLayer& ba
 	CFloatHandle freeTermData = FreeTerms()->GetData();
 	int wieghtCount = Weights()->GetObjectSize();
 	MathEngine().VectorEltwiseMultiply( freeTermData, gamma, freeTermData, numberOfElements );
-	MathEngine().VectorAdd( freeTermData, beta, freeTermData, numberOfElements );
+	MathEngine().VectorAdd( freeTermData, beta, freeTermData, numberOfElements, 14 );
 	for( int i = 0; i < numberOfElements; ++i ) {
 		MathEngine().VectorMultiply( weightData, weightData, wieghtCount, gamma++ );
 		weightData += wieghtCount;

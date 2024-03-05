@@ -138,7 +138,7 @@ void CCenterLossLayer::updateCenters(const CFloatHandle& tempDiffHandle)
 	MathEngine().VectorMultiply( classCentersUpdatesNumerator.GetHandle(), classCentersUpdatesNumerator.GetHandle(),
 		classCentersBlob->GetDataSize(), classCentersConvergenceRate->GetData() );
 	MathEngine().VectorAdd( classCenters, classCentersUpdatesNumerator.GetHandle(), classCenters,
-		classCentersBlob->GetDataSize() );
+		classCentersBlob->GetDataSize(), 9 );
 }
 
 CLayerWrapper<CCenterLossLayer> CenterLoss(
