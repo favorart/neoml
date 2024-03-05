@@ -28,22 +28,40 @@ limitations under the License.
 
 namespace NeoML {
 
-void CCudaMathEngine::VectorCopy(const CFloatHandle& first, const CConstFloatHandle& second, int vectorSize)
+void CCudaMathEngine::VectorCopy(const CFloatHandle& result, const CConstFloatHandle& first, int vectorSize)
 {
-	ASSERT_EXPR(first.GetMathEngine() == this);
-	ASSERT_EXPR(second.GetMathEngine() == this);
+	//ASSERT_EXPR(first.GetMathEngine() == this);
+	//ASSERT_EXPR(second.GetMathEngine() == this);
+	ASSERT_EXPR( result.GetMathEngine() == this );
+	ASSERT_EXPR( first.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
+	
+	int blockCount;
+	int threadCount;
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorFillCombineCount );
 
-	ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(float), cudaMemcpyDeviceToDevice));
+	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize );
+	//printf( "VectorCopy(flt) first=%llx second=%llx count=%d \n", ( unsigned long long )GetRaw( first ), ( unsigned long long )GetRaw( second ), vectorSize );
+	//ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(float), cudaMemcpyDeviceToDevice));
+	//ASSERT_CUDA( cudaDeviceSynchronize() );
 }
 
-void CCudaMathEngine::VectorCopy(const CIntHandle& first, const CConstIntHandle& second, int vectorSize)
+void CCudaMathEngine::VectorCopy(const CIntHandle& result, const CConstIntHandle& first, int vectorSize)
 {
-	ASSERT_EXPR(first.GetMathEngine() == this);
-	ASSERT_EXPR(second.GetMathEngine() == this);
+	//ASSERT_EXPR(first.GetMathEngine() == this);
+	//ASSERT_EXPR(second.GetMathEngine() == this);
+	ASSERT_EXPR( result.GetMathEngine() == this);
+	ASSERT_EXPR( first.GetMathEngine() == this);
 	SetCudaDevice( device->DeviceNumber );
 
-	ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(int), cudaMemcpyDeviceToDevice));
+	int blockCount;
+	int threadCount;
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorFillCombineCount );
+
+	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize );
+	//printf( "VectorCopy(int) first=%llx second=%llx count=%d \n", ( unsigned long long )GetRaw( first ), ( unsigned long long )GetRaw( second ), vectorSize );
+	//ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(int), cudaMemcpyDeviceToDevice));
+	//ASSERT_CUDA( cudaDeviceSynchronize() );
 }
 
 void CCudaMathEngine::BroadcastCopy(const CIntHandle& toHandle, const CConstIntHandle& fromHandle,

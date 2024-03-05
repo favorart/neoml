@@ -24,6 +24,36 @@ limitations under the License.
 namespace NeoML {
 
 const int VectorFillCombineCount = 8;
+
+template<class T>
+__global__ void VectorCopyKernel( T* result, const T* first, int count )
+{
+	int index;
+	int step;
+	int actionCount = GetCudaTaskCountAndIndex( count, VectorFillCombineCount, index, step );
+
+	result += index;
+	first += index;
+
+	for( int i = 0; i < actionCount; ++i ) {
+		*result = *first;
+		if constexpr( std::is_same_v<T, float> ) {
+			if( !isfinite( *result ) ||
+				*result < -18002376725743890449408517795774411571.f ||
+				*result > 18002376725743890449408517795774411571.f )
+			{
+				printf( "VectorCopyKernel: first=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+					*first, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+			}
+			//assert( isfinite( *result ) );
+			//assert( *result > -18002376725743890449408517795774411571.f );
+			//assert( *result < 18002376725743890449408517795774411571.f );
+		}
+		result += step;
+		first += step;
+	}
+}
+
 template<class T>
 __global__ void VectorFillKernel(T* mem, T value, int count)
 {
