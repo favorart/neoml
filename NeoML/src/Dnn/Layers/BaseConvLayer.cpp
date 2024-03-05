@@ -111,7 +111,7 @@ void CBaseConvLayer::SetFilterData(const CPtr<CDnnBlob>& newFilter)
 		Filter() = 0;
 	} else if(Filter() != 0 && GetDnn() != 0) {
 		NeoAssert(Filter()->HasEqualDimensions(newFilter));
-		Filter()->CopyFrom(newFilter);
+		Filter()->CopyFrom1(newFilter, 9, &strName);
 	} else {
 		Filter() = newFilter->GetCopy();
 	}
@@ -135,7 +135,7 @@ void CBaseConvLayer::SetFreeTermData(const CPtr<CDnnBlob>& newFreeTerms)
 		if(FreeTerms() != 0 && GetDnn() != 0) {
 			NeoAssert(FreeTerms()->GetDataSize() == newFreeTerms->GetDataSize());
 
-			FreeTerms()->CopyFrom(newFreeTerms);
+			FreeTerms()->CopyFrom1(newFreeTerms, 10, &strName);
 		} else {
 			FreeTerms() = newFreeTerms->GetCopy();
 		}

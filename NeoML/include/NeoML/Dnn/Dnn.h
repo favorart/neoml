@@ -309,7 +309,7 @@ protected:
 	// Throw check exception if expr is false
 	void CheckLayerArchitecture( bool expr, const char* message ) const;
 
-private:
+//private:
 	// Describes an input connection
 	struct CInputInfo {
 		CString Name; // the name of the layer that is connected to the input

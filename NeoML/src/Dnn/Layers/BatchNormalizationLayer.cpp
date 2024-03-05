@@ -454,7 +454,7 @@ void CBatchNormalizationLayer::SetFinalParams(const CPtr<CDnnBlob>& _params)
 		NeoAssert(finalParams->GetDepth() == _params->GetDepth());
 		NeoAssert(finalParams->GetChannelsCount() == _params->GetChannelsCount());
 
-		finalParams->CopyFrom(_params);
+		finalParams->CopyFrom1(_params, 12, &strName );
 	} else {
 		finalParams = _params->GetCopy();
 	}

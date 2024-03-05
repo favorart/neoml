@@ -26,7 +26,7 @@ namespace NeoML {
 const int VectorFillCombineCount = 8;
 
 template<class T>
-__global__ void VectorCopyKernel( T* result, const T* first, int count )
+__global__ void VectorCopyKernel( T* result, const T* first, int count, int num, const char* name )
 {
 	int index;
 	int step;
@@ -42,8 +42,8 @@ __global__ void VectorCopyKernel( T* result, const T* first, int count )
 				*result < -18002376725743890449408517795774411571.f ||
 				*result > 18002376725743890449408517795774411571.f )
 			{
-				printf( "VectorCopyKernel: first=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
-					*first, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+				printf( "VectorCopyKernel: first=%f result=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  !%d! '%s'  \n",
+					*first, *result, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num, name );
 			}
 			//assert( isfinite( *result ) );
 			//assert( *result > -18002376725743890449408517795774411571.f );

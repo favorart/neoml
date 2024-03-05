@@ -128,7 +128,7 @@ void CGrnLayer::setParam( TParamName name, const CPtr<CDnnBlob>& newValue )
 		paramBlobs[name] = nullptr;
 	} else if( paramBlobs[name] != nullptr && GetDnn() != nullptr ) {
 		NeoAssert( paramBlobs[name]->GetDataSize() == newValue->GetDataSize() );
-		paramBlobs[name]->CopyFrom( newValue );
+		paramBlobs[name]->CopyFrom1( newValue, 20, &strName );
 	} else {
 		paramBlobs[name] = newValue->GetCopy();
 	}

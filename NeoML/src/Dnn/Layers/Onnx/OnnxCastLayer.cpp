@@ -24,7 +24,7 @@ static void onnxCastImpl( const CDnnBlob& input, CDnnBlob& output )
 {
 	IMathEngine& mathEngine = input.GetMathEngine();
 	if( output.GetDataType() == input.GetDataType() ) {
-		output.CopyFrom( &input );
+		output.CopyFrom1( &input,23,0 );
 	} else if( input.GetDataType() == CT_Int ) {
 		mathEngine.VectorConvert( input.GetData<int>(), output.GetData(), input.GetDataSize() );
 	} else {

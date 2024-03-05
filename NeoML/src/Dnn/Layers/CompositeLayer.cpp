@@ -123,7 +123,7 @@ void CCompositeSinkLayer::RunOnce()
 	}
 
 	blob->SetParentPos( inputBlobs[0]->GetParentPos() );
-	blob->CopyFrom( inputBlobs[0] );
+	blob->CopyFrom1( inputBlobs[0], 15, &strName );
 }
 
 void CCompositeSinkLayer::SetDiffBlob(CDnnBlob* blob)

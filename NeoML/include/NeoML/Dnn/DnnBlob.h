@@ -138,7 +138,7 @@ public:
 	// Copies the blob
 	CDnnBlob* GetCopy() const;
 	// Copies the contents from another blob
-	void CopyFrom(const CDnnBlob* other);
+	void CopyFrom1(const CDnnBlob* other, int num, const CConstFloatHandle* name );
 
 	// Transfers CDnnBlob data from other thread owner to this thread.
 	// By default memory underneath each blob is associated with the thread on which its allocation has occurred.

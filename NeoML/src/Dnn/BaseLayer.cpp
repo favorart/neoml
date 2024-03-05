@@ -686,7 +686,7 @@ void CBaseLayer::transferDiffBlob( int i, CDnnBlob* diffBlob, int outputNum )
 			if( outputDiffBlobs[outputNum] == 0 ) {
 				outputDiffBlobs[outputNum] = CDnnBlob::CreateBlob( MathEngine(), diffBlob->GetDesc() );
 			}
-			outputDiffBlobs[outputNum]->CopyFrom( diffBlob );
+			outputDiffBlobs[outputNum]->CopyFrom1( diffBlob, 11, &strName );
 		} else {
 			outputDiffBlobs[outputNum]->Add( diffBlob, 100 + ( 10000 * outputNum ) + ( 1000000 * i ), &strName );
 		}

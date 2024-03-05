@@ -77,7 +77,7 @@ public:
 	void VectorConvert( const CConstIntHandle& from, const CFloatHandle& to, int vectorSize ) override;
 	void VectorFillBernoulli( const CFloatHandle& result, float p, int vectorSize, float value, int seed ) override;
 	void FilterSmallValues( const CFloatHandle& data, int dataSize, float threshold ) override;
-	void VectorCopy( const CFloatHandle& first, const CConstFloatHandle& second, int vectorSize ) override;
+	void VectorCopy( const CFloatHandle& first, const CConstFloatHandle& second, int vectorSize, int num=0, const CConstFloatHandle* name = nullptr ) override;
 	void VectorCopy( const CIntHandle& first, const CConstIntHandle& second, int vectorSize ) override;
 	void BroadcastCopy( const CIntHandle& toHandle, const CConstIntHandle& fromHandle,
 		const CBlobDesc& toDesc, const CBlobDesc& fromDesc, int additionalWidth ) override;

@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace NeoML {
 
-void CCudaMathEngine::VectorCopy(const CFloatHandle& result, const CConstFloatHandle& first, int vectorSize)
+void CCudaMathEngine::VectorCopy(const CFloatHandle& result, const CConstFloatHandle& first, int vectorSize, int num, const CConstFloatHandle* name )
 {
 	//ASSERT_EXPR(first.GetMathEngine() == this);
 	//ASSERT_EXPR(second.GetMathEngine() == this);
@@ -40,7 +40,8 @@ void CCudaMathEngine::VectorCopy(const CFloatHandle& result, const CConstFloatHa
 	int threadCount;
 	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorFillCombineCount );
 
-	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize );
+	const char* str = ( const char* )( name ? GetRaw( *name ) : nullptr );
+	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize, num, str );
 	//printf( "VectorCopy(flt) first=%llx second=%llx count=%d \n", ( unsigned long long )GetRaw( first ), ( unsigned long long )GetRaw( second ), vectorSize );
 	//ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(float), cudaMemcpyDeviceToDevice));
 	//ASSERT_CUDA( cudaDeviceSynchronize() );
@@ -58,7 +59,8 @@ void CCudaMathEngine::VectorCopy(const CIntHandle& result, const CConstIntHandle
 	int threadCount;
 	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorFillCombineCount );
 
-	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize );
+	const char* str = nullptr;
+	VectorCopyKernel<<<blockCount, threadCount>>>( GetRaw( result ), GetRaw( first ), vectorSize, 0, str );
 	//printf( "VectorCopy(int) first=%llx second=%llx count=%d \n", ( unsigned long long )GetRaw( first ), ( unsigned long long )GetRaw( second ), vectorSize );
 	//ASSERT_CUDA( cudaMemcpy(GetRaw(first), GetRaw(second), vectorSize * sizeof(int), cudaMemcpyDeviceToDevice));
 	//ASSERT_CUDA( cudaDeviceSynchronize() );

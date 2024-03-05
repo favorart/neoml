@@ -70,7 +70,7 @@ class NEOMATHENGINE_API IVectorMathEngine : public CCrtAllocatedObject {
 public:
 	virtual ~IVectorMathEngine();
 	// Copying the second vector values into the first
-	virtual void VectorCopy(const CFloatHandle& first, const CConstFloatHandle& second, int vectorSize) = 0;
+	virtual void VectorCopy(const CFloatHandle& first, const CConstFloatHandle& second, int vectorSize, int num = 0, const CConstFloatHandle* name = nullptr ) = 0;
 	virtual void VectorCopy(const CIntHandle& first, const CConstIntHandle& second, int vectorSize) = 0;
 	// Broadcasting the copy to new shape
 	// additionalWidth = 1 means broadcasting from fromDesc to toDesc

@@ -85,18 +85,18 @@ void CBackLinkLayer::RunOnce()
 	CheckLayerArchitecture( outputBlobs[0]->HasEqualDimensions( captureSink->GetBlob() ),
 		"input and output blobs have different dimensions" );
 	if( inputBlobs.IsEmpty() ) {
-		outputBlobs[0]->CopyFrom(captureSink->GetBlob());
+		outputBlobs[0]->CopyFrom1(captureSink->GetBlob(), 2, &strName);
 	} else {
 		if( inputBlobs[0]->GetParent() != 0 ) {
 			// Teacher forcing mode
 			NeoAssert(inputBlobs[0]->GetParentPos() == GetDnn()->GetCurrentSequencePos());
-			outputBlobs[0]->CopyFrom(inputBlobs[0]);
+			outputBlobs[0]->CopyFrom1(inputBlobs[0], 3, &strName);
 		} else if( isProcessingFirstPosition ) {
 			// Initializes backpropagation first step or teacher forcing mode with a 1-length sequence
-			outputBlobs[0]->CopyFrom(inputBlobs[0]);
+			outputBlobs[0]->CopyFrom1(inputBlobs[0], 4, &strName);
 		} else {
 			// Backpropagation
-			outputBlobs[0]->CopyFrom(captureSink->GetBlob());
+			outputBlobs[0]->CopyFrom1(captureSink->GetBlob(), 5, &strName);
 		}
 	}
 	isProcessingFirstPosition = false;
@@ -106,7 +106,7 @@ void CBackLinkLayer::BackwardOnce()
 {
 	captureSink->CopyDiffBlob(outputDiffBlobs[0]);
 	if( !inputDiffBlobs.IsEmpty() && GetDnn()->IsFirstSequencePos() ) {
-		inputDiffBlobs[0]->CopyFrom( outputDiffBlobs[0] );
+		inputDiffBlobs[0]->CopyFrom1( outputDiffBlobs[0], 6, &strName );
 	}
 }
 
@@ -170,7 +170,7 @@ void CCaptureSinkLayer::Reshape()
 
 void CCaptureSinkLayer::RunOnce()
 {
-	blob->CopyFrom(inputBlobs[0]);
+	blob->CopyFrom1(inputBlobs[0], 7, &strName);
 }
 
 void CCaptureSinkLayer::ClearBlob()
@@ -182,7 +182,7 @@ void CCaptureSinkLayer::ClearBlob()
 
 void CCaptureSinkLayer::CopyDiffBlob( CDnnBlob* _diffBlob ) 
 {
-	diffBlob->CopyFrom(_diffBlob);
+	diffBlob->CopyFrom1(_diffBlob, 8, &strName);
 }
 
 void CCaptureSinkLayer::ClearDiffBlob()

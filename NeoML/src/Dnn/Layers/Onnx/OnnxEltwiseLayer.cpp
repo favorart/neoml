@@ -125,7 +125,7 @@ static void onnxArithmeticOperationImpl( COnnxEltwiseLayer::TOperation operation
 	IMathEngine& mathEngine = output.GetMathEngine();
 	if( output.HasEqualDimensions( inputs[initialInputIndex] ) ) {
 		if( !isInPlace ) {
-			output.CopyFrom( inputs[initialInputIndex] );
+			output.CopyFrom1( inputs[initialInputIndex], 29, nullptr );
 		}
 	} else {
 		mathEngine.BroadcastCopy( output.GetData<T>(), inputs[initialInputIndex]->GetData<T>(),

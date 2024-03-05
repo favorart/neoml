@@ -63,7 +63,7 @@ void CCastLayer::Reshape()
 void CCastLayer::RunOnce()
 {
 	if( outputBlobs[0]->GetDataType() == inputBlobs[0]->GetDataType() ) {
-		outputBlobs[0]->CopyFrom( inputBlobs[0] );
+		outputBlobs[0]->CopyFrom1( inputBlobs[0], 13, &strName );
 	} else if( inputBlobs[0]->GetDataType() == CT_Int ) {
 		MathEngine().VectorConvert( inputBlobs[0]->GetData<int>(), outputBlobs[0]->GetData(), inputBlobs[0]->GetDataSize() );
 	} else {
@@ -73,7 +73,7 @@ void CCastLayer::RunOnce()
 
 void CCastLayer::BackwardOnce()
 {
-	inputDiffBlobs[0]->CopyFrom( outputDiffBlobs[0] );
+	inputDiffBlobs[0]->CopyFrom1( outputDiffBlobs[0], 14, &strName );
 }
 
 CLayerWrapper<CCastLayer> Cast( TBlobType outputType )

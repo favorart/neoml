@@ -176,7 +176,7 @@ void CVulkanMathEngine::FilterSmallValues( const CFloatHandle&, int, float )
 	ASSERT_EXPR( false );
 }
 
-void CVulkanMathEngine::VectorCopy( const CFloatHandle& to, const CConstFloatHandle& from, int vectorSize )
+void CVulkanMathEngine::VectorCopy( const CFloatHandle& to, const CConstFloatHandle& from, int vectorSize, int, const CConstFloatHandle* )
 {
 	VkBufferCopy region = {};
 	region.srcOffset = GetRawOffset(from);

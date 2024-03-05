@@ -50,7 +50,7 @@ void CTimeConvLayer::SetFilterData(const CPtr<CDnnBlob>& newFilter)
 		filter() = 0;
 	} else if( filter() != 0 && GetDnn() != 0 ) {
 		NeoAssert(filter()->HasEqualDimensions(newFilter));
-		filter()->CopyFrom(newFilter);
+		filter()->CopyFrom1(newFilter, 27, &strName );
 	} else {
 		filter() = newFilter->GetCopy();
 	}
@@ -74,7 +74,7 @@ void CTimeConvLayer::SetFreeTermData(const CPtr<CDnnBlob>& newFreeTerms)
 		if( freeTerms() != 0 && GetDnn() != 0 ) {
 			NeoAssert(freeTerms()->GetDataSize() == newFreeTerms->GetDataSize());
 
-			freeTerms()->CopyFrom(newFreeTerms);
+			freeTerms()->CopyFrom1(newFreeTerms, 28, &strName );
 		} else {
 			freeTerms() = newFreeTerms->GetCopy();
 		}

@@ -150,7 +150,7 @@ void COnnxSliceLayer::sliceBlob( const CDnnBlob& inputBlob, CDnnBlob& output ) c
 
 		if( start == 0 && end == dimSize ) {
 			if( sliceIndex == getSliceCount() - 1 ) {
-				output.CopyFrom( resultBlob );
+				output.CopyFrom1( resultBlob, 25, &strName );
 			}
 			continue;
 		}

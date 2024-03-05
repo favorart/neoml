@@ -135,7 +135,7 @@ void CGELULayer::runPrecise()
 
 	if( IsBackwardPerformed() ) {
 		NeoAssert( erfMemoization != nullptr );
-		erfMemoization->CopyFrom( outputBlobs[0] );
+		erfMemoization->CopyFrom1( outputBlobs[0], 19, &strName );
 	}
 
 	// output = input * 0.5( 1 + erf( input / sqrt(2) ) )

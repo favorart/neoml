@@ -157,7 +157,7 @@ void CAttentionSumLayer::RunOnce()
 
 void CAttentionSumLayer::BackwardOnce()
 {
-	inputDiffBlobs[0]->CopyFrom(outputDiffBlobs[0]);
+	inputDiffBlobs[0]->CopyFrom1(outputDiffBlobs[0], 1, &strName);
 	MathEngine().SumMatrixRows(inputDiffBlobs[1]->GetBatchWidth(), inputDiffBlobs[1]->GetData(), outputDiffBlobs[0]->GetData(), 
 		outputDiffBlobs[0]->GetListSize(), outputDiffBlobs[0]->GetObjectSize());
 }

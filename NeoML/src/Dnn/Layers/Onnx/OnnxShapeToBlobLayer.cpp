@@ -38,7 +38,7 @@ void COnnxShapeToBlobLayer::CalculateShapes()
 
 void COnnxShapeToBlobLayer::RunOnce()
 {
-	outputBlobs[0]->CopyFrom( inputShapeBlobs[0] );
+	outputBlobs[0]->CopyFrom1( inputShapeBlobs[0], 24, &strName );
 }
 
 } // namespace NeoML

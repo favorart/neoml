@@ -248,11 +248,11 @@ CDnnBlob* CDnnBlob::GetClone() const
 CDnnBlob* CDnnBlob::GetCopy() const
 {
 	CDnnBlob* copy = GetClone(GetDataType());
-	copy->CopyFrom(this);
+	copy->CopyFrom1(this, 18, nullptr);
 	return copy;
 }
 
-void CDnnBlob::CopyFrom(const CDnnBlob* other)
+void CDnnBlob::CopyFrom1(const CDnnBlob* other, int num, const CConstFloatHandle* name )
 {
 	NeoAssert( other != nullptr );
 	NeoAssert( GetDataType() == other->GetDataType() );
@@ -261,7 +261,7 @@ void CDnnBlob::CopyFrom(const CDnnBlob* other)
 	switch( GetDataType() ) {
 		case CT_Float:
 			assert( &mathEngine == &other->GetMathEngine() );
-			mathEngine.VectorCopy( GetData<float>(), other->GetData<float>(), GetDataSize() );
+			mathEngine.VectorCopy( GetData<float>(), other->GetData<float>(), GetDataSize(), num, name );
 			break;
 		case CT_Int:
 			assert( &mathEngine == &other->GetMathEngine() );

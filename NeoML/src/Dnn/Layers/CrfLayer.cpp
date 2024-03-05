@@ -198,7 +198,7 @@ void CCrfCalculationLayer::BackwardOnce()
 	int batchWidth = inputBlobs[0]->GetBatchWidth();
 
 	// Input #0 is the fully-connected layer output (logarithm of the probability of each class in this position)
-	inputDiffBlobs[I_ClassLogProb]->CopyFrom(outputDiffBlobs[O_ClassSeqLogProb]);
+	inputDiffBlobs[I_ClassLogProb]->CopyFrom1(outputDiffBlobs[O_ClassSeqLogProb], 16, &strName );
 	MathEngine().AddVectorToMatrixElements(inputDiffBlobs[I_ClassLogProb]->GetData(), batchWidth, 
 		numberOfClasses, inputBlobs[I_Label]->GetData<int>(), outputDiffBlobs[O_LabelLogProb]->GetData());
 
@@ -248,7 +248,7 @@ void CCrfCalculationLayer::SetTransitions( const CPtr<CDnnBlob>& newWeights )
 		NeoAssert( Transitions() == nullptr || GetDnn() == nullptr );
 		Transitions() = nullptr;
 	} else if( Transitions() != nullptr && GetDnn() != nullptr ) {
-		Transitions()->CopyFrom( newWeights );
+		Transitions()->CopyFrom1( newWeights, 17, &strName );
 	} else {
 		Transitions() = newWeights->GetCopy();
 	}

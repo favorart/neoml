@@ -62,7 +62,7 @@ void CScatterNDLayer::RunOnce()
 	const int indexDims = inputDescs[I_Indices].Channels();
 	const int updateCount = inputDescs[I_Indices].BlobSize() / indexDims;
 
-	outputBlobs[0]->CopyFrom( inputBlobs[I_Data] );
+	outputBlobs[0]->CopyFrom1( inputBlobs[I_Data], 26, &strName );
 	if( outputBlobs[0]->GetDataType() == CT_Float ) {
 		MathEngine().ScatterND( inputBlobs[I_Indices]->GetData<int>(), inputBlobs[I_Updates]->GetData(),
 			outputBlobs[0]->GetData(), outputBlobs[0]->GetDesc(), updateCount, indexDims );

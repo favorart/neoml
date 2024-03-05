@@ -64,7 +64,7 @@ void CObjectNormalizationLayer::SetScale( const CPtr<CDnnBlob>& newScale )
 		Scale() = nullptr;
 	} else if( Scale() != nullptr && GetDnn() != nullptr ) {
 		NeoAssert( Scale()->GetDataSize() == newScale->GetDataSize() );
-		Scale()->CopyFrom( newScale );
+		Scale()->CopyFrom1( newScale, 21, &strName );
 	} else {
 		Scale() = newScale->GetCopy();
 	}
@@ -85,7 +85,7 @@ void CObjectNormalizationLayer::SetBias( const CPtr<CDnnBlob>& newBias )
 		Bias() = nullptr;
 	} else if( Bias() != nullptr && GetDnn() != nullptr ) {
 		NeoAssert( Bias()->GetDataSize() == newBias->GetDataSize() );
-		Bias()->CopyFrom( newBias );
+		Bias()->CopyFrom1( newBias, 22, &strName );
 	} else {
 		Bias() = newBias->GetCopy();
 	}
