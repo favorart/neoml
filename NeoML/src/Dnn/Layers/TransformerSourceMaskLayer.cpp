@@ -62,7 +62,7 @@ void CTransformerSourceMaskLayer::RunOnce()
 		const int padding = maxWidth - objectWidth;
 		if( padding > 0 ) {
 			CFloatHandle objectHandle = outputBlob->GetData() + objectPosition;
-			MathEngine().VectorFill( objectHandle + objectWidth, 1.f, padding );
+			MathEngine().VectorFill( objectHandle + objectWidth, 1.f, padding, 70 );
 			if( maxWidth * headCount > 1 ) {
 				MathEngine().SetVectorToMatrixRows( objectHandle + maxWidth,
 					maxWidth * headCount - 1, maxWidth, objectHandle );

@@ -154,7 +154,7 @@ void CCudaMathEngine::Blob3dConvolutionBackward( const C3dConvolutionDesc& convD
 		SetVectorToMatrixRows( inputDiff, desc.Source.ObjectCount() * desc.Source.Height() * desc.Source.Width() * desc.Source.Depth(),
 			desc.Source.Channels(), *freeTerm );
 	} else {
-		VectorFill( inputDiff, 0.f, desc.Source.BlobSize() );
+		VectorFill( inputDiff, 0.f, desc.Source.BlobSize(),25 );
 	}
 
 	TBackwardOperationType operation = BOT_AtomicAdd;

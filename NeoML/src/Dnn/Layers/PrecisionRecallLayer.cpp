@@ -69,7 +69,7 @@ void CPrecisionRecallLayer::RunOnceAfterReset()
 
 	const int vectorSize = inputBlobs[0]->GetDataSize();
 	CFloatHandleStackVar ones( MathEngine(), vectorSize );
-	MathEngine().VectorFill( ones, 1.0f, vectorSize );
+	MathEngine().VectorFill( ones, 1.0f, vectorSize, 80 );
 
 	// Mask of the elements classified as +1 class (logits are positive)
 	CFloatHandleStackVar zero( MathEngine() );

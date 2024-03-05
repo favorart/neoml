@@ -51,7 +51,7 @@ static void initializeShift( CDnnBlob& shift, int imageHeight, int imageWidth )
 // the pixels should be extracted as one lookup table of batchSize x imageHeight x imageWidth size
 static void shiftIndices( int imageSize, IMathEngine& mathEngine, CDnnBlob& indices, CDnnBlob& shift, CDnnBlob& result )
 {
-	mathEngine.VectorFill( result.GetData<int>(), 0, result.GetDataSize() );
+	mathEngine.VectorFill( result.GetData<int>(), 0, result.GetDataSize(),66 );
 	// Add imageSize value to negative indices
 	mathEngine.VectorEltwiseLess( indices.GetData<int>(), result.GetData<int>(), result.GetData<int>(), result.GetDataSize() );
 	CIntHandleStackVar imageSizeVar( mathEngine );

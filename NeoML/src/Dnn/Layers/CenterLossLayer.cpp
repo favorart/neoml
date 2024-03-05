@@ -116,17 +116,17 @@ void CCenterLossLayer::updateCenters(const CFloatHandle& tempDiffHandle)
 	CFloatHandle handlesArray[1];
 	// The numerator of the correction: the total of x_i - c_{y_i}, aggregated by classes
 	CFloatHandleVar classCentersUpdatesNumerator(MathEngine(), classCentersBlob->GetDataSize());
-	MathEngine().VectorFill(classCentersUpdatesNumerator.GetHandle(), 0.0f, classCentersUpdatesNumerator.Size());
+	MathEngine().VectorFill(classCentersUpdatesNumerator.GetHandle(), 0.0f, classCentersUpdatesNumerator.Size(), 11);
 	handlesArray[0] = classCentersUpdatesNumerator.GetHandle();
 
 	MathEngine().VectorMultichannelLookupAndAddToTable( objectCount, 1, labels, 
 		handlesArray, &lookupDimension, 1, oneMult->GetData(), tempDiffHandle, numberOfFeatures );
 
 	CFloatHandleVar onesTemporaryBlob(MathEngine(), inputBlobs[0]->GetDataSize());
-	MathEngine().VectorFill(onesTemporaryBlob.GetHandle(), 1.0f, onesTemporaryBlob.Size());
+	MathEngine().VectorFill(onesTemporaryBlob.GetHandle(), 1.0f, onesTemporaryBlob.Size(),12);
 	// The denominator of the correction: 1 + the number of elements of this class in the batch
 	CFloatHandleVar classCentersUpdatesDenominator(MathEngine(), classCentersBlob->GetDataSize());
-	MathEngine().VectorFill(classCentersUpdatesDenominator.GetHandle(), 1.0f, classCentersUpdatesDenominator.Size());
+	MathEngine().VectorFill(classCentersUpdatesDenominator.GetHandle(), 1.0f, classCentersUpdatesDenominator.Size(), 13);
 	handlesArray[0] = classCentersUpdatesDenominator.GetHandle();
 
 	MathEngine().VectorMultichannelLookupAndAddToTable( objectCount, 1, labels, 

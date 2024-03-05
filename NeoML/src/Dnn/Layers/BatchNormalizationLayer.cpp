@@ -158,8 +158,8 @@ void CBatchNormalizationLayer::Reshape()
 
 	if(finalParams == 0) {
 		finalParams = CDnnBlob::CreateBlob(MathEngine(), CT_Float, paramDesc);
-		MathEngine().VectorFill(finalParams->GetObjectData( PN_Gamma), 1.0, finalParams->GetObjectSize());
-		MathEngine().VectorFill(finalParams->GetObjectData( PN_Beta), 0.0, finalParams->GetObjectSize());
+		MathEngine().VectorFill(finalParams->GetObjectData( PN_Gamma), 1.0, finalParams->GetObjectSize(), 3);
+		MathEngine().VectorFill(finalParams->GetObjectData( PN_Beta), 0.0, finalParams->GetObjectSize(),4);
 	} else {
 		CheckLayerArchitecture( finalParams->GetObjectCount() == PN_Count, "Parameters batch size must be 2" );
 		CheckLayerArchitecture( finalParams->GetObjectSize() == objectSize, 
@@ -284,8 +284,8 @@ void CBatchNormalizationLayer::updateSlowParams(bool isInit)
 
 	if(isInit) {
 		// Set the initial values for the average and the batch variance
-		MathEngine().VectorFill(slowAverage, 0.f, objectSize);
-		MathEngine().VectorFill(slowVariance, 1.f, objectSize);
+		MathEngine().VectorFill(slowAverage, 0.f, objectSize, 6);
+		MathEngine().VectorFill(slowVariance, 1.f, objectSize, 7);
 	}
 
 	// Average the variance and average values over the batches
@@ -323,7 +323,7 @@ void CBatchNormalizationLayer::updateFinalParams()
 	MathEngine().VectorEltwiseDivide(gamma, finalBeta, finalGamma, objectSize);
 
 	if(isZeroFreeTerm) {
-		MathEngine().VectorFill(finalBeta, 0.0, objectSize);
+		MathEngine().VectorFill(finalBeta, 0.0, objectSize,8);
 	} else {
 		MathEngine().VectorEltwiseMultiply(finalGamma, slowAverage, finalBeta, objectSize);
 		MathEngine().VectorSub(beta, finalBeta, finalBeta, objectSize);
@@ -342,8 +342,8 @@ void CBatchNormalizationLayer::runWhenLearning()
 
 	if(isInit) {
 		// Set the initial gamma and beta values
-		MathEngine().VectorFill( paramBlobs[0]->GetObjectData( PN_Gamma ), 1.f, paramBlobs[0]->GetObjectSize() );
-		MathEngine().VectorFill( paramBlobs[0]->GetObjectData( PN_Beta ), 0.f, paramBlobs[0]->GetObjectSize() );
+		MathEngine().VectorFill( paramBlobs[0]->GetObjectData( PN_Gamma ), 1.f, paramBlobs[0]->GetObjectSize(),9 );
+		MathEngine().VectorFill( paramBlobs[0]->GetObjectData( PN_Beta ), 0.f, paramBlobs[0]->GetObjectSize(), 10 );
 	}
 
 	updateSlowParams(isInit);

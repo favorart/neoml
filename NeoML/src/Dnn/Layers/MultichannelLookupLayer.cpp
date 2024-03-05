@@ -307,7 +307,7 @@ void CMultichannelLookupLayer::Word2VecStep( IMathEngine& mathEngine, int batchS
 		// Calculate loss = -ln(sig(<word, context>)) for positive contexts
 		mathEngine.VectorNegLog(positiveRes, positiveTemp, totalPositive);
 		// Calculate loss = -ln(sig(-<word, context>)) = ln(1 - sig(<word, context>)) for negative contexts
-		mathEngine.VectorFill(negativeTemp, 1, totalNegative);
+		mathEngine.VectorFill(negativeTemp, 1, totalNegative, 71);
 		mathEngine.VectorSub(negativeTemp, negativeRes, negativeTemp, totalNegative);
 		mathEngine.VectorNegLog(negativeTemp, negativeTemp, totalNegative);
 

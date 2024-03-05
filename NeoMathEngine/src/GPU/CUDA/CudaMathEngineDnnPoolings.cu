@@ -81,7 +81,7 @@ void CCudaMathEngine::BlobMaxPoolingBackward( const CMaxPoolingDesc& poolingDesc
 	const CCudaBlobDesc& source = desc.Source;
 	const CCudaBlobDesc& result = desc.Result;
 
-	VectorFill( sourceDiff, 0, source.BlobSize() );
+	VectorFill( sourceDiff, 0, source.BlobSize(),34 );
 
 	const bool isAtomic = desc.FilterHeight > desc.StrideHeight || desc.FilterWidth > desc.StrideWidth;
 	const int batchNorm = ( result.ObjectCount() + BlobMaxPoolingBackwardCombine - 1 ) / BlobMaxPoolingBackwardCombine;
@@ -143,7 +143,7 @@ void CCudaMathEngine::BlobMeanPoolingBackward( const CMeanPoolingDesc& poolingDe
 
 	const bool isAtomic = desc.FilterHeight > desc.StrideHeight || desc.FilterWidth > desc.StrideWidth;
 
-	VectorFill( sourceDiff, 0, source.BlobSize() );
+	VectorFill( sourceDiff, 0, source.BlobSize(),35 );
 
 	dim3 blockCount;
 	dim3 threadCount;
@@ -199,7 +199,7 @@ void CCudaMathEngine::BlobGlobalMaxOverTimePoolingBackward( const CGlobalMaxOver
 	const CCudaBlobDesc& source = desc.Source;
 	const CCudaBlobDesc& result = desc.Result;
 
-	VectorFill( sourceDiff, 0, source.BlobSize() );
+	VectorFill( sourceDiff, 0, source.BlobSize(),36 );
 
 	int blockCount;
 	int threadCount;
@@ -313,7 +313,7 @@ void CCudaMathEngine::BlobGlobalMaxPoolingBackward( const CGlobalMaxPoolingDesc&
 	const CCudaBlobDesc& source = desc.Source;
 	const CCudaBlobDesc& result = desc.Result;
 
-	VectorFill( sourceDiff, 0, source.BlobSize() );
+	VectorFill( sourceDiff, 0, source.BlobSize(),37 );
 
 	const int poolSize = source.Depth() * source.Height() * source.Width();
 	const int maxCount = result.Depth() * result.Height() * result.Width();
@@ -375,7 +375,7 @@ void CCudaMathEngine::Blob3dMaxPoolingBackward( const C3dMaxPoolingDesc& pooling
 	SetCudaDevice( device->DeviceNumber );
 
 	const CCuda3dMaxPoolingDescInternal& desc = static_cast<const CCuda3dMaxPoolingDesc&>( poolingDesc ).Internal;
-	VectorFill( sourceDiff, 0, desc.Source.BlobSize() );
+	VectorFill( sourceDiff, 0, desc.Source.BlobSize(),38 );
 
 	const bool isAtomic = desc.FilterHeight > desc.StrideHeight || desc.FilterWidth > desc.StrideWidth || desc.FilterDepth > desc.StrideDepth;
 
@@ -437,7 +437,7 @@ void CCudaMathEngine::Blob3dMeanPoolingBackward( const C3dMeanPoolingDesc& pooli
 	if( desc.FilterHeight != desc.StrideHeight || desc.FilterWidth != desc.StrideWidth || desc.FilterDepth != desc.StrideDepth ) {
 		// Either the cube blocks used for pooling have nonzero intersections, and we need to add up several diffs,
 		// or some of the data is skipped when pooling and we need to set diff = 0 for it
-		VectorFill( sourceDiff, 0, desc.Source.BlobSize() );
+		VectorFill( sourceDiff, 0, desc.Source.BlobSize(),39 );
 	}
 
 	// Indicates that the cube blocks used for pooling have nonzero intersections, and the diffs should be added up (atomicAdd)
@@ -507,7 +507,7 @@ void CCudaMathEngine::BlobMaxOverTimePoolingBackward( const CMaxOverTimePoolingD
 	const CCudaBlobDesc& result = desc.Result;
 
 	// Set diff to 0
-	VectorFill( sourceDiff, 0, source.BlobSize() );
+	VectorFill( sourceDiff, 0, source.BlobSize(),40 );
 
 	int blockCount;
 	int threadCount;

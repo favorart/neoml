@@ -98,7 +98,7 @@ namespace NeoML {
 // The number of combined operations
 constexpr int VectorCombine = 4;
 
-void CVulkanMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize )
+void CVulkanMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize, int )
 {
 	static_assert(sizeof(float) == sizeof(uint32_t), "");
 
@@ -112,7 +112,7 @@ void CVulkanMathEngine::VectorFill( const CFloatHandle& result, float value, int
 	commandQueue->RunFillBuffer( vulkanMemory->Buffer(), GetRawOffset( result ), size, data );
 }
 
-void CVulkanMathEngine::VectorFill( const CIntHandle& result, int value, int vectorSize )
+void CVulkanMathEngine::VectorFill( const CIntHandle& result, int value, int vectorSize, int )
 {
 	uint32_t data = value;
 	size_t size = vectorSize * sizeof( int );
@@ -123,7 +123,7 @@ void CVulkanMathEngine::VectorFill( const CIntHandle& result, int value, int vec
 	commandQueue->RunFillBuffer( vulkanMemory->Buffer(), GetRawOffset(result), size, data );
 }
 
-void CVulkanMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value)
+void CVulkanMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num )
 {
 	CMemoryHandle bufs[2] = { value, result };
 	size_t sizes[2] = { sizeof(float), vectorSize * sizeof(float) };
@@ -132,7 +132,7 @@ void CVulkanMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, c
 		0, 0, 0, 0, 0, 0, bufs, sizes, 2, Ceil(vectorSize, VectorCombine) );
 }
 
-void CVulkanMathEngine::VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value)
+void CVulkanMathEngine::VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num )
 {
 	CMemoryHandle bufs[2] = { value, result };
 	size_t sizes[2] = { sizeof( int ), vectorSize * sizeof( int ) };

@@ -304,10 +304,10 @@ void CDnnBlob::Clear()
 {
 	switch(GetDataType()) {
 		case CT_Float:
-			mathEngine.VectorFill( GetData<float>(), 0, GetDataSize() );
+			mathEngine.VectorFill( GetData<float>(), 0, GetDataSize(),46 );
 			break;
 		case CT_Int:
-			mathEngine.VectorFill( GetData<int>(), 0, GetDataSize() );
+			mathEngine.VectorFill( GetData<int>(), 0, GetDataSize(), 47 );
 			break;
 		default:
 			NeoAssert( false );
@@ -318,10 +318,10 @@ void CDnnBlob::ClearObject(int num)
 {
 	switch(GetDataType()) {
 		case CT_Float:
-			mathEngine.VectorFill(GetObjectData<float>( num ), 0, GetObjectSize());
+			mathEngine.VectorFill(GetObjectData<float>( num ), 0, GetObjectSize(), 48 );
 			break;
 		case CT_Int:
-			mathEngine.VectorFill(GetObjectData<int>( num ), 0, GetObjectSize());
+			mathEngine.VectorFill(GetObjectData<int>( num ), 0, GetObjectSize(), 49 );
 			break;
 		default:
 			NeoAssert( false );

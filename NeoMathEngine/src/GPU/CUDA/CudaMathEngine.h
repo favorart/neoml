@@ -69,10 +69,10 @@ public:
 	CMemoryHandle CopyFrom( const CMemoryHandle& handle, size_t size ) override;
 
 	// IVectorMathematicsEngine interface methods
-	void VectorFill( const CFloatHandle& result, float value, int vectorSize ) override;
-	void VectorFill( const CIntHandle& result, int value, int vectorSize ) override;
-	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value ) override;
-	void VectorFill( const CIntHandle& result, int vectorSize, const CConstIntHandle& value ) override;
+	void VectorFill( const CFloatHandle& result, float value, int vectorSize, int num ) override;
+	void VectorFill( const CIntHandle& result, int value, int vectorSize, int num ) override;
+	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num ) override;
+	void VectorFill( const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num ) override;
 	void VectorConvert( const CConstFloatHandle& from, const CIntHandle& to, int vectorSize ) override;
 	void VectorConvert( const CConstIntHandle& from, const CFloatHandle& to, int vectorSize ) override;
 	void VectorFillBernoulli( const CFloatHandle& result, float p, int vectorSize, float value, int seed ) override;
@@ -758,7 +758,7 @@ inline void CCudaMathEngine::VectorHardTanhDiffOp( const CConstFloatHandle& firs
 inline void CCudaMathEngine::SumMatrixRows( int batchSize,
 	const CFloatHandle& resultHandle, const CConstFloatHandle& matrixHandle, int matrixHeight, int matrixWidth )
 {
-	VectorFill( resultHandle, 0.f, batchSize * matrixWidth );
+	VectorFill( resultHandle, 0.f, batchSize * matrixWidth, 5 );
 	SumMatrixRowsAdd( batchSize, resultHandle, matrixHandle, matrixHeight, matrixWidth );
 }
 

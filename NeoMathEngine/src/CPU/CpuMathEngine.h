@@ -63,10 +63,10 @@ public:
 	void GetMathEngineInfo( CMathEngineInfo& info ) const override;
 
 	// IVectorMathEngine interface methods
-	void VectorFill( const CFloatHandle& result, float value, int vectorSize ) override;
-	void VectorFill( const CIntHandle& result, int value, int vectorSize ) override;
-	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value ) override;
-	void VectorFill( const CIntHandle& result, int vectorSize, const CConstIntHandle& value ) override;
+	void VectorFill( const CFloatHandle& result, float value, int vectorSize, int num = 0) override;
+	void VectorFill( const CIntHandle& result, int value, int vectorSize, int num = 0 ) override;
+	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num = 0 ) override;
+	void VectorFill( const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num = 0 ) override;
 	void VectorConvert( const CConstFloatHandle& from, const CIntHandle& to, int vectorSize ) override;
 	void VectorConvert( const CConstIntHandle& from, const CFloatHandle& to, int vectorSize ) override;
 	void VectorFillBernoulli( const CFloatHandle& result, float p, int vectorSize, float value, int seed ) override;

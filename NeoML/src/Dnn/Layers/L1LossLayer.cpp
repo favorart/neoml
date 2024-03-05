@@ -43,7 +43,7 @@ void CL1LossLayer::BatchCalculateLossAndGradient( int batchSize, CConstFloatHand
 
 	if( !lossGradient.IsNull() ) {
 		CFloatHandleStackVar ones( MathEngine(), totalSize );
-		MathEngine().VectorFill( ones.GetHandle(), 1.f, totalSize );
+		MathEngine().VectorFill( ones.GetHandle(), 1.f, totalSize,72 );
 
 		MathEngine().VectorAbsDiff( temp, ones, lossGradient, totalSize );
 	}

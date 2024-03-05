@@ -243,7 +243,7 @@ void CCudaMathEngine::SumMatrixRows( int batchSize, const CIntHandle& resultHand
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( resultHandle, 0, batchSize * matrixWidth );
+	VectorFill( resultHandle, 0, batchSize * matrixWidth,50 );
 
 	const int height = ( matrixHeight + SumMatrixRowsAddCombineCount - 1 ) / SumMatrixRowsAddCombineCount;
 
@@ -472,7 +472,7 @@ void CCudaMathEngine::FindMinValueInColumns( const CConstFloatHandle& matrixHand
 	SetCudaDevice( device->DeviceNumber );
 	// Initialize using the first row data
 	VectorCopy( resultHandle, matrixHandle, matrixWidth );
-	VectorFill( columnIndices, 0, matrixWidth );
+	VectorFill( columnIndices, 0, matrixWidth,51 );
 
 	int blockCount;
 	int threadCount;
@@ -576,7 +576,7 @@ void CCudaMathEngine::MultiplyLookupMatrixByLookupVector(int batchSize, const CL
 	if(blockCount.x > 0) {
 		// Several GPUs may take part in adding up one row, need atomic operations
 		// Set resultHandle to zeros
-		VectorFill(resultHandle, 0, batchSize * matrix.Height());
+		VectorFill(resultHandle, 0, batchSize * matrix.Height(),52);
 	}
 
 	const int sharedSize = threadCount.x * threadCount.y * sizeof(float);
@@ -711,7 +711,7 @@ void CCudaMathEngine::RowMultiplyMatrixByMatrix( const CConstFloatHandle& firstH
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( resultHandle, 0, height );
+	VectorFill( resultHandle, 0, height, 53 );
 	const int widthNorm = ( width + RowMultiplyMatrixByMatrixCombine - 1 ) / RowMultiplyMatrixByMatrixCombine;
 
 	dim3 blockCount;
@@ -807,7 +807,7 @@ void CCudaMathEngine::LookupAndAddToTable( const CConstIntHandle& indicesHandle,
 	ASSERT_EXPR( additionsHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( tableHandle, 0.f, vectorSize * vectorCount );
+	VectorFill( tableHandle, 0.f, vectorSize * vectorCount,54 );
 
 	dim3 blockCount, threadCount;
 	getCudaTaskGrid3D( blockCount, threadCount, batchSize, indexCount, vectorSize );
@@ -888,7 +888,7 @@ void CCudaMathEngine::sumMatrixColumnsKernelFunc(const CFloatHandle& resultHandl
 		blockCount.x = maxAtomicPerX;
 	}
 	if( blockCount.x > 1 ) {
-		VectorFill(resultHandle, 0, matrixHeight);
+		VectorFill(resultHandle, 0, matrixHeight,55);
 	}
 	const int totalThreadXCount = threadCount.x * blockCount.x;
 	const int combine = (matrixWidth + totalThreadXCount - 1) / totalThreadXCount;
@@ -918,7 +918,7 @@ void CCudaMathEngine::multiplyVectorByLookupMatrixImpl(int batchSize, const CLoo
 	if(blockCount.x > 0 && !isAdd) {
 		// Several GPUs may take part in adding up one column, need atomic operations
 		// Set resultHandle to zeros
-		VectorFill(resultHandle, 0, batchSize * matrix.Width());
+		VectorFill(resultHandle, 0, batchSize * matrix.Width(),56);
 	}
 
 	const int sharedSize = threadCount.x * threadCount.y * sizeof(float);
@@ -933,9 +933,9 @@ void CCudaMathEngine::matrixSpreadRowsImpl(const T* source, int height, int widt
 {
 	SetCudaDevice( device->DeviceNumber );
 	if(fillValue.IsNull()) {
-		VectorFill( result, 0, resultHeight * width);
+		VectorFill( result, 0, resultHeight * width, 20);
 	} else {
-		VectorFill( result, resultHeight * width, fillValue);
+		VectorFill( result, resultHeight * width, fillValue,21);
 	}
 
 	const int widthNorm = (width + MatrixSpreadRowsCombine - 1) / MatrixSpreadRowsCombine;

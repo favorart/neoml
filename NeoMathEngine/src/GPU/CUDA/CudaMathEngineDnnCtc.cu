@@ -62,7 +62,7 @@ static void calcBlankSkipMask( int padLabelLen, int batchSize, const CConstIntHa
 	IMathEngine& mathEngine = *padLabels.GetMathEngine();
 	CFloatHandleStackVar logZeroVar( mathEngine );
 	logZeroVar.SetValue( logZero );
-	mathEngine.VectorFill( blankSkipMask + batchSize * ( padLabelLen - 2 ), 1.f, batchSize * 2 );
+	mathEngine.VectorFill( blankSkipMask + batchSize * ( padLabelLen - 2 ), 1.f, batchSize * 2,27 );
 	const int effectiveMaskSize = ( padLabelLen - 2 ) * batchSize;
 	mathEngine.VectorEqual( padLabels, padLabels + 2 * batchSize, blankSkipMask, effectiveMaskSize );
 	mathEngine.VectorMultiply( blankSkipMask, blankSkipMask, padLabelLen * batchSize, logZeroVar );
@@ -163,8 +163,8 @@ void CCudaMathEngine::ctcCalcForwardVariables( int resultLen, int batchSize, int
 	const int U = padLabelLen;
 
 	// The sequence may start with a space or with the first element
-	VectorFill( logAlpha, 0.f, batchSize * 2 );
-	VectorFill( logAlpha + batchSize * 2, logZero, batchSize * ( U - 2 ) );
+	VectorFill( logAlpha, 0.f, batchSize * 2,28 );
+	VectorFill( logAlpha + batchSize * 2, logZero, batchSize * ( U - 2 ),29 );
 	// Add the logarithm of probability of label recognition
 	assert( isfinite( logAlpha.GetValueAt( 0 ) ) );
 	assert( isfinite( resultLogProbMask.GetValueAt( 0 ) ) );
@@ -195,10 +195,10 @@ void CCudaMathEngine::ctcCalcBackwardVariables( int resultLen, int batchSize, in
 	// The sequence may end either with a space or with the actual last element
 	// Therefore logBetaWindow is filled with logZero everywhere except two positions per sample
 	// which should be filled with zero
-	VectorFill( logBetaWindow, logZero, U * batchSize );
+	VectorFill( logBetaWindow, logZero, U * batchSize,30 );
 	if( labelLens.IsNull() ) {
 		// Fixed length. Fill the two last positions with zero
-		VectorFill( logBetaWindow + ( U - 2 ) * batchSize, 0.f, batchSize * 2 );
+		VectorFill( logBetaWindow + ( U - 2 ) * batchSize, 0.f, batchSize * 2,31 );
 	} else {
 		// Varying length. Fill the (2 * labelsLengths[j]) and (2 * labelsLengths[j] - 1) positions with zero
 		CIntHandleStackVar endOfLabelPos( *this, batchSize );
@@ -208,7 +208,7 @@ void CCudaMathEngine::ctcCalcBackwardVariables( int resultLen, int batchSize, in
 		vectorFillLinear( endOfLabelSample, batchSize, 0, 1 );
 
 		CFloatHandleStackVar batchOfZeros( *this, batchSize );
-		VectorFill( batchOfZeros, 0.f, batchSize );
+		VectorFill( batchOfZeros, 0.f, batchSize,32 );
 
 		setVectorToMatrixElements( logBetaWindow, U, batchSize, endOfLabelPos, endOfLabelSample,
 			batchOfZeros, batchSize );
@@ -249,7 +249,7 @@ void CCudaMathEngine::ctcCalcGradient( int resultLen, int batchSize, int classCo
 	// chapter 7.4.1
 	CFloatHandleStackVar probSum( *this, resultLen * batchSize * classCount );
 	{
-		VectorFill( probSum, logZero, resultLen * batchSize * classCount );
+		VectorFill( probSum, logZero, resultLen * batchSize * classCount,33 );
 		dim3 blockCount;
 		dim3 threadCount;
 		getCudaTaskGrid2D( blockCount, threadCount, resultLen, batchSize );

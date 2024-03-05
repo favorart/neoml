@@ -67,7 +67,7 @@ void CGlobalSumPoolingLayer::RunOnce()
 
 void CGlobalSumPoolingLayer::BackwardOnce()
 {
-	MathEngine().VectorFill( inputDiffBlobs[0]->GetData(), 0.0f, inputDiffBlobs[0]->GetDataSize() );
+	MathEngine().VectorFill( inputDiffBlobs[0]->GetData(), 0.0f, inputDiffBlobs[0]->GetDataSize(),65 );
 	if( inputDiffBlobs[0]->GetChannelsCount() == 1 ) {
 		MathEngine().AddVectorToMatrixColumns( inputDiffBlobs[0]->GetData(), inputDiffBlobs[0]->GetData(),
 			inputDiffBlobs[0]->GetObjectCount(), inputDiffBlobs[0]->GetGeometricalSize(), outputDiffBlobs[0]->GetData() );

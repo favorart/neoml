@@ -86,7 +86,7 @@ static CPtr<CDnnBlob> diagJacobianToFull( const CPtr<CDnnBlob>& diag )
 	IMathEngine& mathEngine = diag->GetMathEngine();
 	const int width = diag->GetObjectSize();
 	CPtr<CDnnBlob> full = CDnnBlob::CreateBlob( mathEngine, { width, 1, 1, 1, 1, 1, width } );
-	mathEngine.VectorFill( full->GetData(), 0.f, width * width );
+	mathEngine.VectorFill( full->GetData(), 0.f, width * width, 1 );
 	mathEngine.AddDiagMatrixToMatrix( diag->GetData(), full->GetData(),
 		width, width, full->GetData() );
 	return full;
@@ -1319,7 +1319,7 @@ CPtr<CDnnBlob> CTapeConcat::Jacobian( const CTapeBlob* var ) const
 			CBlobDesc desc = blobs[i]->GetDesc();
 			desc.SetDimSize( BD_Channels, desc.DimSize( BD_Channels ) * width );
 			jacobians[i] = CDnnBlob::CreateBlob( mathEngine, desc );
-			mathEngine.VectorFill( jacobians[i]->GetData(), 0.f, jacobians[i]->GetDataSize() );
+			mathEngine.VectorFill( jacobians[i]->GetData(), 0.f, jacobians[i]->GetDataSize(),2 );
 		} else {
 			if( jacobians[i]->GetObjectCount() == 1 ) {
 				jacobians[i] = diagJacobianToFull( jacobians[i] );

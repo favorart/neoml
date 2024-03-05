@@ -28,7 +28,7 @@ void CBaseMultiHingeLossLayer::BatchCalculateLossAndGradient(int batchSize,
 	NeoAssert(labelSize == vectorSize);
 
 	CFloatHandleStackVar ones( MathEngine(), batchSize * vectorSize );
-	MathEngine().VectorFill(ones, 1.f, batchSize * vectorSize);
+	MathEngine().VectorFill(ones, 1.f, batchSize * vectorSize,73);
 
 	// lossValue - positives
 	MathEngine().RowMultiplyMatrixByMatrix(data, label, batchSize, vectorSize, lossValue);
@@ -53,7 +53,7 @@ void CBaseMultiHingeLossLayer::BatchCalculateLossAndGradient(int batchSize,
 		CalculateEltwiseLossDiff( lossValue, ones, derivative, batchSize );
 
 		CFloatHandle temp2 = ones;
-		MathEngine().VectorFill(temp2, 0.f, batchSize * vectorSize);
+		MathEngine().VectorFill(temp2, 0.f, batchSize * vectorSize,74);
 		MathEngine().AddMatrixElementsToMatrix(temp, batchSize, vectorSize, temp2, negIdx);
 		MathEngine().VectorSub(label, temp2, temp2, batchSize * vectorSize);
 		MathEngine().MultiplyDiagMatrixByMatrix(derivative, batchSize, temp2, vectorSize,
@@ -70,11 +70,11 @@ void CBaseMultiHingeLossLayer::BatchCalculateLossAndGradient(int batchSize,
 	NeoAssert(labelSize == 1);
 
 	// lossValue - positives
-	MathEngine().VectorFill(lossValue, 0, batchSize);
+	MathEngine().VectorFill(lossValue, 0, batchSize,75);
 	MathEngine().AddMatrixElementsToVector(data, batchSize, vectorSize, label, lossValue, batchSize);
 
 	CFloatHandleStackVar temp( MathEngine(), batchSize * vectorSize );
-	MathEngine().VectorFill(temp, 0, batchSize * vectorSize);
+	MathEngine().VectorFill(temp, 0, batchSize * vectorSize, 76);
 	MathEngine().AddVectorToMatrixElements(temp, batchSize, vectorSize, label, lossValue);
 	MathEngine().VectorSub(data, temp, temp, batchSize * vectorSize);
 
@@ -91,11 +91,11 @@ void CBaseMultiHingeLossLayer::BatchCalculateLossAndGradient(int batchSize,
 
 	if(!lossGradient.IsNull()) {
 		CFloatHandleStackVar temp2( MathEngine(), batchSize * vectorSize );
-		MathEngine().VectorFill(temp2, 1.f, batchSize);
+		MathEngine().VectorFill(temp2, 1.f, batchSize, 77);
 		CFloatHandle derivative = negatives;
 		CalculateEltwiseLossDiff( lossValue, temp2, derivative, batchSize );
 
-		MathEngine().VectorFill(temp2, 0.f, batchSize * vectorSize);
+		MathEngine().VectorFill(temp2, 0.f, batchSize * vectorSize, 78);
 		MathEngine().AddMatrixElementsToMatrix(temp, batchSize, vectorSize, temp2, negIdx);
 		MathEngine().EnumBinarization(batchSize, label, vectorSize, temp);
 		MathEngine().VectorSub(temp, temp2, temp2, batchSize * vectorSize);

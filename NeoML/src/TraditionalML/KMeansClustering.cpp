@@ -562,7 +562,7 @@ struct CKMeansVectorFillZeroThreadTask : public IKMeansMathEngineThreadTask {
 	{}
 protected:
 	void Run( int /*threadIndex*/, const int* index, const int* count ) override
-	{ MathEngine.VectorFill( Result + *index, 0, *count ); }
+	{ MathEngine.VectorFill( Result + *index, 0, *count, 0 ); }
 };
 
 //-------------------------------------------------------------------------------------------------------------

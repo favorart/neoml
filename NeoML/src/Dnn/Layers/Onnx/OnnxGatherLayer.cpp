@@ -35,7 +35,7 @@ static void shiftIndices( int gatherDimSize, const CDnnBlob& indices, CDnnBlob& 
 {
 	IMathEngine& mathEngine = indices.GetMathEngine();
 
-	mathEngine.VectorFill( result.GetData<int>(), 0, result.GetDataSize() );
+	mathEngine.VectorFill( result.GetData<int>(), 0, result.GetDataSize(),79 );
 	// Add imageSize value to negative indices
 	mathEngine.VectorEltwiseLess( indices.GetData<int>(), result.GetData<int>(), result.GetData<int>(), result.GetDataSize() );
 	CIntHandleStackVar imageSizeVar( mathEngine );

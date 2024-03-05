@@ -30,7 +30,7 @@ limitations under the License.
 
 namespace NeoML {
 
-void CCpuMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize )
+void CCpuMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize, int )
 {
 	ASSERT_EXPR( result.GetMathEngine() == this );
 	CCpuExecutionScope scope;
@@ -38,7 +38,7 @@ void CCpuMathEngine::VectorFill( const CFloatHandle& result, float value, int ve
 	vectorFill( GetRaw( result ), value, vectorSize );
 }
 
-void CCpuMathEngine::VectorFill( const CIntHandle& resultHandle, int value, int vectorSize )
+void CCpuMathEngine::VectorFill( const CIntHandle& resultHandle, int value, int vectorSize, int )
 {
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	CCpuExecutionScope scope;

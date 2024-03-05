@@ -335,14 +335,14 @@ template<class T>
 inline void CDnnBlob::Fill(typename CBlobType<T>::TDataType value)
 {
 	NeoAssert(GetDataType() == CBlobType<T>::GetType());
-	mathEngine.VectorFill(GetData<T>(), value, GetDataSize());
+	mathEngine.VectorFill(GetData<T>(), value, GetDataSize(),61);
 }
 
 template<class T>
 inline void CDnnBlob::FillObject(int num, typename CBlobType<T>::TDataType value)
 {
 	NeoAssert(GetDataType() == CBlobType<T>::GetType());
-	mathEngine.VectorFill(GetObjectData<T>(num), value, GetObjectSize());
+	mathEngine.VectorFill(GetObjectData<T>(num), value, GetObjectSize(),62);
 }
 
 template<class T>

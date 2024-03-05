@@ -96,7 +96,7 @@ void CCudaMathEngine::BroadcastCopy(const CFloatHandle& toHandle, const CConstFl
 		GetRaw( toHandle ), GetRaw( fromHandle ), toDesc, fromDesc, additionalWidth, resultSize );
 }
 
-void CCudaMathEngine::VectorFill(const CFloatHandle& result, float value, int vectorSize)
+void CCudaMathEngine::VectorFill(const CFloatHandle& result, float value, int vectorSize, int num)
 {
 	ASSERT_EXPR(result.GetMathEngine() == this);
 	SetCudaDevice( device->DeviceNumber );
@@ -105,10 +105,10 @@ void CCudaMathEngine::VectorFill(const CFloatHandle& result, float value, int ve
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorFillCombineCount);
 
-	VectorFillKernel<<<blockCount, threadCount>>>(GetRaw(result), value, vectorSize);
+	VectorFillKernel<<<blockCount, threadCount>>>(GetRaw(result), value, vectorSize, num );
 }
 
-void CCudaMathEngine::VectorFill(const CIntHandle& result, int value, int vectorSize)
+void CCudaMathEngine::VectorFill(const CIntHandle& result, int value, int vectorSize, int num )
 {
 	ASSERT_EXPR(result.GetMathEngine() == this);
 	SetCudaDevice( device->DeviceNumber );
@@ -117,10 +117,10 @@ void CCudaMathEngine::VectorFill(const CIntHandle& result, int value, int vector
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorFillCombineCount);
 
-	VectorFillKernel<<<blockCount, threadCount>>>(GetRaw(result), value, vectorSize);
+	VectorFillKernel<<<blockCount, threadCount>>>(GetRaw(result), value, vectorSize, num );
 }
 
-void CCudaMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value)
+void CCudaMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num )
 {
 	ASSERT_EXPR(result.GetMathEngine() == this);
 	ASSERT_EXPR(value.GetMathEngine() == this);
@@ -130,10 +130,10 @@ void CCudaMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, con
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorFillHandleCombineCount);
 
-	VectorFillHandleKernel<<<blockCount, threadCount>>>(GetRaw(result), vectorSize, GetRaw(value));
+	VectorFillHandleKernel<<<blockCount, threadCount>>>(GetRaw(result), vectorSize, GetRaw(value), num );
 }
 
-void CCudaMathEngine::VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value)
+void CCudaMathEngine::VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num )
 {
 	ASSERT_EXPR(result.GetMathEngine() == this);
 	ASSERT_EXPR(value.GetMathEngine() == this);
@@ -143,7 +143,7 @@ void CCudaMathEngine::VectorFill(const CIntHandle& result, int vectorSize, const
 	int threadCount;
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, VectorFillHandleCombineCount);
 
-	VectorFillHandleKernel<<<blockCount, threadCount>>>(GetRaw(result), vectorSize, GetRaw(value));
+	VectorFillHandleKernel<<<blockCount, threadCount>>>(GetRaw(result), vectorSize, GetRaw(value), num );
 }
 
 void CCudaMathEngine::VectorConvert(const CConstFloatHandle& from, const CIntHandle& to, int vectorSize)
@@ -292,7 +292,7 @@ void CCudaMathEngine::VectorSumAlongDimensionDiag( const CConstFloatHandle& firs
 	getCudaTaskGrid2D( blockCount, threadCount, precedingDimension, followingDimension );
 
 	VectorFill( resultHandle, 0.0, precedingDimension * precedingDimension * dimension
-		* followingDimension * followingDimension );
+		* followingDimension * followingDimension,42 );
 	VectorSumAlongDimensionDiagKernel<<<blockCount, threadCount>>>
 		( GetRaw( firstHandle ), precedingDimension, dimension, followingDimension, GetRaw( resultHandle ) );
 }
@@ -309,7 +309,7 @@ void CCudaMathEngine::VectorCumSumAlongDimensionDiag( const CConstFloatHandle& f
 	getCudaTaskGrid2D( blockCount, threadCount, precedingDimension, dimension * followingDimension );
 
 	VectorFill( resultHandle, 0.0, precedingDimension * precedingDimension * dimension
-		* dimension * followingDimension * followingDimension );
+		* dimension * followingDimension * followingDimension,43 );
 	VectorCumSumAlongDimensionDiagKernel<<<blockCount, threadCount>>>
 		( GetRaw( firstHandle ), precedingDimension, dimension, followingDimension, GetRaw( resultHandle ) );
 }
@@ -1569,7 +1569,7 @@ void CCudaMathEngine::VectorFindMaxValueInSet(const CConstFloatHandle* vectors, 
 	ASSERT_EXPR( vectors[0].GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( indexHandle, 0, vectorSize );
+	VectorFill( indexHandle, 0, vectorSize,44 );
 	VectorCopy( resultHandle, vectors[0], vectorSize );
 
 	int blockCount;
@@ -1643,7 +1643,7 @@ void CCudaMathEngine::VectorTopKDiff( const CConstFloatHandle& sourceGrad, int s
 	SetCudaDevice( device->DeviceNumber );
 
 	if( sourceGradHeight == 1 ){
-		VectorFill( resultGrad, 0, k * sourceGradWidth );
+		VectorFill( resultGrad, 0, k * sourceGradWidth,45 );
 
 		int blockCount;
 		int threadCount;

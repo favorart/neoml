@@ -292,7 +292,7 @@ void CCudaMathEngine::Upsampling2DBackward( const CBlobDesc& input, const CConst
 	SetCudaDevice( device->DeviceNumber );
 
 	// Fill the resulting blob with zeros
-	VectorFill( resultData, 0, result.BlobSize() );
+	VectorFill( resultData, 0, result.BlobSize(),22 );
 
 	// This is how the algorithm works
 	// The input blob can be considered as batchSize matrices of inputHeight x inputRowSize size each
@@ -322,7 +322,7 @@ void CCudaMathEngine::BuildIntegerHist( const CConstIntHandle& numbersHandle, in
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( resultHandle, 0, maxNumber );
+	VectorFill( resultHandle, 0, maxNumber,23 );
 
 	int blockCount;
 	int threadCount;
@@ -342,7 +342,7 @@ void CCudaMathEngine::MatrixRowsToVectorSquaredL2Distance( const CConstFloatHand
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( resultHandle, 0.f, matrixHeight );
+	VectorFill( resultHandle, 0.f, matrixHeight,24 );
 
 	const int normalizedWidth = ( matrixWidth + MatrixRowsToVectorSquaredL2DistanceCombineCount - 1 )
 		/ MatrixRowsToVectorSquaredL2DistanceCombineCount;

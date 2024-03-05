@@ -92,7 +92,7 @@ void CFocalLossLayer::BatchCalculateLossAndGradient( int batchSize, CConstFloatH
 
 	// tempMatrix: (1 - P_t) * y_t
 	// remainderVector: (1 - P_t) * y_t
-	MathEngine().VectorFill( tempMatrixHandle.GetHandle(), 1.0, batchSize * vectorSize );
+	MathEngine().VectorFill( tempMatrixHandle.GetHandle(), 1.0, batchSize * vectorSize,63 );
 	MathEngine().VectorSub( tempMatrixHandle.GetHandle(), data, tempMatrixHandle.GetHandle(), dataSize );
 	MathEngine().VectorEltwiseMultiply( tempMatrixHandle.GetHandle(), label, tempMatrixHandle.GetHandle(), dataSize );
 	CFloatHandleVar remainderVector( MathEngine(), batchSize );

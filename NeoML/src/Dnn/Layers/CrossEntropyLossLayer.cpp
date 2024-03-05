@@ -78,7 +78,7 @@ void CCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize, CCons
 	} else {
 		MathEngine().VectorInv( activation, activation, totalSize );
 		MathEngine().VectorEltwiseMultiply( activation, label, activation, totalSize );
-		MathEngine().VectorFill( activationEltwiseMul, 1.f, totalSize );
+		MathEngine().VectorFill( activationEltwiseMul, 1.f, totalSize, 15 );
 		MathEngine().VectorSub( activationEltwiseMul, activation, activationEltwiseMul, totalSize );
 	}
 
@@ -113,7 +113,7 @@ void CCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize, CCons
 		MathEngine().VectorMinMax( data, activation, totalSize, minValue, maxValue );
 	}
 
-	MathEngine().VectorFill( activationMul, 0, batchSize );
+	MathEngine().VectorFill( activationMul, 0, batchSize, 16 );
 	MathEngine().AddMatrixElementsToVector( activation, batchSize, vectorSize, label, activationMul, batchSize );
 
 	MathEngine().VectorNegLog( activationMul, lossValue, batchSize );
@@ -124,15 +124,15 @@ void CCrossEntropyLossLayer::BatchCalculateLossAndGradient( int batchSize, CCons
 
 	if( isSoftmaxApplied ) {
 		// lossGradient = softmax
-		MathEngine().VectorFill( activationMul, -1, batchSize );
+		MathEngine().VectorFill( activationMul, -1, batchSize, 17 );
 	} else {
 		MathEngine().VectorInv( activation, activation, totalSize );
 		CFloatHandleStackVar minusOne( MathEngine() );
 		minusOne.SetValue( -1 );
 		MathEngine().VectorMultiply( activation, activation, totalSize, minusOne );
-		MathEngine().VectorFill( activationMul, 0, batchSize );
+		MathEngine().VectorFill( activationMul, 0, batchSize, 18 );
 		MathEngine().AddMatrixElementsToVector( activation, batchSize, vectorSize, label, activationMul, batchSize );
-		MathEngine().VectorFill( activation, 1, totalSize );
+		MathEngine().VectorFill( activation, 1, totalSize, 19 );
 	}
 	
 	MathEngine().AddVectorToMatrixElements( activation, batchSize, vectorSize, label, activationMul );

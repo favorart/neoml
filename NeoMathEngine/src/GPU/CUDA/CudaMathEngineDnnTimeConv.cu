@@ -149,7 +149,7 @@ void CCudaMathEngine::BlobTimeConvolutionBackward( const CTimeConvolutionDesc& c
 		CConstFloatHandle currOutputDiff = outputDiffData;
 		CFloatHandleStackVar tempMatrixPart( mathEngine(), maxInMemoryHeight * tempMatrixWidth );
 
-		VectorFill( inputDiffData, 0.f, inputDiff.BlobSize() );
+		VectorFill( inputDiffData, 0.f, inputDiff.BlobSize(),41 );
 		
 		const int combineCount = max( 1, BlobTimeConvolutionBackwardUnpackCombine / filter.Height() );
 		const int xSizeNorm = (inputDiff.ObjectSize() + combineCount - 1) / combineCount;

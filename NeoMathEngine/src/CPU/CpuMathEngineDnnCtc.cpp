@@ -86,7 +86,7 @@ static void calcBlankSkipMask( int padLabelLen, int batchSize, const CConstIntHa
 	IMathEngine& mathEngine = *padLabels.GetMathEngine();
 	CFloatHandleStackVar logZeroVar( mathEngine );
 	logZeroVar.SetValue( logZero );
-	mathEngine.VectorFill( blankSkipMask + batchSize * ( padLabelLen - 2 ), 1.f, batchSize * 2 );
+	mathEngine.VectorFill( blankSkipMask + batchSize * ( padLabelLen - 2 ), 1.f, batchSize * 2, 57);
 	const int effectiveMaskSize = ( padLabelLen - 2 ) * batchSize;
 	mathEngine.VectorEqual( padLabels, padLabels + 2 * batchSize, blankSkipMask, effectiveMaskSize );
 	mathEngine.VectorMultiply( blankSkipMask, blankSkipMask, padLabelLen * batchSize, logZeroVar );
@@ -173,7 +173,7 @@ static void calcGradient( int resultLen, int batchSize, int classCount, int padL
 	CFloatHandleStackVar probSum( mathEngine, batchSize * classCount );
 	CFloatHandleStackVar logAlphaBeta( mathEngine, U * batchSize );
 	for( int t = 0; t < T; ++t ) {
-		mathEngine.VectorFill( probSum, logZero, batchSize * classCount );
+		mathEngine.VectorFill( probSum, logZero, batchSize * classCount, 58 );
 		CConstFloatHandle resultProbWindow = resultProb + t * batchSize * classCount;
 		CConstFloatHandle logAlphaWindow = logAlpha + t * U * batchSize;
 		CConstFloatHandle logBetaWindow = logBeta + t * U * batchSize;
@@ -276,8 +276,8 @@ void CCpuMathEngine::ctcCalcForwardVariables( int resultLen, int batchSize, int 
 	const int U = padLabelLen;
 
 	// The sequence may start with a space or with the first element
-	mathEngine.VectorFill( logAlpha, 0.f, batchSize * 2 );
-	mathEngine.VectorFill( logAlpha + batchSize * 2, logZero, batchSize * ( U - 2 ) );
+	mathEngine.VectorFill( logAlpha, 0.f, batchSize * 2, 59 );
+	mathEngine.VectorFill( logAlpha + batchSize * 2, logZero, batchSize * ( U - 2 ), 60 );
 	// Add the logarithm of probability of label recognition
 	mathEngine.AddMatrixElementsToVector( resultLogProb, batchSize, classCount, rowIndices, padLabels,
 		logAlpha, U * batchSize );

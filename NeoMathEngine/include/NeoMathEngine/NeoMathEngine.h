@@ -83,12 +83,12 @@ public:
 		const CBlobDesc& toDesc, const CBlobDesc& fromDesc, int additionalWidth) = 0;
 
 	// Filling a vector with the specified value
-	virtual void VectorFill(const CFloatHandle& result, float value, int vectorSize) = 0;
-	virtual void VectorFill(const CIntHandle& result, int value, int vectorSize) = 0;
+	virtual void VectorFill(const CFloatHandle& result, float value, int vectorSize, int num ) = 0;
+	virtual void VectorFill(const CIntHandle& result, int value, int vectorSize, int num ) = 0;
 
 	// Filling a vector with a value stored in MathEngine memory
-	virtual void VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value) = 0;
-	virtual void VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value) = 0;
+	virtual void VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num ) = 0;
+	virtual void VectorFill(const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num ) = 0;
 
 	// Converting data type
 	virtual void VectorConvert(const CConstFloatHandle& from, const CIntHandle& to, int vectorSize) = 0;

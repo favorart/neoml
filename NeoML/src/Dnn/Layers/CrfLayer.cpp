@@ -307,7 +307,7 @@ void CCrfInternalLossLayer::BatchCalculateLossAndGradient(int batchSize, CConstF
 		MathEngine().MatrixSoftmaxByRows(data, batchSize, vectorSize, dataLossGradient);
 	}
 	if(!labelLossGradient.IsNull()) {
-		MathEngine().VectorFill(labelLossGradient, -1.f, batchSize);
+		MathEngine().VectorFill(labelLossGradient, -1.f, batchSize, 14);
 	}
 }
 
