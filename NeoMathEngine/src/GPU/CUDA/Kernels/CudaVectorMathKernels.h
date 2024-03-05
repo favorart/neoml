@@ -34,12 +34,24 @@ __global__ void VectorFillKernel(T* mem, T value, int count)
 	mem += index;
 
 	for(int i = 0; i < actionCount; ++i) {
-		*mem = value;
 		if constexpr( std::is_same_v<T, float> ) {
+			if( !isfinite( *mem ) ||
+				*mem < -18002376725743890449408517795774411571.f ||
+				*mem >  18002376725743890449408517795774411571.f )
+			{
+				printf( "VectorFillKernel: mem=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u \n",
+					*mem, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x );
+			}
+			//------------
+			*mem = value;
+			//------------
 			assert( isfinite( *mem ) );
 			assert( *mem > -18002376725743890449408517795774411571.f );
-			assert( *mem < 18002376725743890449408517795774411571.f );
+			assert( *mem <  18002376725743890449408517795774411571.f );
+		} else {
+			*mem = value;
 		}
+		//*mem = value;
 		mem += step;
 	}
 }
@@ -164,6 +176,7 @@ __global__ void FilterSmallValuesKernel( float* data, float threshold, int count
 		data += stepSize;
 	}
 }
+
 const int VectorSumCombineCount = 16;
 __global__ void VectorSumKernel(const float* __restrict__ mem, int count, float* result, bool isNeg, bool setZero)
 {
@@ -342,7 +355,6 @@ __global__ void VectorEqualValueKernel( const int* first,
 }
 
 const int VectorActivationCombineCount = 8;
-
 __global__ void VectorELUKernel( const float* __restrict__ first, float* result, int count,
 	const float* __restrict__ alpha )
 {
@@ -384,6 +396,7 @@ __global__ void VectorELUDiffKernel( const float* __restrict__ first, const floa
 		result += step;
 	}
 }
+
 __global__ void VectorELUDiffOpKernel( const float* __restrict__ first, const float* __restrict__ second,
 	float* result, int count, const float* __restrict__ alpha )
 {
@@ -437,6 +450,7 @@ __global__ void VectorReLUKernel(const float* first, float* result,
 		}
 	}
 }
+
 __global__ void VectorReLUDiffKernel(const float* __restrict__ first,
 	const float* __restrict__ second, float* result, int count, const float* __restrict__ threshold)
 {
@@ -567,6 +581,7 @@ __global__ void VectorHSwishDiffKernel( const float* __restrict__ first, const f
 		result += step;
 	}
 }
+
 const int VectorEltwiseMaxCombineCount = 8;
 __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
 	float* result, int count)
@@ -1657,8 +1672,8 @@ __global__ void vectorLessKernel( float first, const float* __restrict__ second,
 }
 
 template<class T>
-__global__ void vectorEqualKernel( const T* __restrict__ first, const T* __restrict__ second, int* result,
-	int vectorSize )
+__global__ void vectorEqualKernel( const T* __restrict__ first, const T* __restrict__ second,
+	int* result, int vectorSize )
 {
 	int index;
 	if( GetCudaTaskIndex( vectorSize, index ) ) {

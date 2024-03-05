@@ -257,25 +257,15 @@ void CDnnBlob::CopyFrom(const CDnnBlob* other)
 	NeoAssert( other != nullptr );
 	NeoAssert( GetDataType() == other->GetDataType() );
 	NeoAssert( HasEqualDimensions( other ) );
-	if( this == other ) {
-		return;
-	}
+	assert( this != other );
 	switch( GetDataType() ) {
 		case CT_Float:
-			if( &mathEngine == &other->GetMathEngine() ) {
-				mathEngine.VectorCopy( GetData<float>(), other->GetData<float>(), GetDataSize() );
-			} else {
-				CDnnBlobBuffer<float> buffer( const_cast<CDnnBlob&>( *other ), TDnnBlobBufferAccess::Read );
-				CopyFrom( buffer.Ptr() );
-			}
+			assert( &mathEngine == &other->GetMathEngine() );
+			mathEngine.VectorCopy( GetData<float>(), other->GetData<float>(), GetDataSize() );
 			break;
 		case CT_Int:
-			if( &mathEngine == &other->GetMathEngine() ) {
-				mathEngine.VectorCopy( GetData<int>(), other->GetData<int>(), GetDataSize() );
-			} else {
-				CDnnBlobBuffer<int> buffer( const_cast<CDnnBlob&>( *other ), TDnnBlobBufferAccess::Read );
-				CopyFrom( buffer.Ptr() );
-			}
+			assert( &mathEngine == &other->GetMathEngine() );
+			mathEngine.VectorCopy( GetData<int>(), other->GetData<int>(), GetDataSize() );
 			break;
 		default:
 			NeoAssert( false );
