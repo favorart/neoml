@@ -360,6 +360,7 @@ protected:
 	// and do no calculations if it is still the same run
 	int lastRunNumber;
 
+public:
 	const CConstFloatHandle strName;
 
 	// The number of output diffs ready for backpropagation

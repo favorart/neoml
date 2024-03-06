@@ -111,7 +111,7 @@ void CMaxOverTimePoolingLayer::BackwardOnce()
 
 	NeoPresume( maxIndices->GetDataSize() == outputDiffBlobs[0]->GetDataSize());
 	
-	inputDiffBlobs[0]->Clear();
+	inputDiffBlobs[0]->Clear( 2100, &strName );
 	
 	if(filterLength > 0 && strideLength > 0) {
 		MathEngine().BlobMaxOverTimePoolingBackward( *desc, outputDiffBlobs[0]->GetData(),

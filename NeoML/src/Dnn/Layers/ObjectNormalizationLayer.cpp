@@ -112,7 +112,7 @@ void CObjectNormalizationLayer::OnReshaped()
 	}
 	if( Bias() == nullptr || Bias()->GetDataSize() != paramDesc.BlobSize() ) {
 		Bias() = CDnnBlob::CreateBlob( MathEngine(), CT_Float, paramDesc );
-		Bias()->Clear();
+		Bias()->Clear( 2300, &strName );
 	}
 
 	normalizedInput = nullptr;

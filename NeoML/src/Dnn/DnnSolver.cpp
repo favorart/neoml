@@ -450,7 +450,7 @@ void CDnnSimpleGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjec
 	if(gradientHistory.Size() == 0) {
 		for (int i = 0; i < paramDiffBlobs.Size(); ++i) {
 			CDnnBlob* blob = paramDiffBlobs[i]->GetClone();
-			blob->Clear();
+			blob->Clear( 1400, &layer->strName );
 			gradientHistory.Add(blob);
 		}
 	}
@@ -591,7 +591,7 @@ void CDnnAdaptiveGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		for( int j = 0; j < gradientHistoryTypeCount; j++ ) {
 			for(int i = 0; i < paramDiffBlobs.Size(); ++i) {
 				CDnnBlob* blob = paramDiffBlobs[i]->GetClone();
-				blob->Clear();
+				blob->Clear( 1500, &layer->strName );
 				gradientHistory.Add( blob );
 			}
 		}
@@ -755,7 +755,7 @@ void CDnnNesterovGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		for( int j = 0; j < gradientHistoryTypeCount; j++ ) {
 			for(int i = 0; i < paramDiffBlobs.Size(); ++i) {
 				CDnnBlob* blob = paramDiffBlobs[i]->GetClone();
-				blob->Clear();
+				blob->Clear( 1600, &layer->strName );
 				gradientHistory.Add( blob );
 			}
 		}
@@ -929,7 +929,7 @@ void CDnnLambGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjectA
 		for( int j = 0; j < 2; j++ ) {
 			for( int i = 0; i < paramDiffBlobs.Size(); ++i ) {
 				CDnnBlob* blob = paramDiffBlobs[i]->GetClone();
-				blob->Clear();
+				blob->Clear( 1700, &layer->strName );
 				gradientHistory.Add( blob );
 			}
 		}

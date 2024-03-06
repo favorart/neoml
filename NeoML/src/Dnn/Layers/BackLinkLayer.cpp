@@ -160,11 +160,11 @@ void CCaptureSinkLayer::Reshape()
 
 	if(blob == 0 || !blob->GetDesc().HasEqualDimensions(inputWindow)) {
 		blob = CDnnBlob::CreateBlob( MathEngine(), inputWindow.GetDataType(), inputWindow );
-		blob->Clear();
+		blob->Clear( 100, &strName );
 	}
 	if(diffBlob == 0 || !diffBlob->GetDesc().HasEqualDimensions(inputWindow)) {
 		diffBlob = CDnnBlob::CreateBlob( MathEngine(), inputWindow.GetDataType(), inputWindow );
-		diffBlob->Clear();
+		diffBlob->Clear( 200, &strName );
 	}
 }
 
@@ -176,7 +176,7 @@ void CCaptureSinkLayer::RunOnce()
 void CCaptureSinkLayer::ClearBlob()
 {
 	if(blob != 0) {
-		blob->Clear();
+		blob->Clear( 300, &strName );
 	}
 }
 
@@ -188,7 +188,7 @@ void CCaptureSinkLayer::CopyDiffBlob( CDnnBlob* _diffBlob )
 void CCaptureSinkLayer::ClearDiffBlob()
 {
 	if(diffBlob != 0) {
-		diffBlob->Clear();
+		diffBlob->Clear( 400, &strName );
 	}
 }
 

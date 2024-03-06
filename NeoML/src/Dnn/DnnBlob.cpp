@@ -300,28 +300,28 @@ bool CDnnBlob::Add(const CDnnBlob* other, int num, const CConstFloatHandle* name
 	return true;
 }
 
-void CDnnBlob::Clear()
+void CDnnBlob::Clear( int num, const CConstFloatHandle* name )
 {
 	switch(GetDataType()) {
 		case CT_Float:
-			mathEngine.VectorFill( GetData<float>(), 0, GetDataSize(),46 );
+			mathEngine.VectorFill( GetData<float>(), 0, GetDataSize(), num + 46, name );
 			break;
 		case CT_Int:
-			mathEngine.VectorFill( GetData<int>(), 0, GetDataSize(), 47 );
+			mathEngine.VectorFill( GetData<int>(), 0, GetDataSize(), num + 47 );
 			break;
 		default:
 			NeoAssert( false );
 	}
 }
 
-void CDnnBlob::ClearObject(int num)
+void CDnnBlob::ClearObject(int object, int num, const CConstFloatHandle* name )
 {
 	switch(GetDataType()) {
 		case CT_Float:
-			mathEngine.VectorFill(GetObjectData<float>( num ), 0, GetObjectSize(), 48 );
+			mathEngine.VectorFill(GetObjectData<float>( object ), 0, GetObjectSize(), num + 48, name );
 			break;
 		case CT_Int:
-			mathEngine.VectorFill(GetObjectData<int>( num ), 0, GetObjectSize(), 49 );
+			mathEngine.VectorFill(GetObjectData<int>( object ), 0, GetObjectSize(), num + 49 );
 			break;
 		default:
 			NeoAssert( false );

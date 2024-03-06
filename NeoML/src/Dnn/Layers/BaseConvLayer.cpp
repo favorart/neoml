@@ -159,7 +159,7 @@ void CBaseConvLayer::ApplyBatchNormalization(CBatchNormalizationLayer& batchNorm
 	if( newFreeTerm == nullptr ) {
 		SetZeroFreeTerm( false );
 		newFreeTerm = CDnnBlob::CreateVector( MathEngine(), CT_Float, filterCount );
-		newFreeTerm->Clear();
+		newFreeTerm->Clear( 500, &strName );
 	}
 
 	CFloatHandle filterData = newFilter->GetData();

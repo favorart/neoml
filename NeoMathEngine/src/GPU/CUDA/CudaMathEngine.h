@@ -69,9 +69,9 @@ public:
 	CMemoryHandle CopyFrom( const CMemoryHandle& handle, size_t size ) override;
 
 	// IVectorMathematicsEngine interface methods
-	void VectorFill( const CFloatHandle& result, float value, int vectorSize, int num ) override;
+	void VectorFill( const CFloatHandle& result, float value, int vectorSize, int num, const CConstFloatHandle* name = nullptr ) override;
 	void VectorFill( const CIntHandle& result, int value, int vectorSize, int num ) override;
-	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num ) override;
+	void VectorFill( const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num, const CConstFloatHandle* name = nullptr ) override;
 	void VectorFill( const CIntHandle& result, int vectorSize, const CConstIntHandle& value, int num ) override;
 	void VectorConvert( const CConstFloatHandle& from, const CIntHandle& to, int vectorSize ) override;
 	void VectorConvert( const CConstIntHandle& from, const CFloatHandle& to, int vectorSize ) override;

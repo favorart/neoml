@@ -339,7 +339,7 @@ void CEltwiseMaxLayer::BackwardOnce()
 	}
 
 	for( int j = 0; j < inputDiffBlobs.Size(); ++j ) {
-		inputDiffBlobs[j]->Clear();
+		inputDiffBlobs[j]->Clear( 1800, &strName );
 	}
 
 	MathEngine().VectorSpreadValues( outputDiffBlobs[0]->GetData(), diffVectors.GetPtr(), diffVectors.Size(),

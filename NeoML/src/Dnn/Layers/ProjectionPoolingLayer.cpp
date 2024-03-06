@@ -122,7 +122,7 @@ void CProjectionPoolingLayer::RunOnce()
 		// Calculate pooling result into the temporary blob
 		MathEngine().BlobMeanPooling( *desc, inputBlobs[0]->GetData(), projectionResultBlob->GetData() );
 		// Broadcatst pooling result along whole result blob
-		outputBlobs[0]->Clear();
+		outputBlobs[0]->Clear( 2500, &strName );
 
 		int batchSize = 1;
 		int matrixHeight = 1;

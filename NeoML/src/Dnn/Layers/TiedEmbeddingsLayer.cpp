@@ -130,7 +130,7 @@ void CTiedEmbeddingsLayer::LearnOnce()
 
 		MathEngine().VectorAdd( totalDiffBlob->GetData(), diffBlob->GetData(),
 			totalDiffBlob->GetData(), totalDiffBlob->GetDataSize(), 6 );
-		diffBlob->Clear();
+		diffBlob->Clear( 2900, &strName );
 	}
 
 	CMultichannelLookupLayer* embeddingsLayer = getLookUpLayer();

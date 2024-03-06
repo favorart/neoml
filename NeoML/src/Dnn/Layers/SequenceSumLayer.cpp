@@ -38,7 +38,7 @@ void CSequenceSumLayer::RunOnce()
 
 void CSequenceSumLayer::BackwardOnce()
 {
-	inputDiffBlobs[0]->Clear();
+	inputDiffBlobs[0]->Clear( 2700, &strName );
 	MathEngine().AddVectorToMatrixRows(1, inputDiffBlobs[0]->GetData(), inputDiffBlobs[0]->GetData(),
 		inputDiffBlobs[0]->GetBatchLength(), outputDiffBlobs[0]->GetDataSize(), outputDiffBlobs[0]->GetData());
 }

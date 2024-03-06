@@ -148,8 +148,8 @@ public:
 	// Elementwise adds a blob of the same dimensions
 	bool Add( const CDnnBlob* other, int num, const CConstFloatHandle* name = nullptr);
 	// Clears the contents
-	void Clear();
-	void ClearObject( int num );
+	void Clear( int num, const CConstFloatHandle* name );
+	void ClearObject( int object, int num, const CConstFloatHandle* name );
 	// Fills the blob with the given value 
 	// (CBlobType<T>::TDataType is used to avoid invalid typecasts when a call like Fill(0) is made)
 	template<class T = float>

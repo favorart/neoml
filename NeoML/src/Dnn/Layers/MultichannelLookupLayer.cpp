@@ -131,7 +131,7 @@ void CMultichannelLookupLayer::Initialize(CDnnInitializer* init)
 			if(init != 0) {
 				init->InitializeLayerParams(*getParams()[i], GetDimensions()[i].VectorSize );
 			} else {
-				getParams()[i]->Clear();
+				getParams()[i]->Clear( 2200, &strName );
 			}
 		}
 	}

@@ -128,7 +128,7 @@ void CLoraFullyConnectedLayer::Reshape()
 		BDesc.SetDimSize( BD_Channels, lora.Rank );
 		WeightsB() = CDnnBlob::CreateBlob( MathEngine(), CT_Float, BDesc );
 		// Initialize zeroes
-		WeightsB()->Clear();
+		WeightsB()->Clear( 2000, &strName );
 	}
 	// For each layer element there is a channel in the output blob
 	outputDescs[0] = inputDescs[0];

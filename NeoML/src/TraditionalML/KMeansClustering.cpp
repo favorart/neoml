@@ -1398,7 +1398,7 @@ void CKMeansClustering::calcClusterVariances( const CDnnBlob& data, const CDnnBl
 		CKMeansVectorMultichannelLookupAndAddToTableThreadTask( *threadPool, mathEngine, /*itemCount*/params.InitialClustersCount,
 			/*itemSize*/featureCount, /*batchSize*/vectorCount, labels.GetData<int>(), /*result*/sumOfSquares, squaredData ).ParallelRun();
 
-		variances.Clear();
+		variances.Clear( 1900, nullptr );
 		// Divide sum of squares by cluster size
 		CKMeansDiagMxMThreadTask( *threadPool, mathEngine, /*first*/sizeInv->GetData(), clusterCount,
 			/*second*/sumOfSquares, featureCount, /*result*/variances.GetData() ).ParallelRun();

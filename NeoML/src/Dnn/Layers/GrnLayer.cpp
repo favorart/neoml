@@ -64,7 +64,7 @@ void CGrnLayer::Reshape()
 	}
 	if( bias() == nullptr || bias()->GetDataSize() != paramDesc.BlobSize() ) {
 		bias() = CDnnBlob::CreateBlob( MathEngine(), CT_Float, paramDesc );
-		bias()->Clear();
+		bias()->Clear( 1300, &strName );
 	}
 
 	invChannels.SetValue( 1.f / inputDescs[0].Channels() );

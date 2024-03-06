@@ -98,7 +98,7 @@ namespace NeoML {
 // The number of combined operations
 constexpr int VectorCombine = 4;
 
-void CVulkanMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize, int )
+void CVulkanMathEngine::VectorFill( const CFloatHandle& result, float value, int vectorSize, int, const CConstFloatHandle* )
 {
 	static_assert(sizeof(float) == sizeof(uint32_t), "");
 
@@ -123,7 +123,7 @@ void CVulkanMathEngine::VectorFill( const CIntHandle& result, int value, int vec
 	commandQueue->RunFillBuffer( vulkanMemory->Buffer(), GetRawOffset(result), size, data );
 }
 
-void CVulkanMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num )
+void CVulkanMathEngine::VectorFill(const CFloatHandle& result, int vectorSize, const CConstFloatHandle& value, int num, const CConstFloatHandle* )
 {
 	CMemoryHandle bufs[2] = { value, result };
 	size_t sizes[2] = { sizeof(float), vectorSize * sizeof(float) };

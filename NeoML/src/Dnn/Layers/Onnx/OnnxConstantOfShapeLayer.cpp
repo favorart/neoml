@@ -26,7 +26,7 @@ COnnxConstantOfShapeLayer::COnnxConstantOfShapeLayer( IMathEngine& mathEngine ) 
 	COnnxLayerBase( mathEngine, "OnnxConstantOfShapeLayer" )
 {
 	value = CDnnBlob::CreateVector( mathEngine, CT_Float, 1 );
-	value->Clear();
+	value->Clear( 2400, &strName );
 }
 
 void COnnxConstantOfShapeLayer::SetValue( const CDnnBlob& blob )

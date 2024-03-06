@@ -43,7 +43,7 @@ void CSinkLayer::RunOnce()
 
 void CSinkLayer::BackwardOnce()
 {
-	inputDiffBlobs[0]->Clear();
+	inputDiffBlobs[0]->Clear( 2800, &strName );
 }
 
 static const int SinkLayerVersion = 2000;

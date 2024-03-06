@@ -41,7 +41,7 @@ void CQualityControlLayer::BackwardOnce()
 {
 	// This layer is usually placed after some learnable layers.
 	// In order to learn those layers are requiring for gradient from all succeeding layers (including this one).
-	inputDiffBlobs[0]->Clear();
+	inputDiffBlobs[0]->Clear( 2600, &strName );
 }
 
 void CQualityControlLayer::RunOnce()

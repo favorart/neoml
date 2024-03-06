@@ -55,7 +55,7 @@ __global__ void VectorCopyKernel( T* result, const T* first, int count, int num,
 }
 
 template<class T>
-__global__ void VectorFillKernel(T* mem, T value, int count, int num)
+__global__ void VectorFillKernel(T* mem, T value, int count, int num, const char* name)
 {
 	int index;
 	int step;
@@ -71,8 +71,8 @@ __global__ void VectorFillKernel(T* mem, T value, int count, int num)
 				*mem < -18002376725743890449408517795774411571.f ||
 				*mem >  18002376725743890449408517795774411571.f )
 			{
-				printf( "VectorFillKernel: mem=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  !%d! \n",
-					*mem, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num );
+				printf( "VectorFillKernel: mem=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  !%d!  '%s' \n",
+					*mem, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num, name );
 			}
 			assert( isfinite( *mem ) );
 			assert( *mem > -18002376725743890449408517795774411571.f );
@@ -84,7 +84,7 @@ __global__ void VectorFillKernel(T* mem, T value, int count, int num)
 
 const int VectorFillHandleCombineCount = 8;
 template<class T>
-__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num)
+__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name)
 {
 	int index;
 	int step;
@@ -100,8 +100,8 @@ __global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ 
 				*mem < -18002376725743890449408517795774411571.f ||
 				*mem >  18002376725743890449408517795774411571.f )
 			{
-				printf( "VectorFillHandleKernel: mem=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  !%d! \n",
-					*mem, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num );
+				printf( "VectorFillHandleKernel: mem=%f i=%d count=%d index=%d step=%d blockIdx.x=%u blockDim.x=%u threadIdx.x=%u  !%d!  '%s' \n",
+					*mem, i, count, index, step, blockIdx.x, blockDim.x, threadIdx.x, num, name );
 			}
 			assert( isfinite( *mem ) );
 			assert( *mem > -18002376725743890449408517795774411571.f );

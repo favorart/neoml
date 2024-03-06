@@ -106,7 +106,7 @@ void CCrfCalculationLayer::calcLabelProbability()
 {
 	int batchWidth = inputBlobs[I_ClassLogProb]->GetBatchWidth();
 	int numberOfClasses = inputBlobs[I_ClassLogProb]->GetObjectSize();
-	outputBlobs[O_LabelLogProb]->Clear();
+	outputBlobs[O_LabelLogProb]->Clear( 800, &strName );
 	// Add the unary estimates (the fully-connected layer output for this element features)
 	MathEngine().AddMatrixElementsToVector(inputBlobs[I_ClassLogProb]->GetData(), batchWidth, 
 		numberOfClasses, inputBlobs[I_Label]->GetData<int>(), 
@@ -131,12 +131,12 @@ void CCrfCalculationLayer::RunOnce()
 	// The unary estimates of the current elements (the fully-connected layer output)
 	CConstFloatHandle currentProbabilities = inputBlobs[I_ClassLogProb]->GetData();
 	// Always clear tempSumBlob so it is not left uninitialized
-	tempSumBlob->Clear();
+	tempSumBlob->Clear( 900, &strName );
 
 	if( isFirstStep() || ( IsLearningPerformed() && !doCalculateBestPrevClass ) ) {
 		// We don't compute O_BestPrevClass output at the first step and also during training when not asked explicitly.
 		// Clear the O_BestPrevClass output so it is not left uninitialized.
-		outputBlobs[O_BestPrevClass]->Clear();
+		outputBlobs[O_BestPrevClass]->Clear( 1000, &strName );
 	}
 
 	if( isFirstStep() ) {
@@ -497,8 +497,8 @@ void CBestSequenceLayer::Reshape()
 
 void CBestSequenceLayer::BackwardOnce()
 {
-	inputDiffBlobs[I_BestPrevClass]->Clear();
-	inputDiffBlobs[I_ClassSeqLogProb]->Clear();
+	inputDiffBlobs[I_BestPrevClass]->Clear( 1100, &strName );
+	inputDiffBlobs[I_ClassSeqLogProb]->Clear( 1200, &strName );
 }
 
 void CBestSequenceLayer::RunOnce()

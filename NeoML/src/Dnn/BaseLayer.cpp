@@ -560,7 +560,7 @@ void CBaseLayer::recheckBackwardNeeded()
 CDnnBlob* CBaseLayer::cloneBlobForDiff(const CBlobDesc& desc)
 {
 	CDnnBlob* ret = CDnnBlob::CreateBlob( MathEngine(), desc );
-	ret->Clear();
+	ret->Clear( 600, &strName );
 	return ret;
 }
 
@@ -612,7 +612,7 @@ void CBaseLayer::backwardRunAndLearnOnce()
 			// Create blobs
 			for( int i = 0; i < paramBlobs.Size(); ++i ) {
 				paramDiffBlobs.Add( paramBlobs[i]->GetClone() );
-				paramDiffBlobs[i]->Clear();
+				paramDiffBlobs[i]->Clear( 700, &strName );
 			}
 		}
 		// Calculate parameter diffs
