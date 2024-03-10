@@ -26,7 +26,7 @@ namespace NeoML {
 const int VectorFillCombineCount = 8;
 
 template<class T>
-__global__ void VectorCopyKernel( T* result, const T* first, int count, int num, const char* name )
+__global__ void VectorCopyKernel( T* result, const T* first, int count, int num, const char* name, size_t calls_counter )
 {
 	int index;
 	int step;
@@ -55,7 +55,7 @@ __global__ void VectorCopyKernel( T* result, const T* first, int count, int num,
 }
 
 template<class T>
-__global__ void VectorFillKernel(T* mem, T value, int count, int num, const char* name)
+__global__ void VectorFillKernel(T* mem, T value, int count, int num, const char* name, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -99,7 +99,7 @@ __global__ void VectorFillSpecialKernel(T* mem, T value, int count)
 
 const int VectorFillHandleCombineCount = 8;
 template<class T>
-__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name)
+__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -633,7 +633,7 @@ __global__ void VectorHSwishDiffKernel( const float* __restrict__ first, const f
 
 const int VectorEltwiseMaxCombineCount = 8;
 __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
-	float* result, int count)
+	float* result, int count, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -1076,8 +1076,8 @@ __global__ void VectorBernulliKLDerivativeKernel(const float* __restrict__ first
 
 const int VectorAddCombineCount = 8;
 template<class T>
-__global__ void VectorAddKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count, const T* name, int num )
+__global__ void VectorAddKernel(const T* __restrict__ first, const T* __restrict__ second,
+	T* result, int count, const char* name, int num, size_t calls_counter)
 {
 	int index = 0;
 	int step = 0;
@@ -1110,8 +1110,8 @@ __global__ void VectorAddKernel(const T* __restrict__ first,
 
 const int VectorAddValueCombineCount = 8;
 template<class T>
-__global__ void VectorAddValueKernel(
-	const T* __restrict__ first, T* result, int count, const T* __restrict__ addition )
+__global__ void VectorAddValueKernel( const T* __restrict__ first,
+	T* result, int count, const T* __restrict__ addition, size_t calls_counter )
 {
 	int index;
 	int step;
@@ -1142,7 +1142,7 @@ __global__ void VectorAddValueKernel(
 
 const int VectorSubCombineCount = 8;
 template<class T>
-__global__ void VectorSubKernel( const T* __restrict__ first, const T* __restrict__ second, T* result, int count )
+__global__ void VectorSubKernel( const T* __restrict__ first, const T* __restrict__ second, T* result, int count, size_t calls_counter )
 {
 	int index;
 	int step;
@@ -1166,7 +1166,7 @@ __global__ void VectorSubKernel( const T* __restrict__ first, const T* __restric
 }
 
 __global__ void VectorSubKernel( const float* __restrict__ first,
-	float second, float* result, int count )
+	float second, float* result, int count, size_t calls_counter )
 {
 	int index;
 	int step;
@@ -1186,7 +1186,7 @@ __global__ void VectorSubKernel( const float* __restrict__ first,
 }
 
 __global__ void VectorSubKernel( float first,
-	const float* __restrict__ second, float* result, int count )
+	const float* __restrict__ second, float* result, int count, size_t calls_counter )
 {
 	int index;
 	int step;
@@ -1222,7 +1222,7 @@ __global__ void VectorMultiplyAndSubKernel(const float* __restrict__ first,
 const int VectorMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorMultiplyKernel(const T* __restrict__ first,
-	T* result, int count, const T* __restrict__ multiplier)
+	T* result, int count, const T* __restrict__ multiplier, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -1279,7 +1279,7 @@ __global__ void VectorNegMultiplyKernel(const float* __restrict__ first,
 const int VectorEltwiseMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count, const T* name, int blockCount, int threadCount )
+	const T* __restrict__ second, T* result, int count, const char* name, int blockCount, int threadCount, size_t calls_counter)
 {
 	int index = 0;
 	int step = 0;
@@ -1371,7 +1371,7 @@ __global__ void VectorEltwiseNegMultiplyKernel(const float* __restrict__ first,
 const int VectorEltwiseDivideCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseDivideKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count)
+	const T* __restrict__ second, T* result, int count, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -1418,7 +1418,7 @@ __global__ void VectorEltwisePowerKernel(const float* __restrict__ first,
 	}
 }
 
-__global__ void VectorSqrtKernel(const float* __restrict__ first, float* result, int count)
+__global__ void VectorSqrtKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
@@ -1458,7 +1458,7 @@ __global__ void VectorInvKernel(const float* __restrict__ first, float* result, 
 
 const int VectorMinMaxCombineCount = 8;
 __global__ void VectorMinMaxKernel(const float* __restrict__ first, float* result, int count,
-	const float* __restrict__ minValue, const float* __restrict__ maxValue)
+	const float* __restrict__ minValue, const float* __restrict__ maxValue, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -1480,7 +1480,7 @@ __global__ void VectorMinMaxKernel(const float* __restrict__ first, float* resul
 	}
 }
 
-__global__ void VectorSigmoidKernel(const float* __restrict__ first, float* result, int count)
+__global__ void VectorSigmoidKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
@@ -1497,7 +1497,7 @@ __global__ void VectorSigmoidKernel(const float* __restrict__ first, float* resu
 }
 
 __global__ void VectorSigmoidDiffKernel(const float* __restrict__ first,
-	const float* __restrict__ second, float* result, int count)
+	const float* __restrict__ second, float* result, int count, size_t calls_counter)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
@@ -1518,7 +1518,7 @@ __global__ void VectorSigmoidDiffKernel(const float* __restrict__ first,
 
 const int VectorSigmoidDiffOpCombineCount = 4;
 __global__ void VectorSigmoidDiffOpKernel(const float* __restrict__ first, const float* __restrict__ second,
-	float* result, int vectorSize)
+	float* result, int vectorSize, size_t calls_counter)
 {
 	int index;
 	int step;
@@ -1545,7 +1545,7 @@ __global__ void VectorSigmoidDiffOpKernel(const float* __restrict__ first, const
 	}
 }
 
-__global__ void VectorTanhKernel(const float* __restrict__ first, float* result, int count)
+__global__ void VectorTanhKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
@@ -1560,7 +1560,7 @@ __global__ void VectorTanhKernel(const float* __restrict__ first, float* result,
 }
 
 __global__ void VectorTanhDiffKernel(const float* __restrict__ first,
-	const float* __restrict__ second, float* result, int count)
+	const float* __restrict__ second, float* result, int count, size_t calls_counter)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
@@ -1577,7 +1577,7 @@ __global__ void VectorTanhDiffKernel(const float* __restrict__ first,
 
 const int VectorTanhDiffOpCombineCount = 4;
 __global__ void VectorTanhDiffOpKernel(const float* __restrict__ first, const float* __restrict__ second,
-	float* result, int vectorSize)
+	float* result, int vectorSize, size_t calls_counter)
 {
 	int index;
 	int step;

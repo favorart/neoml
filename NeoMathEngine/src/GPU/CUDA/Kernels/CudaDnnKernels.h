@@ -32,7 +32,7 @@ struct CCudaBlobDescArray {
 const int BlobMergeByDimCombine = 16;
 
 template<class T>
-__global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T> from, CCudaBlobDesc to, T* toData, int heightNorm)
+__global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T> from, CCudaBlobDesc to, T* toData, int heightNorm, size_t calls_counter )
 {
 	int j;
 	int i;
@@ -69,7 +69,7 @@ __global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T
 const int BlobSplitByDimCombine = 16;
 
 template<class T>
-__global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, const T* fromData, CCudaBlobDescArray<T> to, int heightNorm)
+__global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, const T* fromData, CCudaBlobDescArray<T> to, int heightNorm, size_t calls_counter )
 {
 	int j;
 	int i;
@@ -137,7 +137,7 @@ __global__ void BlobResizeImageKernel( const CCudaBlobDesc from, const float* __
 
 const int BlobGetSubSequenceCombine = 16;
 __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromData, int* index, CCudaBlobDesc to,
-	float* toData, int startPos, bool isRev, int objectSizeNorm )
+	float* toData, int startPos, bool isRev, int objectSizeNorm, size_t calls_counter )
 {
 	int seqPos;
 	int seqNum;

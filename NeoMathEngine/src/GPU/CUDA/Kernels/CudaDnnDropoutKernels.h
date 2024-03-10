@@ -21,7 +21,7 @@ limitations under the License.
 namespace NeoML {
 
 __global__ void RandomMatrixDropout( const float* first, int firstHeight,
-	int firstWidth, float* res, int seed, float forwardRate )
+	int firstWidth, float* res, int seed, float forwardRate, size_t calls_counter )
 {
 	const unsigned int threshold = forwardRate * UINT_MAX;
 	int row;

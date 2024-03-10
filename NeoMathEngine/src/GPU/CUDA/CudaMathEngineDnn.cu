@@ -27,6 +27,8 @@ limitations under the License.
 
 namespace NeoML {
 
+extern size_t calls_counter;
+
 template<class T>
 void CCudaMathEngine::blobMergeByDimCuda( int dimNum, const CBlobDesc* from, const CTypedMemoryHandle<T>* fromData, int fromCount,
 	const CBlobDesc& to, const CTypedMemoryHandle<T>& toData )
@@ -59,7 +61,7 @@ void CCudaMathEngine::blobMergeByDimCuda( int dimNum, const CBlobDesc* from, con
 	dim3 threadCount;
 	getCudaTaskGrid2D(blockCount, threadCount, heightNorm, width);
 
-	BlobMergeByDimKernel<<<blockCount, threadCount>>>(height, width, fromArr, to, GetRaw(toData), heightNorm);
+	BlobMergeByDimKernel<<<blockCount, threadCount>>>(height, width, fromArr, to, GetRaw(toData), heightNorm, ++calls_counter);
 }
 
 template<class T>
@@ -117,7 +119,7 @@ void CCudaMathEngine::blobSplitByDimCuda(int dimNum, const CBlobDesc& from, cons
 	dim3 threadCount;
 	getCudaTaskGrid2D(blockCount, threadCount, heightNorm, width);
 
-	BlobSplitByDimKernel<<<blockCount, threadCount>>>(height, width, from, GetRaw(fromData), toArr, heightNorm);
+	BlobSplitByDimKernel<<<blockCount, threadCount>>>(height, width, from, GetRaw(fromData), toArr, heightNorm, ++calls_counter);
 }
 
 template<class T>
@@ -203,7 +205,7 @@ void CCudaMathEngine::BlobGetSubSequence( const CBlobDesc& from, const CFloatHan
 	getCudaTaskGrid3D(blockCount, threadCount, to.BatchLength(), to.BatchWidth(), objectSizeNorm);
 
 	BlobGetSubSequenceKernel<<<blockCount, threadCount>>>(from, GetRaw(fromData), GetRaw(indexHandle),
-		to, GetRaw( toData ), startPos, isRev, objectSizeNorm);
+		to, GetRaw( toData ), startPos, isRev, objectSizeNorm, ++calls_counter);
 }
 
 void CCudaMathEngine::Upsampling2DForward( const CBlobDesc& input, const CConstIntHandle& inputData, int heightCopyCount,

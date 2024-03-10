@@ -34,6 +34,8 @@ CDropoutDesc* CCudaMathEngine::InitDropout(float rate, bool isSpatial, bool isBa
 	return new CSeedDropoutDesc(rate, isSpatial, isBatchwise, input, output, seed);
 }
 
+extern size_t calls_counter;
+
 void CCudaMathEngine::Dropout( const CDropoutDesc& dropoutDesc,
 	const CFloatHandle& inputData, const CFloatHandle& outputData )
 {
@@ -61,7 +63,7 @@ void CCudaMathEngine::Dropout( const CDropoutDesc& dropoutDesc,
 
 		getCudaTaskGrid2D(blockCount, threadCount, batchLength, (maskSize + desc.MaskAlign - 1) / desc.MaskAlign);
 		RandomMatrixDropout<<<blockCount, threadCount>>>( GetRaw(inputData), batchLength, maskSize,
-			GetRaw(outputData), desc.Seed, desc.ForwardRate );
+			GetRaw(outputData), desc.Seed, desc.ForwardRate, ++calls_counter );
 		return;
 	}
 
