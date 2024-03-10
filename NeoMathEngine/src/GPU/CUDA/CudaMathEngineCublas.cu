@@ -32,6 +32,7 @@ namespace NeoML {
 void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 	int vectorSize, const CFloatHandle& resultHandle)
 {
+	// printf( "VectorDotProduct \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -44,6 +45,7 @@ void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, con
 void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 	const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle )
 {
+	// printf( "VectorMultiplyAndAdd \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -65,6 +67,7 @@ void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle&
 	int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
 	const CFloatHandle& resultHandle, int resultRowSize, int )
 {
+	// printf( "MultiplyMatrixByTransposedMatrix1 \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -79,6 +82,7 @@ void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( int batchSize, const CCo
 	int firstHeight, int firstWidth, const CConstFloatHandle& secondHandle, int secondHeight,
 	const CFloatHandle& resultHandle, int )
 {
+	printf( "MultiplyMatrixByTransposedMatrix2 \n" );
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -94,6 +98,7 @@ void CCudaMathEngine::MultiplyTransposedMatrixByMatrixAndAdd( const CConstFloatH
 	int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondWidth, int secondRowSize,
 	const CFloatHandle& resultHandle, int resultRowSize, int )
 {
+	//printf( "MultiplyTransposedMatrixByMatrixAndAdd \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -107,6 +112,7 @@ void CCudaMathEngine::MultiplyTransposedMatrixByMatrixAndAdd( const CConstFloatH
 void CCudaMathEngine::MultiplyTransposedMatrixByMatrix( int batchSize, const CConstFloatHandle& firstHandle, int firstHeight,
 	int firstWidth, const CConstFloatHandle& secondHandle, int secondWidth, const CFloatHandle& resultHandle, int )
 {
+	printf( "MultiplyTransposedMatrixByMatrix \n" );
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -122,6 +128,7 @@ void CCudaMathEngine::MultiplyMatrixByMatrix( int batchSize, const CConstFloatHa
 	int firstWidth, const CConstFloatHandle& secondHandle, int secondWidth,
 	const CFloatHandle& resultHandle, int )
 {
+	// printf( "MultiplyMatrixByMatrix \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
@@ -143,6 +150,7 @@ void CCudaMathEngine::multiplyMatrixByTransposedMatrixAndAdd(const CConstFloatHa
 	const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
 	const CFloatHandle& resultHandle, int resultRowSize)
 {
+	printf( "multiplyMatrixByTransposedMatrixAndAdd \n" );
 	SetCudaDevice( device->DeviceNumber );
 	ASSERT_CUBLAS( cublas->Sgemm( cublasHandle, CUBLAS_OP_T, CUBLAS_OP_N, secondHeight, firstHeight, firstWidth,
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstOne,
@@ -153,6 +161,7 @@ void CCudaMathEngine::BatchMultiplyMatrixByDiagMatrix( int batchSize, const CCon
 	int width, int firstMatrixOffset, const CConstFloatHandle& secondHandle, int secondMatrixOffset,
 	const CFloatHandle& resultHandle, int )
 {
+	printf( "BatchMultiplyMatrixByDiagMatrix \n" );
 	if( height == 1 && batchSize == 1 ) {
 		VectorEltwiseMultiply( firstHandle, secondHandle, resultHandle, width );
 		return;

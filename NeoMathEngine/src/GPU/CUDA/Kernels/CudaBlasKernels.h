@@ -346,7 +346,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, 0, 0, "MatrixLogSumExpByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixLogSumExpByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
@@ -410,7 +410,7 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, 0, 0, "MatrixSoftmaxByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
@@ -484,7 +484,7 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD3_F( index, 0, 0, "MatrixSoftmaxDiffOpByRowsKernel", first, second, result, width /*, height, widthNorm*/ );
+	PRINT_HEAD3_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxDiffOpByRowsKernel", first, second, result, width /*, height, widthNorm*/ );
 
 	int xPos;
 	int yPos;
@@ -535,7 +535,7 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(height, combineCount, index, step);
-	PRINT_HEAD2_F( index, 0, 0, "MatrixSoftmaxByColumnsKernel", matrix, result, height /*, width, heightNorm*/ );
+	PRINT_HEAD2_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxByColumnsKernel", matrix, result, height /*, width, heightNorm*/ );
 
 	index *= width;
 	step *= width;
@@ -611,7 +611,7 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ fir
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(height, combineCount, index, step);
-	PRINT_HEAD3_F( index, 0, 0, "MatrixSoftmaxDiffOpByColumnsKernel", first, second, result, height /*, width, heightNorm*/ );
+	PRINT_HEAD3_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxDiffOpByColumnsKernel", first, second, result, height /*, width, heightNorm*/ );
 
 	index *= width;
 	step *= width;
