@@ -26,8 +26,12 @@ __global__ void SetVectorToMatrixRowsKernel(float* result,
 {
 	int index;
 	if( GetCudaTaskIndex( matrixHeight * matrixWidth, index ) ) {
+		PRINT_HEAD2_F( index, 0, 0, "SetVectorToMatrixRowsKernel", vector, result, matrixHeight * matrixWidth );
+
 		result[index] = vector[index % matrixWidth];
 		assert( isfinite( result[index] ) );
+		assert( result[index] > -18002376725743890449408517795774411571.f );
+		assert( result[index] < 18002376725743890449408517795774411571.f );
 	}
 }
 
@@ -38,12 +42,15 @@ __global__ void AddVectorToMatrixElementsKernel( float* matrix, int height, int 
 	int jPos;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( height, AddVectorToMatrixElementsCombine, jPos, step );
+	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddVectorToMatrixElementsKernel1", vector, matrix, height, calls_counter );
 
 	for( int i = 0; i < count; ++i ) {
 		const int index = indices[jPos];
 		if( index >= 0 && index < width ) {
-			matrix[jPos * width + index] += vector[jPos];
-			assert( isfinite( matrix[jPos * width + index] ) );
+			float result = matrix[jPos * width + index] += vector[jPos];
+			assert( isfinite( result ) );
+			assert( result > -18002376725743890449408517795774411571.f );
+			assert( result < 18002376725743890449408517795774411571.f );
 		}
 		jPos += step;
 	}
@@ -58,9 +65,13 @@ __global__ void AddVectorToMatrixElementsKernel( float* __restrict__ matrix, int
 	int step;
 	const int count = GetCudaTaskCountAndIndex( vectorSize, AddVectorToMatrixElementsMulCombine, index, step );
 
+	PRINT_HEAD2_CNT_F( index, 0, 0, "AddVectorToMatrixElementsKernel2", vector, matrix, vectorSize, calls_counter );
 	for( int i = 0; i < count; ++i ) {
-		atomicAdd( matrix + rowIndices[index] * width + columnIndices[index], vector[index] );
-		assert( isfinite( matrix[rowIndices[index] * width + columnIndices[index]] ) );
+		float* result = matrix + rowIndices[index] * width + columnIndices[index];
+		atomicAdd( result, vector[index] );
+		assert( isfinite( *result ) );
+		assert( *result > -18002376725743890449408517795774411571.f );
+		assert( *result < 18002376725743890449408517795774411571.f );
 		index += step;
 	}
 }
@@ -77,9 +88,12 @@ __global__ void SetVectorToMatrixElementsKernel(
 	const int count = GetCudaTaskCountAndIndex(
 		vectorSize, SetVectorToMatrixElementsMulCombine, index, step );
 
+	PRINT_HEAD2_F( index, 0, 0, "SetVectorToMatrixElementsKernel", vector, matrix, vectorSize );
 	for( int i = 0; i < count; ++i ) {
-		matrix[rowIndices[index] * width + columnIndices[index]] = vector[index];
-		assert( isfinite( matrix[rowIndices[index] * width + columnIndices[index]] ) );
+		float result = matrix[rowIndices[index] * width + columnIndices[index]] = vector[index];
+		assert( isfinite( result ) );
+		assert( result > -18002376725743890449408517795774411571.f );
+		assert( result < 18002376725743890449408517795774411571.f );
 		index += step;
 	}
 }
@@ -92,13 +106,13 @@ __global__ void AddMatrixElementsToVectorKernel( const float* __restrict__ matri
 	int step;
 	const int count = GetCudaTaskCountAndIndex( height, AddMatrixElementsToVectorCombine, jPos, step );
 
+	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddMatrixElementsToVectorKernel1", matrix, result, height, /*width,*/ calls_counter);
 	for( int i = 0; i < count; ++i ) {
 		const int index = indices[jPos];
 		if( index >= 0 && index < width ) {
 			result[jPos] += matrix[jPos * width + index];
-			assert( isfinite( result[jPos] ) );
-			assert( result[jPos] > -18002376725743890449408517795774411571.f );
-			assert( result[jPos] < 18002376725743890449408517795774411571.f );
+
+			WARN2_CNT_F( "AddMatrixElementsToVectorKernel1", matrix[jPos * width + index], matrix, result[jPos], result, height, width, index, /*jPos,*/ calls_counter );
 		}
 		jPos += step;
 	}
@@ -112,11 +126,11 @@ __global__ void AddMatrixElementsToVectorKernel(const float* __restrict__ matrix
 	int step;
 	const int count = GetCudaTaskCountAndIndex(vectorSize, AddMatrixElementsToVectorMulCombine, index, step);
 
+	PRINT_HEAD2_CNT_F( index, 0, 0, "AddMatrixElementsToVectorKernel2", matrix, result, /*rowIndices columnIndices, width,*/ vectorSize, calls_counter );
 	for(int i = 0; i < count; ++i) {
-		result[index] += matrix[rowIndices[index] * width + columnIndices[index]];
-		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		float val = result[index] += matrix[rowIndices[index] * width + columnIndices[index]];
+
+		WARN2_CNT_F( "AddMatrixElementsToVectorKernel2", val, matrix, val, result, vectorSize, width, index, calls_counter );
 		index += step;
 	}
 }
@@ -129,13 +143,15 @@ __global__ void AddMatrixElementsToMatrixKernel(const float* __restrict__ matrix
 	int step;
 	const int count = GetCudaTaskCountAndIndex(height, AddMatrixElementsToMatrixCombine, jPos, step);
 
+	PRINT_HEAD2_F( jPos, 0, 0, "AddMatrixElementsToMatrixKernel", matrix, result, height /*, width*/ );
+
 	for(int i = 0; i < count; ++i) {
 		const int index = indices[jPos];
 		if(index >= 0 && index < width) {
-			result[jPos * width + index] += matrix[jPos * width + index];
-			assert( isfinite( result[jPos * width + index] ) );
-			assert( result[jPos * width + index] > -18002376725743890449408517795774411571.f );
-			assert( result[jPos * width + index] < 18002376725743890449408517795774411571.f );
+			float val = result[jPos * width + index] += matrix[jPos * width + index];
+			assert( isfinite( val ) );
+			assert( val > -18002376725743890449408517795774411571.f );
+			assert( val < 18002376725743890449408517795774411571.f );
 		}
 		jPos += step;
 	}
@@ -156,12 +172,13 @@ __global__ void AddVectorToMatrixRowsKernel(int batchSize,
 		int step;
 		const int count = GetCudaTaskCountAndIndexX(matrixWidth, BatchAddVectorToMatrixRowsCombine, index, step);
 
+		PRINT_HEAD3_CNT_F( yPos, index, 0, "AddVectorToMatrixRowsKernel", matrix, vector, result, matrixHeight, /*matrixWidth, batchSize,*/ calls_counter );
 		for(int i = 0; i < count; ++i) {
 			const int matrixIndex = matrixBaseIndex + index;
-			result[matrixIndex] = matrix[matrixIndex] + vector[vectorBaseIndex + index];
-			assert( isfinite( result[matrixIndex] ) );
-			assert( result[matrixIndex] > -18002376725743890449408517795774411571.f );
-			assert( result[matrixIndex] < 18002376725743890449408517795774411571.f );
+			float val = result[matrixIndex] = matrix[matrixIndex] + vector[vectorBaseIndex + index];
+
+			WARN3_CNT_F( "AddVectorToMatrixRowsKernel", matrix[matrixIndex], matrix, vector[vectorBaseIndex + index], vector, val, result,
+				matrixHeight, matrixWidth, index, calls_counter );
 			index += step;
 		}
 	}
@@ -174,6 +191,8 @@ __global__ void AddVectorToMatrixColumnsKernel( const T* __restrict__ matrix, T*
 	int i;
 	int j;
 	if( GetCudaTaskIndex2D( matrixHeight, matrixWidth, j, i ) ) {
+		PRINT_HEAD3_T( i, j, 0, "AddVectorToMatrixColumnsKernel", matrix, vector, result, matrixHeight /*, matrixWidth*/ );
+
 		const int index = matrixWidth * j + i;
 		result[index] = matrix[index] + vector[j];
 		if constexpr( std::is_same_v<T, float> ) {
@@ -190,6 +209,8 @@ __global__ void SubVectorFromMatrixColumnsKernel(const float* __restrict__ matri
 	int i;
 	int j;
 	if(GetCudaTaskIndex2D(matrixHeight, matrixWidth, j, i)) {
+		PRINT_HEAD3_F( i, j, 0, "SubVectorFromMatrixColumnsKernel", matrix, vector, result, matrixHeight /*, matrixWidth*/ );
+
 		const int index = matrixWidth * j + i;
 		result[index] = matrix[index] - vector[j];
 		assert( isfinite( result[index] ) );
@@ -212,6 +233,8 @@ __global__ void SumMatrixRowsAddKernel(
 	if( !GetCudaTaskIndex3D( batchSize, height, matrixWidth, batchIndex, rowIndex, colIndex ) ) {
 		return;
 	}
+	PRINT_HEAD2_CNT_T( batchIndex, rowIndex, colIndex, "SumMatrixRowsAddKernel", matrix, result, batchSize /*, matrixHeight, matrixWidth*/, calls_counter );
+
 	rowIndex *= SumMatrixRowsAddCombineCount;
 	if( rowIndex >= matrixHeight ) {
 		return;
@@ -219,19 +242,22 @@ __global__ void SumMatrixRowsAddKernel(
 
 	const int rowEndIndex = min( matrixHeight, rowIndex + SumMatrixRowsAddCombineCount );
 
+	[[maybe_unused]] const T* __restrict__ base_matrix = matrix;
+
 	matrix += ( batchIndex * matrixHeight + rowIndex ) * matrixWidth + colIndex;
 	T sum = *matrix;
 	for(int j = rowIndex + 1; j < rowEndIndex; ++j) {
 		matrix += matrixWidth;
 		sum += *matrix;
+		//assert( sum > -18002376725743890449408517795774411571.f );
+		//assert( sum <  18002376725743890449408517795774411571.f );
 	}
 
-	atomicAdd( result + batchIndex * matrixWidth + colIndex, sum );
-	if constexpr( std::is_same_v<T, float> ) {
-		assert( isfinite( result[batchIndex * matrixWidth + colIndex] ) );
-		assert( result[batchIndex * matrixWidth + colIndex] > -18002376725743890449408517795774411571.f );
-		assert( result[batchIndex * matrixWidth + colIndex] < 18002376725743890449408517795774411571.f );
-	}
+	auto *val = result + batchIndex * matrixWidth + colIndex;
+	atomicAdd( val, sum );
+
+	WARN2_CNT_T( "SumMatrixRowsAddKernel", sum, base_matrix, *val, result,
+		matrixHeight, matrixWidth, batchIndex/*, colIndex, rowIndex, rowEndIndex*/, calls_counter );
 }
 
 const int SumMatrixColumnsCombine = 4;
@@ -249,6 +275,8 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 	int index;
 	int y;
 	GetCudaTaskIndex2D(matrixHeight, widthNorm, y, index);
+	PRINT_HEAD2_F( index, y, 0, "SumMatrixColumnsKernel", matrix, result, matrixHeight /*, matrixWidth, widthNorm, combine*/ );
+
 	if(y < matrixHeight) {
 		// Calculate partial sums
 		result += y;
@@ -318,6 +346,9 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
+	PRINT_HEAD2_CNT_F( index, 0, 0, "MatrixLogSumExpByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+
+	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
 	int xPos;
 	int yPos;
@@ -353,14 +384,14 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 
 	if(yPos < height && threadIdx.x == 0) {
 		if( !isfinite( sumVal ) ) {
-			printf( "MatrixLogSumExpByRowsKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
-				sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+			printf( "MatrixLogSumExpByRowsKernel: ReduceSumXSharedBuffer=%f  x=%d y=%d z=%d  count=%d index=%d step=%d  height=%d yPos=%d  call=%llu \n",
+				sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos, calls_counter );
 		}
 		assert( isfinite( sumVal ) );
-		result[yPos] = maxVal + log(sumVal);
-		assert( isfinite( result[yPos] ) );
-		assert( result[yPos] > -18002376725743890449408517795774411571.f );
-		assert( result[yPos] < 18002376725743890449408517795774411571.f );
+
+		float val = result[yPos] = maxVal + log(sumVal);
+
+		WARN2_CNT_F( "MatrixLogSumExpByRowsKernel", maxVal /*, sumVal*/, base_matrix, val, result, height, width, yPos /*, widthNorm*/, calls_counter );
 	}
 }
 
@@ -379,6 +410,9 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
+	PRINT_HEAD2_CNT_F( index, 0, 0, "MatrixSoftmaxByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+
+	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
 	int xPos;
 	int yPos;
@@ -420,18 +454,17 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 		assert( reduce != 0.f );
 		const float sumVal = 1.f / reduce;
 		if( !isfinite( reduce ) || !isfinite( sumVal ) ) {
-			printf( "MatrixSoftmaxByRowsKernel: ReduceSumXSharedBuffer=%f sumVal=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d \n",
-				reduce, sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos );
+			printf( "MatrixSoftmaxByRowsKernel: ReduceSumXSharedBuffer=%f sumVal=%f x=%d y=%d z=%d count=%d index=%d step=%d height=%d yPos=%d  call=%llu \n",
+				reduce, sumVal, threadIdx.x, threadIdx.y, threadIdx.z, count, index, step, height, yPos, calls_counter );
 		}
 		assert( isfinite( reduce ) );
 		assert( isfinite( sumVal ) );
 
 		// Divide the needed part by the total
 		for(int i = 0; i < count; ++i) {
-			auto val = result[index + i * step] *= sumVal;
-			assert( isfinite( val ) );
-			assert( val > -18002376725743890449408517795774411571.f );
-			assert( val < 18002376725743890449408517795774411571.f );
+			float val = result[index + i * step] *= sumVal;
+
+			WARN2_CNT_F( "MatrixSoftmaxByRowsKernel", /*maxVal,*/ sumVal, base_matrix, val, result, height, width, index /*, i, step, widthNorm*/, calls_counter );
 		}
 	}
 }
@@ -451,6 +484,7 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
+	PRINT_HEAD3_F( index, 0, 0, "MatrixSoftmaxDiffOpByRowsKernel", first, second, result, width /*, height, widthNorm*/ );
 
 	int xPos;
 	int yPos;
@@ -501,6 +535,8 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(height, combineCount, index, step);
+	PRINT_HEAD2_F( index, 0, 0, "MatrixSoftmaxByColumnsKernel", matrix, result, height /*, width, heightNorm*/ );
+
 	index *= width;
 	step *= width;
 
@@ -575,6 +611,8 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ fir
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(height, combineCount, index, step);
+	PRINT_HEAD3_F( index, 0, 0, "MatrixSoftmaxDiffOpByColumnsKernel", first, second, result, height /*, width, heightNorm*/ );
+
 	index *= width;
 	step *= width;
 
@@ -618,6 +656,8 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 {
 	assert( threadIdx.z == 0 );
 
+	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
+
 	extern __shared__ CValueWithIndex threadBuffer[];
 	CValueWithIndex& res = threadBuffer[threadIdx.y * blockDim.x + threadIdx.x];
 	// NOTE: all threads are not used in the current task, should not interfere in the reduce max or sum
@@ -627,6 +667,9 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 	int yPos;
 	int xPos;
 	if(GetCudaTaskIndex2D(matrixHeight, widthNorm, yPos, xPos)) {
+		PRINT_HEAD2_CNT_F( yPos, xPos, 0, "FindMaxValueWithIndicesInRowsKernel", matrix, result,
+			matrixHeight /*, matrixWidth, widthNorm*/, calls_counter );
+
 		// Find the maximum in the needed part of the row
 		matrix += yPos * matrixWidth;
 
@@ -651,10 +694,10 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 	assert( isfinite( maxVal.Value ) );
 
 	if(yPos < matrixHeight && threadIdx.x == 0) {
-		result[yPos] = maxVal.Value;
-		assert( isfinite( result[yPos] ) );
-		assert( result[yPos] > -18002376725743890449408517795774411571.f );
-		assert( result[yPos] < 18002376725743890449408517795774411571.f );
+		float val = result[yPos] = maxVal.Value;
+
+		WARN2_CNT_F( "FindMaxValueWithIndicesInRowsKernel", maxVal.Value, base_matrix, val, result,
+			matrixHeight, matrixWidth, yPos /*, xPos, widthNorm */, calls_counter );
 		indices[yPos] = maxVal.Index;
 	}
 }
@@ -671,6 +714,8 @@ __global__ void FindMaxValueInRowsKernel(const float* __restrict__ matrix,
 	int yPos;
 	int xPos;
 	if(GetCudaTaskIndex2D(matrixHeight, widthNorm, yPos, xPos)) {
+		PRINT_HEAD2_F( yPos, xPos, 0, "FindMaxValueInRowsKernel", matrix, result, matrixHeight /*, matrixWidth, widthNorm*/);
+
 		// Find the maximum in the needed part of the row
 		matrix += yPos * matrixWidth;
 
@@ -715,6 +760,8 @@ __global__ void FindMaxValueInColumnsKernel( int batchSize, const float* __restr
 	int colIndex;
 	int rowIndex;
 	if( GetCudaTaskIndex3D( batchSize, width, heightNorm, batchIndex, colIndex, rowIndex ) ) {
+		PRINT_HEAD2_F( batchIndex, colIndex, rowIndex, "FindMaxValueInColumnsKernel", matrix, result, batchSize /*, height, width, heightNorm*/ );
+
 		matrix += batchIndex * height * width + colIndex;
 
 		const int combineCount = ( height + blockDim.x - 1 ) / blockDim.x;
@@ -751,6 +798,8 @@ static __global__ void FindMinValueInColumnsKernel( const float* matrixHandle, i
 {
 	int index = 0;
 	if( GetCudaTaskIndex( matrixWidth, index ) ) {
+		PRINT_HEAD2_F( index, 0, 0, "FindMinValueInColumnsKernel", matrixHandle, resultHandle, matrixWidth /*, matrixHeight*/ );
+
 		matrixHandle += index;
 		resultHandle += index;
 		columnIndices += index;
@@ -776,6 +825,13 @@ __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __
 	if(!GetCudaTaskIndex2D(batchNorm, vectorSize, b, index)) {
 		return;
 	}
+	using T = TLookup;
+	PRINT_HEAD3_CNT_T( b, index, 0, "VectorChannelLookupAndCopyKernel", (T*)input, lookup, output,
+	 vectorSize /*, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter );
+
+	[[maybe_unused]] const TInput* __restrict__ base_input = input;
+	[[maybe_unused]] const TLookup* __restrict__ base_lookup = lookup;
+	[[maybe_unused]] TLookup* base_output = output;
 
 	b *= BatchVectorLookupAndCopyCombineBatch;
 	const int bLast = min( batchSize, b + BatchVectorLookupAndCopyCombineBatch );
@@ -788,6 +844,9 @@ __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __
 		const int tableIndex = (int)(*input);
 		input += inputChannels;
 		*output = lookup[tableIndex * vectorSize];
+
+		WARN3_CNT_T( "VectorChannelLookupAndCopyKernel", *((T*)&tableIndex), base_input, lookup[tableIndex * vectorSize], base_lookup, *output, base_output,
+			vectorSize, k, index /*, b, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter );
 		output += outputChannels;
 	}
 }
@@ -801,6 +860,8 @@ __global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* __rest
 	if(!GetCudaTaskIndex2D(batchNorm, vectorSize, b, index)) {
 		return;
 	}
+	using T = TLookup;
+	PRINT_HEAD2_T( b, index, 0, "BatchVectorChannelCopyKernel", (T*)input, output, vectorSize );
 
 	b *= BatchVectorLookupAndCopyCombineBatch;
 	const int bLast = min( batchSize, b + BatchVectorLookupAndCopyCombineBatch );
@@ -810,6 +871,11 @@ __global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* __rest
 	output += b * outputChannels + index;
 	for(int k = 0; k < count; ++k) {
 		*output = *input;
+		if constexpr( std::is_same_v<TLookup, float> ) {
+			assert( isfinite( *output ) );
+			assert( *output > -18002376725743890449408517795774411571.f );
+			assert( *output < 18002376725743890449408517795774411571.f );
+		}
 		input += inputChannels;
 		output += outputChannels;
 	}
@@ -825,6 +891,8 @@ __global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* _
 	if(!GetCudaTaskIndex2D(batchNorm, vectorSize, b, index)) {
 		return;
 	}
+	PRINT_HEAD3_F( b, index, 0, "VectorChannelLookupAndAddToTableKernel", (float*)input, matrix, lookup,
+		vectorSize /*, inputChannels, batchSize, outputChannels, batchNorm*/ );
 
 	b *= BatchVectorLookupAndAddToTableCombine;
 	const int bLast = min( batchSize, b + BatchVectorLookupAndAddToTableCombine );
@@ -836,7 +904,13 @@ __global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* _
 	for(int k = 0; k < count; ++k) {
 		const int tableIndex = (int)(*input);
 		input += inputChannel;
-		atomicAdd(lookup + tableIndex * vectorSize, *matrix * mult);
+
+		float* res = lookup + tableIndex * vectorSize;
+		atomicAdd( res, *matrix * mult);
+
+		assert( isfinite( *res ));
+		assert( *res > -18002376725743890449408517795774411571.f );
+		assert( *res < 18002376725743890449408517795774411571.f );
 		matrix += outputChannel;
 	}
 }
@@ -847,11 +921,16 @@ __global__ void LookupAndSumKernel( const int* __restrict__ indices, int batchSi
 	int batch;
 	int elem;
 	if( GetCudaTaskIndex2D( batchSize, vectorSize, batch, elem ) ) {
+		PRINT_HEAD2_F( batch, elem, 0, "LookupAndSumKernel", table, result, vectorSize /*, indexCount, batchSize*/ );
+
 		result += batch * vectorSize + elem;
 		indices += batch * indexCount;
 		table += elem;
 		if( *indices >= 0 ) {
 			*result = table[*indices * vectorSize];
+			assert( isfinite( *result ) );
+			assert( *result > -18002376725743890449408517795774411571.f );
+			assert( *result < 18002376725743890449408517795774411571.f );
 		} else {
 			*result = 0.f;
 		}
@@ -859,6 +938,9 @@ __global__ void LookupAndSumKernel( const int* __restrict__ indices, int batchSi
 			++indices;
 			if( *indices >= 0 ) {
 				*result += table[*indices * vectorSize];
+				assert( isfinite( *result ) );
+				assert( *result > -18002376725743890449408517795774411571.f );
+				assert( *result < 18002376725743890449408517795774411571.f );
 			}
 		}
 	}
@@ -871,10 +953,15 @@ __global__ void LookupAndAddToTableKernel( const int* __restrict__ indices, int 
 	int batch;
 	int vectorCoord;
 	if( GetCudaTaskIndex3D( batchSize, indexCount, vectorSize, batch, indexCoord, vectorCoord ) ) {
+		PRINT_HEAD2_F( indexCoord, batch, vectorCoord, "LookupAndAddToTableKernel", additions, table, vectorSize /*, indexCount, batchSize*/ );
+
 		indices += batch * indexCount + indexCoord;
 		if( *indices >= 0 ) {
-			atomicAdd( table + *indices * vectorSize + vectorCoord,
-				*( additions + batch * vectorSize + vectorCoord ) );
+			float* res = table + *indices * vectorSize + vectorCoord;
+			atomicAdd( res, *( additions + batch * vectorSize + vectorCoord ) );
+			assert( isfinite( *res ) );
+			assert( *res > -18002376725743890449408517795774411571.f );
+			assert( *res < 18002376725743890449408517795774411571.f );
 		}
 	}
 }
@@ -886,6 +973,7 @@ __global__ void EnumBinarizationKernel(int batchSize, const T* __restrict__ inpu
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(batchSize * enumSize, EnumBinarizationCombine, index, step);
+	PRINT_HEAD2_F( index, 0, 0, "EnumBinarizationKernel", (float*)input, result, enumSize );
 
 	for(int i = 0; i < count; ++i) {
 		const int batch = index / enumSize;
@@ -909,6 +997,7 @@ __global__ void BitSetBinarizationKernel(int batchSize, int bitSetElementCount,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( batchSize * outputVectorSize, 1, index, step );
+	PRINT_HEAD2_F( index, 0, 0, "EnumBinarizationKernel", ( float* )input, result, batchSize * outputVectorSize );
 
 	for( int i = 0; i < count; ++i, index += step ) {
 		const int batchIndex = index / outputVectorSize;
@@ -943,6 +1032,8 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 	int yPos;
 	int xPos;
 	if(GetCudaTaskIndex2D(totalY, widthNorm, yPos, xPos)) {
+		PRINT_HEAD3_F( yPos, xPos, 0, "MultiplyLookupMatrixByLookupVectorKernel", matrixTable, vectorTable, result, totalY );
+
 		const int matrixBaseIndex = rows[yPos] * vectorSize;
 		const int vectorBaseIndex = vector[yPos / rowCount] * vectorSize;
 
@@ -996,6 +1087,7 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 	int yPos;
 	int xPos;
 	GetCudaTaskIndex2D(totalX, heightNorm, xPos, yPos);
+	PRINT_HEAD3_F( yPos, xPos, 0, "MultiplyTransposedLookupMatrixByVectorKernel", matrixTable, vector, result, totalX );
 
 	const int batch = xPos / width;
 	const int resultIndex = xPos;
@@ -1049,6 +1141,8 @@ __global__ void MultiplyVectorByTransposedLookupVectorAndAddToTableKernel(int ba
 	int yPos;
 	int xPos;
 	GetCudaTaskIndex2D( batchSize * firstSize, vectorSizeNorm, yPos, xPos );
+	PRINT_HEAD3_F( yPos, xPos, 0, "MultiplyVectorByTransposedLookupVectorAndAddToTableKernel", first, secondTable, table, batchSize * firstSize );
+
 	if( yPos < batchSize * firstSize ) {
 		const int batch = yPos / firstSize;
 		const int tableIndex = tableIndices[yPos] * vectorSize;
@@ -1075,11 +1169,13 @@ __global__ void MultiplyDiagMatrixByMatrixKernel(const float* __restrict__ first
 	int i;
 	int j;
 	if(GetCudaTaskIndex2D(firstSize, secondWidth, j, i)) {
+		PRINT_HEAD3_CNT_F( i, j, 0, "MultiplyDiagMatrixByMatrixKernel", first, second, result, firstSize, calls_counter );
+
 		const int index = j * secondWidth + i;
 		result[index] = second[index] * first[j];
-		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+
+		WARN3_CNT_F( "MultiplyDiagMatrixByMatrixKernel", first[j], first, second[index], second, result[index], result,
+			i, j, index, /*, firstSize, secondWidth*/ calls_counter );
 	}
 }
 
@@ -1093,6 +1189,7 @@ __global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* __
 	if(!GetCudaTaskIndex2D(batchNorm, matrixSize, b, index)) {
 		return;
 	}
+	PRINT_HEAD3_F( index, b, 0, "Multiply1DiagMatrixByMatrixKernel", first, second, result, batchNorm );
 
 	b *= Multiply1DiagMatrixByMatrixCombine;
 	const int bLast = min( batchSize, b + Multiply1DiagMatrixByMatrixCombine );
@@ -1115,12 +1212,14 @@ __global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* __
 }
 
 const int TransposeMatrixCombine = 8;
-template<class T> __global__ void TransposeMatrixKernel(int batchSize,
+template<class T>
+__global__ void TransposeMatrixKernel(int batchSize,
 	const T* __restrict__ first, int height, int medium, int width, int channels, T* result, int size)
 {
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(size, TransposeMatrixCombine, index, step);
+	PRINT_HEAD2_T( index, 0, 0, "TransposeMatrixKernel", first, result, size );
 
 	for(int i = 0; i < count; ++i) {
 		const int resChannel = index % channels;
@@ -1132,9 +1231,14 @@ template<class T> __global__ void TransposeMatrixKernel(int batchSize,
 		const int resWidth = cur % height;
 		const int resBatch = cur / height;
 
-		result[(((resBatch * width + resHeight) * medium + resMed) * height + resWidth) * channels + resChannel] =
-			first[index];
+		int j = ( ( ( resBatch * width + resHeight ) * medium + resMed ) * height + resWidth ) * channels + resChannel;
+		result[j] = first[index];
 
+		if constexpr( std::is_same_v<T, float> ) {
+			assert( isfinite( result[j] ) );
+			assert( result[j] > -18002376725743890449408517795774411571.f );
+			assert( result[j] < 18002376725743890449408517795774411571.f );
+		}
 		index += step;
 	}
 }
@@ -1151,6 +1255,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 	int column;
 	int row;
 	GetCudaTaskIndex3D( firstSize, secondWidth, batchSizeNorm, row, column, batch );
+	PRINT_HEAD3_CNT_F( batch, column, row, "MultiplyDiagMatrixByMatrixAndSumKernel", first, second, result, firstSize /*, secondWidth, batchSizeNorm, batchSize*/, calls_counter);
 
 	const bool isValidZY = row < firstSize && column < secondWidth;
 
@@ -1163,9 +1268,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 
 		for( int i = 0; i < count; ++i ) {
 			my += *currFirst * *currSecond;
-			assert( isfinite( my ) );
-			assert( my > -18002376725743890449408517795774411571.f );
-			assert( my < 18002376725743890449408517795774411571.f );
+
+			WARN3_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", *currFirst, first, *currSecond, second, my, result, firstSize, secondWidth, batchSize, calls_counter );
 			currFirst += step * firstSize;
 			currSecond += step * secondWidth * firstSize;
 		}
@@ -1175,8 +1279,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 
 	if( isValidZY && threadIdx.x == 0 ) {
 		if( !isfinite( sum ) ) {
-			printf( "MultiplyDiagMatrixByMatrixAndSumKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d row=%d firstSize=%d column=%d secondWidth=%d batch=%d \n",
-				sum, threadIdx.x, threadIdx.y, threadIdx.z, row, firstSize, column, secondWidth, batch );
+			printf( "MultiplyDiagMatrixByMatrixAndSumKernel: ReduceSumXSharedBuffer=%f x=%d y=%d z=%d row=%d firstSize=%d column=%d secondWidth=%d batch=%d  call=%llu \n",
+				sum, threadIdx.x, threadIdx.y, threadIdx.z, row, firstSize, column, secondWidth, batch, ( unsigned long long )calls_counter );
 		}
 		assert( isfinite( sum ) );
 
@@ -1186,9 +1290,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		} else {
 			*currResult += sum;
 		}
-		assert( isfinite( *currResult ) );
-		assert( *currResult > -18002376725743890449408517795774411571.f );
-		assert( *currResult < 18002376725743890449408517795774411571.f );
+		WARN2_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", sum, first, *currResult, result, firstSize, secondWidth, batchSizeNorm, calls_counter );
 	}
 }
 
@@ -1206,6 +1308,7 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* __restrict__ first
 	int row;
 	int column;
 	GetCudaTaskIndex2D( height, widthNorm, row, column );
+	PRINT_HEAD3_F( column, row, 0, "RowMultiplyMatrixByMatrixKernel", first, second, result, height /*, width, widthNorm*/ );
 
 	if( row < height ) {
 		first += row * width;
@@ -1253,11 +1356,18 @@ __global__ void MatrixSpreadRowsKernel(const T* __restrict__ source, int height,
 	int i;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(width, MatrixSpreadRowsCombine, i, step);
+	PRINT_HEAD2_CNT_T( i, j, 0, "MatrixSpreadRowsKernel", source, result, height /*, width, widthNorm*/, calls_counter );
+
+	[[maybe_unused]] const T* __restrict__ base_source = source;
+	[[maybe_unused]] T* base_result = result;
 
 	source += j * width + i;
 	result += indices[j] * width + i;
 	for(int c = 0; c < count; ++c) {
 		*result = *source;
+
+		WARN2_CNT_T( "MatrixSpreadRowsKernel", *source, ( unsigned long long )base_source, *result, ( unsigned long long )base_result,
+			/*i, j,*/ height, width, step, calls_counter );
 		source += step;
 		result += step;
 	}
@@ -1274,6 +1384,7 @@ __global__ void MatrixSpreadRowsAddKernel(const float* __restrict__ source, int 
 	int i;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(width, MatrixSpreadRowsCombine, i, step);
+	PRINT_HEAD2_F( i, j, 0, "MatrixSpreadRowsAddKernel", source, result, height /*, width, widthNorm*/ );
 
 	int sourceIndex = j * width + i;
 	result += indices[j] * width + i;
@@ -1296,6 +1407,7 @@ __global__ void AddDiagMatrixToMatrixKernel( const float* __restrict__ diagMatri
 	if( !GetCudaTaskIndex2D( height, widthNorm, row, col ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( col, row, 0, "AddDiagMatrixToMatrixKernel", diagMatrix, matrix, result, height /*, width, widthNorm*/ );
 
 	col *= AddDiagMatrixToMatrixCombine;
 	matrix += row * width + col;
@@ -1323,6 +1435,7 @@ __global__ void MatrixColumnsEltwiseDivideKernel( const float* __restrict__ matr
 	if( !GetCudaTaskIndex2D( matrixHeight, widthNorm, row, col ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( col, row, 0, "MatrixColumnsEltwiseDivideKernel", matrix, vector, result, matrixHeight /*, matrixWidth, widthNorm*/ );
 
 	col *= MatrixColumnsEltwiseDivideCombine;
 	matrix += row * matrixWidth + col;
@@ -1345,6 +1458,7 @@ __global__ void MultiplyMatrixByDiagMatrixKernel( int batchSize, const float* __
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( resultSize, MultiplyMatrixByDiagMatrixCombine, index, step );
+	PRINT_HEAD3_F( index, 0, 0, "MultiplyMatrixByDiagMatrixKernel", first, second, result, resultSize /*, height, width, firstMatrixOffset, secondMatrixOffset*/ );
 
 	for( int i = 0; i < count; ++i ) {
 		const int b = index / matrixSize;
