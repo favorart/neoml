@@ -38,6 +38,7 @@ __global__ void Blob3dMaxPoolingKernel( const CCuda3dMaxPoolingDescInternal desc
 	if( !GetCudaTaskIndex3D( result.ObjectCount(), resultGeomSize, totalChannels, b, pos, channel ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( b, pos, channel, "Blob3dMaxPoolingKernel", sourceData, resultData, result.ObjectCount() );
 
 	const int resultShift = b * resultObjectSize + pos * totalChannels + channel;
 
@@ -97,6 +98,7 @@ __global__ void Blob3dMaxPoolingBackwardKernel( const CCuda3dMaxPoolingDescInter
 	if( !GetCudaTaskIndex3D( result.ObjectCount(), resultGeomSize, result.Channels(), b, pos, channel ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( b, pos, channel, "Blob3dMaxPoolingBackwardKernel", resultDiff, sourceDiff, result.ObjectCount() );
 
 	float* const sourcePtr = sourceDiff + b * source.ObjectSize();
 
@@ -127,6 +129,7 @@ __global__ void Blob3dMeanPoolingKernel( const CCuda3dMeanPoolingDescInternal de
 	if( !GetCudaTaskIndex3D( result.ObjectCount(), resultGeomSize, result.Channels(), b, pos, channel ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( b, pos, channel, "Blob3dMeanPoolingKernel", sourceData, resultData, result.ObjectCount() );
 
 	const int resultShift = b * resultObjectSize + pos * totalChannels + channel;
 
@@ -178,6 +181,7 @@ __global__ void Blob3dMeanPoolingBackwardKernel( const CCuda3dMeanPoolingDescInt
 	if( !GetCudaTaskIndex3D( result.ObjectCount(), resultGeomSize, totalChannels, b, pos, channel ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( b, pos, channel, "Blob3dMeanPoolingBackwardKernel", resultDiff, sourceDiff, result.ObjectCount() );
 
 	const int resultShift = ( b * resultGeomSize + pos ) * totalChannels + channel;
 	const float value = __ldg( resultDiff + resultShift ) / desc.FilterHeight / desc.FilterWidth / desc.FilterDepth;

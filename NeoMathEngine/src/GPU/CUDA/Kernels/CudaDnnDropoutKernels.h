@@ -27,6 +27,8 @@ __global__ void RandomMatrixDropout( const float* first, int firstHeight,
 	int row;
 	int col;
 	if( GetCudaTaskIndex2D( firstHeight, ( firstWidth + 3 ) / 4, row, col ) ) {
+		PRINT_HEAD2_CNT_F( row, col, 0, "RandomMatrixDropout", first, res, firstHeight, calls_counter );
+
 		CCudaRandom random(seed);
 		random.Skip(col);
 		col *= 4;
@@ -34,7 +36,9 @@ __global__ void RandomMatrixDropout( const float* first, int firstHeight,
 
 		CIntArray<4> generated = random.Next();
 		for(int j = 0; j < 4 && col + j < firstWidth; ++j) {
-			res[index + j] = (generated[j] <= threshold) ? (first[index + j] / forwardRate) : 0.f;
+			float result = res[index + j] = (generated[j] <= threshold) ? (first[index + j] / forwardRate) : 0.f;
+
+			WARN2_CNT_F( "RandomMatrixDropout", first[index + j], first, result, res, firstHeight, firstWidth, index, /*j, col,*/ calls_counter );
 		}
 	}
 }
@@ -47,6 +51,8 @@ __global__ void RandomSpatialDropout( const float* input, float* res, int inputO
 	int row;
 	int col;
 	if( GetCudaTaskIndex3D( inputObjectCount, inputObjectSize / maskObjectSize, maskObjectSize, obj, row, col ) ) {
+		PRINT_HEAD2_F( obj, row, col, "RandomSpatialDropout", input, res, inputObjectCount );
+
 		const int pack = obj % maskObjectCount;
 		const int index = obj * inputObjectSize + row * maskObjectSize + col;
 		const int numBlock = ( pack * maskObjectSize + col ) / 4;

@@ -34,6 +34,7 @@ __global__ void BlobGlobalMaxOverTimePoolingWithIndexKernel( const CCudaGlobalMa
 	if( !GetCudaTaskIndex( objectSize, objectNum ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( objectNum, 0, 0, "BlobGlobalMaxOverTimePoolingWithIndexKernel", sourceData, resultData, objectSize );
 
 	int curIndex = objectNum;
 	int maxIndex = 0;
@@ -64,6 +65,7 @@ __global__ void BlobGlobalMaxOverTimePoolingKernel( const CCudaGlobalMaxOverTime
 	if( !GetCudaTaskIndex( objectSize, objectNum ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( objectNum, 0, 0, "BlobGlobalMaxOverTimePoolingKernel", sourceData, resultData, objectSize );
 
 	int curIndex = objectNum;
 	float maxVal = -FLT_MAX;
@@ -87,6 +89,7 @@ __global__ void BlobGlobalMaxOverTimePoolingBackwardKernel( const CCudaGlobalMax
 	if( !GetCudaTaskIndex( result.BlobSize(), pos ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( pos, 0, 0, "BlobGlobalMaxOverTimePoolingBackwardKernel", resultDiff, sourceDiff, result.BlobSize() );
 	sourceDiff[__ldg( maxIndicesData + pos ) * result.BlobSize() + pos] = __ldg( resultDiff + pos );
 }
 

@@ -46,6 +46,8 @@ __global__ void BuildTempMatrixKernel( const CCudaConvolutionDescInternal desc,
 	int xy;
 	int c;
 	if( GetCudaTaskIndex2D( resultSize, desc.Source.Depth() * desc.Source.Channels(), xy, c ) ) {
+		PRINT_HEAD2_F( xy, c, 0, "BuildTempMatrixKernel", sourceData, resultData, resultSize );
+
 		resultData += xy * desc.Filter.ObjectSize() + c;
 		xy += resultOffset;
 		x = xy % desc.Result.Width();
@@ -146,6 +148,8 @@ __global__ void Conv3x3s1d1Kernel1x8( const CCudaConvolutionDescInternal desc,
 	int outCol;
 	int filterIndex;
 	if( GetCudaTaskIndex3D( objectCount * outputHeight, widthNorm, filterCount, b, outCol, filterIndex ) ) {
+		PRINT_HEAD3_F( b, outCol, filterIndex, "Conv3x3s1d1Kernel1x8", filter, freeTerm, result, widthNorm );
+
 		const int inputWidth = desc.Source.Width();
 		const int inputHeight = desc.Source.Height();
 		const int inputRowSize = inputWidth * inputChannels;
@@ -249,6 +253,8 @@ __global__ void BuildInputFromTempMatrixKernel( const CCudaConvolutionDescIntern
 	if( matrixRow >= matrixHeight ) {
 		return;
 	}
+	PRINT_HEAD2_F( matrixRow, matrixCol, 0, "BuildInputFromTempMatrixKernel", tempMatrix, result, matrixHeight );
+
 	tempMatrix += matrixRow * matrixWidth;
 	matrixRow += heightOffset;
 

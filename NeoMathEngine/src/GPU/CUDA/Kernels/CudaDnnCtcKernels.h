@@ -26,6 +26,7 @@ __global__ void CtcFillPaddingKernel( int maxSeqLen, int batchSize, int classCou
 {
 	int seq, b, classIndex;
 	if( GetCudaTaskIndex3D( maxSeqLen, batchSize, classCount, seq, b, classIndex ) && seq >= seqLens[b] ) {
+		PRINT_HEAD1_F( seq, b, classIndex, "CtcFillPaddingKernel", data, maxSeqLen );
 		data[( seq * batchSize + b ) * classCount + classIndex] = 0.f;
 	}
 }
@@ -51,6 +52,8 @@ __global__ void CtcMatrixLogSumExpByColumnsKernel(int batchSize, const float* __
 	int yPos;
 	int zPos;
 	GetCudaTaskIndex3D(batchSize, width, heightNorm, zPos, xPos, yPos);
+	PRINT_HEAD2_F( zPos, yPos, xPos, "CtcMatrixLogSumExpByColumnsKernel", matrix, result, batchSize );
+
 	if(xPos < width && zPos < batchSize && count > 0) {
 		matrix += zPos * height * width;
 		result += zPos * width;
@@ -99,6 +102,8 @@ __global__ void CtcCalcResultLogProbMaskKernel( int resultLen, int batchSize, in
 	int u;
 	int b;
 	if( GetCudaTaskIndex3D( resultLen, padLabelLen, batchSize, t, u, b ) ) {
+		PRINT_HEAD2_F( t, u, b, "CtcCalcResultLogProbMaskKernel", resultProb, resultLogProbMask, resultLen );
+
 		resultLogProbMask += ( t * padLabelLen + u ) * batchSize + b;
 		resultProb += ( t * batchSize + b ) * classCount;
 		if( resultLens != nullptr ) {
@@ -123,6 +128,8 @@ __global__ void CtcCalcForwardVariableKernel( int resultLen, int batchSize, int 
 {
 	const int b = blockIdx.y * blockDim.y + threadIdx.y;
 	if( b < batchSize ) {
+		PRINT_HEAD3_F( threadIdx.x, b, 0, "CtcCalcForwardVariableKernel", blankSkipMask, resultLogProbMask, logAlpha, batchSize );
+
 		const int T = resultLen;
 		const int U = padLabelLen;
 		for( int t = 1; t < T; ++t ) {
@@ -161,6 +168,7 @@ __global__ void CtcCalcBackwardVariableKernel( int resultLen, int batchSize, int
 	if( b < batchSize ) {
 		const int T = resultLen;
 		const int U = padLabelLen;
+		PRINT_HEAD3_F( threadIdx.x, b, 0, "CtcCalcBackwardVariableKernel", blankSkipMask, resultLogProbMask, logBeta, batchSize );
 
 		for( int t = T - 2; t >= 0; --t ) {
 			const float* const resultLogProbWindow = resultLogProbMask + ( t + 1 ) * U * batchSize;
@@ -194,6 +202,8 @@ __global__ void CtcCalcProbSumKernel( int resultLen, int batchSize, int classCou
 	int t;
 	int b;
 	if( GetCudaTaskIndex2D( resultLen, batchSize, t, b ) ) {
+		PRINT_HEAD2_F( t, b, 0, "CtcCalcProbSumKernel", logAlphaBeta, probSum, resultLen );
+
 		padLabels += b;
 		logAlphaBeta += t * padLabelLen * batchSize + b;
 		probSum += ( t * batchSize + b ) * classCount;
@@ -211,6 +221,8 @@ __global__ void CtcCalcGradientKernel( int resultLen, int batchSize, int classCo
 {
 	int t, b, c;
 	if( GetCudaTaskIndex3D( resultLen, batchSize, classCount, t, b, c ) ) {
+		PRINT_HEAD3_F( t, b, c, "CtcCalcGradientKernel", resultProb, totalLogProb, probSum, resultLen );
+
 		const int offset = ( t * batchSize + b ) * classCount + c;
 		resultProb += offset;
 		totalLogProb += skipBlanks ? t * batchSize + b : b;

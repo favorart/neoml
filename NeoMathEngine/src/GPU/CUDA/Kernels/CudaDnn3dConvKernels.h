@@ -64,6 +64,7 @@ __global__ void BuildTempMatrixKernel( const CCuda3dConvolutionDescInternal desc
 	if( matrixRow >= matrixHeight ) {
 		return;
 	}
+	PRINT_HEAD2_F( matrixRow, matrixCol, 0, "BuildTempMatrixKernel", input, matrix, matrixHeight );
 
 	int step;
 	const int count = GetCudaTaskCountAndIndex( matrixWidth, BuildTempMatrixCombine, matrixCol, step );
@@ -125,6 +126,8 @@ __global__ void BuildInputFromTempMatrixKernel( const CCuda3dConvolutionDescInte
 	if( tempRow >= matrixHeight ) {
 		return;
 	}
+	PRINT_HEAD2_F( tempRow, tempCol, 0, "BuildInputFromTempMatrixKernel", tempMatrix, result, matrixHeight );
+
 	tempMatrix += tempRow * matrixWidth;
 	tempRow += heightOffset;
 

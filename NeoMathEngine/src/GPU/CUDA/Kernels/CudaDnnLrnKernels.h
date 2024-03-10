@@ -28,6 +28,7 @@ __global__ void LrnKernel( const float* input, float* invSum, float* invSumBeta,
 	if( !GetCudaTaskIndex2D( vectorCount, vectorSize, vectorIndex, channelIndex ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( vectorIndex, channelIndex, 0, "LrnKernel", input, invSum, output, vectorCount );
 
 	const int firstC = max( 0, channelIndex - ( windowSize - 1 ) / 2 );
 	const int lastC = min( vectorSize - 1, channelIndex + windowSize / 2 );
@@ -58,6 +59,7 @@ __global__ void LrnBackwardKernel( const float* input, const float* output, cons
 	if( !GetCudaTaskIndex2D( vectorCount, vectorSize, vectorIndex, channelIndex ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( vectorIndex, channelIndex, 0, "LrnBackwardKernel", input, output, inputDiff, vectorCount );
 
 	// (windowSize - 1) / 2 and windowSize / 2 are switched because it's backward
 	const int firstC = max( 0, channelIndex - windowSize / 2 );

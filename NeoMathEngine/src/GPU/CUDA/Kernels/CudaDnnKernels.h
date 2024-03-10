@@ -39,6 +39,7 @@ __global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T
 	if(!GetCudaTaskIndex2D(heightNorm, width, j, i)) {
 		return;
 	}
+	PRINT_HEAD2_CNT_T( i, j, 0, "BlobMergeByDimKernel", toData, from.Data[0], heightNorm, calls_counter );
 
 	j *= BlobMergeByDimCombine;
 	int jLast = j + BlobMergeByDimCombine;
@@ -61,6 +62,8 @@ __global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T
 
 	for(int k = 0; k < count; ++k) {
 		*curToData = __ldg(fromData);
+
+		WARN2_CNT_T( "BlobMergeByDimKernel", *fromData, from.Data[fromIndex], *curToData, toData, i, j, k, calls_counter ); // height, width, heightNorm, fromIndex, count
 		curToData += width;
 		fromData += fromWidth;
 	}
@@ -76,6 +79,7 @@ __global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, 
 	if(!GetCudaTaskIndex2D(heightNorm, width, j, i)) {
 		return;
 	}
+	PRINT_HEAD2_CNT_T( i, j, 0, "BlobSplitByDimKernel", to.Data[0], fromData, heightNorm, calls_counter );
 
 	j *= BlobSplitByDimCombine;
 	int jLast = j + BlobSplitByDimCombine;
@@ -97,6 +101,8 @@ __global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, 
 	T* toData = to.Data[toIndex] + j * toWidth + toI;
 	for(int k = 0; k < count; ++k) {
 		*toData = __ldg(curFromData);
+
+		WARN2_CNT_T( "BlobSplitByDimKernel", *curFromData, fromData, *toData, to.Data[toIndex], i, j, k, calls_counter ); //height, width, heightNorm, toIndex,
 		curFromData += width;
 		toData += toWidth;
 	}
@@ -112,6 +118,8 @@ __global__ void BlobResizeImageKernel( const CCudaBlobDesc from, const float* __
 	int currGeom;
 	int ch;
 	if( GetCudaTaskIndex3D( to.ObjectCount(), geom, totalChannels, num, currGeom, ch ) ) {
+		PRINT_HEAD2_F( num, currGeom, ch, "BlobResizeImageKernel", fromData, toData, to.ObjectCount() * geom );
+
 		toData += num * totalChannels * geom + totalChannels * currGeom + ch;
 
 		int xFrom = currGeom % to.Width() - deltaLeft;
@@ -147,6 +155,7 @@ __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromD
 	if( seqPos >= to.BatchLength() || seqNum >= to.BatchWidth() ) {
 		return;
 	}
+	PRINT_HEAD2_CNT_F( seqPos, seqNum, i, "BlobGetSubSequenceKernel", fromData, toData, to.BatchLength() * to.BatchWidth(), calls_counter );
 
 	const int objectSize = from.ObjectSize() * from.ListSize();
 	const int fromSeqPos = isRev ? startPos - seqPos : startPos + seqPos;
@@ -164,6 +173,8 @@ __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromD
 
 	for(int k = 0; k < count; ++k) {
 		curToData[i] = __ldg(curFromData + i);
+
+		WARN2_CNT_F( "BlobGetSubSequenceKernel", *curFromData, fromData, curToData[i], curToData, seqPos, seqNum, i, calls_counter );
 		i += step;
 	}
 }
@@ -179,6 +190,8 @@ __global__ void Upsampling2DForwardKernel(
 	if( !GetCudaTaskIndex2D( resultHeight, resultRowSize, resultI, resultJ ) ) {
 		return;
 	}
+	PRINT_HEAD2_T( resultI, resultJ, 0, "Upsampling2DForwardKernel", input, result, resultHeight * resultRowSize );
+
 	const int inputI = resultI / heightCopyCount;
 	const int inputJ = ( resultJ / pixelSize / widthCopyCount ) * pixelSize + resultJ % pixelSize;
 
@@ -199,6 +212,8 @@ __global__ void Upsampling2DBackwardKernel(
 	if( !GetCudaTaskIndex2D( inputHeight, inputRowSize, inputI, inputJ ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( inputI, inputJ, 0, "Upsampling2DBackwardKernel", input, result, inputHeight * inputRowSize );
+
 	const int resultI = inputI / heightCopyCount;
 	const int resultJ = ( inputJ / pixelSize / widthCopyCount ) * pixelSize + inputJ % pixelSize;
 	for( int batchIndex = 0; batchIndex < batchSize; ++batchIndex ) {
@@ -214,6 +229,8 @@ static __global__ void BuildIntegerHistKernel( const int* numbers, int numbersCo
 {
 	int index;
 	if( GetCudaTaskIndex( numbersCount, index ) ) {
+		PRINT_HEAD2_I( index, 0, 0, "BuildIntegerHistKernel", numbers, result, numbersCount );
+
 		const int currNumber = numbers[index];
 		if( currNumber >= 0 ) {
 			atomicAdd( result + currNumber, 1 );
@@ -230,6 +247,7 @@ __global__ void MatrixRowsToVectorSquaredL2DistanceKernel( const float* matrix, 
 	if( !GetCudaTaskIndex2D( matrixHeight, normalizedWidth, rowIndex, colIndex ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( rowIndex, colIndex, 0, "MatrixRowsToVectorSquaredL2DistanceKernel", matrix, vector, result, matrixHeight * normalizedWidth );
 	int step;
 	const int count = GetCudaTaskCountAndIndex( matrixWidth, MatrixRowsToVectorSquaredL2DistanceCombineCount,
 		colIndex, step );
@@ -274,6 +292,8 @@ __global__ void ReorgKernel( const T *input, int width, int height, int nFilters
 	if( !GetCudaTaskIndex( width * height * nFilters * batchSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_T( index, 0, 0, "ReorgKernel", input, output, width * height * nFilters * batchSize );
+
 	const int inputIndex = LegacyRepackIndex( index, nFilters * stride * stride, height / stride, width / stride );
 
 	const int inputColumn = index % width;
@@ -314,6 +334,7 @@ __global__ void SpaceToDepthKernel( const T* source, int dataRowCount, int dataR
 	if( !GetCudaTaskIndex2D( dataRowCount, dataRowSize, dataRowIndex, elementIndex ) ) {
 		return;
 	}
+	PRINT_HEAD2_T( dataRowIndex, elementIndex, 0, "SpaceToDepthKernel", source, result, dataRowCount * dataRowSize );
 
 	// number of elements in a single row inside 3d-block
 	const int blockRowSize = blockChannels * blockSize;
@@ -346,6 +367,8 @@ __global__ void AddWidthIndexKernel( const float *input, int width, int height, 
 	if( !GetCudaTaskIndex( width * height * nFilters * batchSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( index, 0, 0, "AddWidthIndexKernel1", input, output, width * height * nFilters * batchSize );
+
 	const int inputColumn = ( index / nFilters ) % width;
 	output[index] = input[index] + ( isForward ? inputColumn : -inputColumn ); 
 }
@@ -358,6 +381,8 @@ __global__ void AddWidthIndexKernel( const int *input, int width, int height, in
 	if( !GetCudaTaskIndex( width * height * nFilters * batchSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_I( index, 0, 0, "AddWidthIndexKernel2", input, output, width * height * nFilters * batchSize );
+
 	const int inputColumn = ( index / nFilters ) % width;
 	output[index] = input[index] + ( isForward ? inputColumn : -inputColumn );
 }
@@ -370,6 +395,8 @@ __global__ void AddHeightIndexKernel( const float *input, int width, int height,
 	if( !GetCudaTaskIndex( width * height * nFilters * batchSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( index, 0, 0, "AddHeightIndexKernel1", input, output, width* height* nFilters* batchSize );
+
 	const int inputRow = ( index / ( width * nFilters ) ) % height;
 	output[index] = input[index] + ( isForward ? inputRow : -inputRow );
 }
@@ -382,6 +409,8 @@ __global__ void AddHeightIndexKernel( const int *input, int width, int height, i
 	if( !GetCudaTaskIndex( width * height * nFilters * batchSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_I( index, 0, 0, "AddHeightIndexKernel2", input, output, width* height* nFilters* batchSize );
+
 	const int inputRow = ( index / ( width * nFilters ) ) % height;
 	output[index] = input[index] + ( isForward ? inputRow : -inputRow );
 }
@@ -393,6 +422,7 @@ __global__ void QrnnFPoolingKernel( bool reverse, int sequenceLength, int object
 	if( !GetCudaTaskIndex( objectSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "QrnnFPoolingKernel", z, f, res, objectSize );
 
 	const int nextObjectOffset = reverse ? -objectSize : objectSize;
 	const int firstElemOffset = reverse ? ( objectSize * ( sequenceLength - 1 ) + index ) : index;
@@ -425,6 +455,7 @@ __global__ void QrnnFPoolingBackwardKernel( bool reverse, int sequenceLength, in
 	if( !GetCudaTaskIndex( objectSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "QrnnFPoolingBackwardKernel", z, f, outDiff, objectSize );
 
 	const int nextObjectOffset = reverse ? -objectSize : objectSize;
 	const int firstElemOffset = reverse ? ( objectSize * ( sequenceLength - 1 ) + index ) : index;
@@ -463,6 +494,7 @@ __global__ void QrnnIfPoolingKernel( bool reverse, int sequenceLength, int objec
 	if( !GetCudaTaskIndex( objectSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "QrnnIfPoolingKernel", z, f, res, objectSize );
 
 	const int nextObjectOffset = reverse ? -objectSize : objectSize;
 	const int firstElemOffset = reverse ? ( objectSize * ( sequenceLength - 1 ) + index ) : index;
@@ -497,6 +529,7 @@ __global__ void QrnnIfPoolingBackwardKernel( bool reverse, int sequenceLength, i
 	if( !GetCudaTaskIndex( objectSize, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "QrnnIfPoolingBackwardKernel", z, f, outDiff, objectSize );
 
 	const int nextObjectOffset = reverse ? -objectSize : objectSize;
 	const int firstElemOffset = reverse ? ( objectSize * ( sequenceLength - 1 ) + index ) : index;
@@ -544,6 +577,7 @@ __global__ void IndRnnRecurrentKernel( bool reverse, int sequenceLength, int bat
 	if( !GetCudaTaskIndex2D( batchSize, objectSize, batch, elem ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( batch, elem, 0, "IndRnnRecurrentKernel", wx, mask, h, batchSize * objectSize );
 
 	// AF_Sigmoid == 5
 	// AF_ReLU == 2
@@ -585,6 +619,7 @@ __global__ void IndRnnRecurrentBackwardKernel( bool reverse, int sequenceLength,
 	if( !GetCudaTaskIndex2D( batchSize, objectSize, batch, elem ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( batch, elem, 0, "IndRnnRecurrentBackwardKernel", mask, u, outDiff, batchSize * objectSize );
 
 	// AF_Sigmoid == 5
 	// AF_ReLU == 2
@@ -631,6 +666,7 @@ __global__ void IndRnnRecurrentLearnKernel( bool reverse, int sequenceLength, in
 	if( !GetCudaTaskIndex2D( batchSize, objectSize, batch, elem ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( batch, elem, 0, "IndRnnRecurrentLearnKernel", mask, u, outDiff, batchSize * objectSize );
 
 	// AF_Sigmoid == 5
 	// AF_ReLU == 2
@@ -680,6 +716,7 @@ __global__ void BertConvKernel( const float* data, const float* kernel, int seqL
 	if( !GetCudaTaskIndex( taskCount, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "BertConvKernel", data, kernel, output, taskCount );
 
 	const int pad = ( kernelSize - 1 ) / 2;
 	const int dataSeqStep = batchNumHeads * headSize;
@@ -715,6 +752,7 @@ __global__ void BertConvBackwardDataKernel( const float* kernel, const float* ou
 	if( !GetCudaTaskIndex( taskCount, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "BertConvBackwardDataKernel", kernel, outputDiff, dataDiff, taskCount );
 
 	const int pad = ( kernelSize - 1 ) / 2;
 	const int outputSeqStep = batchNumHeads * headSize;
@@ -752,6 +790,7 @@ __global__ void BertConvBackwardKernelKernel( const float* data, const float* ou
 	if( !GetCudaTaskIndex( taskCount, index ) ) {
 		return;
 	}
+	PRINT_HEAD3_F( index, 0, 0, "BertConvBackwardKernelKernel", data, outputDiff, kernelDiff, taskCount );
 
 	const int kernelOffset = index;
 	const int posInKernel = index % kernelSize;
@@ -789,6 +828,7 @@ __global__ void LinearInterpolationKernel( const float* data, float* result, int
 	if( !GetCudaTaskIndex( taskCount, taskIndex ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( taskIndex, 0, 0, "LinearInterpolationKernel", data, result, taskCount );
 
 	result += taskIndex;
 	const int elem = taskIndex % objectSize;
@@ -856,6 +896,7 @@ __global__ void scatterNDKernel( const T* updates, const int* indices, T* data, 
 	if( !GetCudaTaskIndex( taskCount, index ) ) {
 		return;
 	}
+	PRINT_HEAD2_T( index, 0, 0, "scatterNDKernel", updates, data, taskCount );
 
 	const int updateIndex = index / objectSize;
 	const int elem = index % objectSize;

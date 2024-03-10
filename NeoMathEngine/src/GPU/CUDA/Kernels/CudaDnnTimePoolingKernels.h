@@ -38,6 +38,7 @@ __global__ void BlobMaxOverTimePoolingKernel( const CCudaMaxOverTimePoolingDescI
 	if( !GetCudaTaskIndex2D( result.BlobSize(), desc.FilterLen, pos, x ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( x, pos, 0, "BlobMaxOverTimePoolingKernel1", sourceData, resultData, result.BlobSize() );
 
 	const int seqNum = pos / seqElemSize;
 	const int srcPos = pos % seqElemSize;
@@ -81,6 +82,7 @@ __global__ void BlobMaxOverTimePoolingKernel( const CCudaMaxOverTimePoolingDescI
 	if( !GetCudaTaskIndex2D( result.BlobSize(), desc.FilterLen, pos, x ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( x, pos, 0, "BlobMaxOverTimePoolingKernel2", sourceData, resultData, result.BlobSize() );
 
 	const int seqNum = pos / seqElemSize;
 	const int srcPos = pos % seqElemSize;
@@ -127,6 +129,7 @@ __global__ void BlobMaxOverTimePoolingBackwardKernel( Store store, const CCudaMa
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( result.BlobSize(), BlobMaxOverTimePoolingBackwardCombine, index, step );
+	PRINT_HEAD2_F( index, 0, 0, "BlobMaxOverTimePoolingBackwardKernel", resultDiff, sourceDiff, result.BlobSize() );
 
 	const int objectSize = source.ObjectSize();
 	const int seqElemSize = source.BatchWidth() * objectSize;

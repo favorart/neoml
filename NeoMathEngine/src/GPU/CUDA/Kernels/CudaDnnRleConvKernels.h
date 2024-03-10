@@ -31,6 +31,8 @@ __global__ void BlobConvertFromRleKernel( const CCudaConvolutionDescInternal con
 	if(!GetCudaTaskIndex2D(source.ObjectCount(), source.Height(), num, line)) {
 		return;
 	}
+	PRINT_HEAD2_F( num, line, 0, "BlobConvertFromRleKernel", (float*)sourceData, resultData, source.ObjectCount() );
+
 	const CCudaRleImage* __restrict__ image = reinterpret_cast<const CCudaRleImage*>(
 		(const char*)sourceData + num * objectSize);
 	float* output = GetBlobPtr(source, resultData, num, line, 0, 0);

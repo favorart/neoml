@@ -128,6 +128,8 @@ __global__ void BlobGlobalMaxPoolingHeapKernel( const CCudaGlobalMaxPoolingDescI
 	float* const localHeap = sharedData + ( threadIdx.y * ( blockDim.x + 1 ) + threadIdx.x ) * bufferStep;
 	float* const globalHeap = sharedData + ( threadIdx.y * ( blockDim.x + 1 ) + blockDim.x ) * bufferStep;
 
+	PRINT_HEAD2_F( b, c, 0, "BlobGlobalMaxPoolingHeapKernel", sourceData, resultData, totalChannels );
+
 	for( int i = 0; i < maxCount; ++i ) {
 		localHeap[2 * i] = -FLT_MAX;
 		localHeap[2 * i + 1] = -1;
@@ -210,6 +212,8 @@ __global__ void BlobGlobalMaxPoolingLocalSortKernel( const CCudaGlobalMaxPooling
 	const int countPerBlock = ( poolSize + gridDim.y - 1 ) / gridDim.y;
 	const int countPerThread = ( countPerBlock + blockDim.y - 1 ) / blockDim.y;
 	const int count = min( countPerThread, min( countPerBlock, poolSize - (int)blockIdx.y * countPerBlock ) - (int)threadIdx.y * countPerThread );
+
+	PRINT_HEAD1_F( b, c, 0, "BlobGlobalMaxPoolingLocalSortKernel", sourceData, totalChannels );
 
 	for( int i = 0; i < histSize; ++i ) {
 		threadHistogram[i] = 0;
@@ -309,6 +313,8 @@ __global__ void BlobGlobalMaxPoolingGlobalScanKernel( const CCudaGlobalMaxPoolin
 	const int index = threadIdx.y * countPerThread;
 	const int count = min( countPerThread, blockCountY - ( int )index );
 
+	PRINT_HEAD1_I( index, 0, 0, "BlobGlobalMaxPoolingGlobalScanKernel", global, histSize );
+
 	for( int i = 0; i < histSize; ++i ) {
 		int temp = 0;
 		threadHistogram[i] = 0;
@@ -388,6 +394,8 @@ __global__ void BlobGlobalMaxPoolingGlobalShuffleKernel( const CCudaGlobalMaxPoo
 	const int count = min( countPerThread, min( countPerBlock, poolSize - ( int )blockIdx.y * countPerBlock ) - localPos );
 	int index = ( b * poolSize + blockIdx.y * countPerBlock + localPos ) * totalChannels + c;
 
+	PRINT_HEAD2_F( x, b, c, "BlobGlobalMaxPoolingGlobalShuffleKernel", sourceData, resultData, totalChannels );
+
 	// global sort using local and global positions of histogram values
 	if( b < source.ObjectCount() && c < totalChannels ) {
 		// initialize result
@@ -428,6 +436,8 @@ __global__ void BlobGlobalMaxPoolingBackwardKernel( const CCudaGlobalMaxPoolingD
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( fullSize, BlobGlobalMaxPoolingBackwardCombine, index, step );
+
+	PRINT_HEAD2_F( index, 0, 0, "BlobGlobalMaxPoolingBackwardKernel", resultDiff, sourceDiff, fullSize );
 
 	const int totalChannels = desc.Result.Channels();
 

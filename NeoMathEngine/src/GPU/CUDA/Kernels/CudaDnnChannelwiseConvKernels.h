@@ -33,6 +33,9 @@ __global__ void BlobChannelwiseConvolutionKernel( const CCudaChannelwiseConvolut
 	int taskX;
 
 	if( GetCudaTaskIndex2D( result.ObjectCount() * result.Height(), result.Width() * result.Channels(), taskY, taskX ) ) {
+		PRINT_HEAD3_F( taskX, taskY, 0, "BlobChannelwiseConvolutionKernel", sourceData, filterData, resultData,
+			result.ObjectCount() * result.Height() );
+
 		float* resultPtr = resultData + taskY * result.Channels() * result.Width() + taskX;
 
 		const int channel = taskX % result.Channels();
@@ -81,6 +84,9 @@ __global__ void BlobChannelwiseConvolutionBackwardKernel( const CCudaChannelwise
 	int taskY;
 
 	if( GetCudaTaskIndex2D( inputDiff.ObjectCount() * inputDiff.Height(), inputDiff.Width() * inputDiff.Channels(), taskY, taskX ) ) {
+		PRINT_HEAD3_F( taskX, taskY, 0, "BlobChannelwiseConvolutionBackwardKernel", sourceData, filterData, resultData,
+			inputDiff.ObjectCount() * inputDiff.Height() );
+
 		resultData += taskY * inputDiff.Width() * inputDiff.Channels() + taskX;
 		const int channel = taskX % inputDiff.Channels();
 		const int outCol = taskX / inputDiff.Channels();
@@ -125,6 +131,9 @@ __global__ void BlobChannelwiseConvolutionLearnAddKernel( const CCudaChannelwise
 	int fb;
 	int hw;
 	if( GetCudaTaskIndex2D( filterDiff.Height() * filterDiff.Width(), filterDiff.Channels(), hw, fb ) ) {
+		PRINT_HEAD3_F( fb, hw, 0, "BlobChannelwiseConvolutionLearnAddKernel", inputData, outputDiffData, filterDiffData,
+			filterDiff.Height() * filterDiff.Width() );
+
 		const int fy = hw / filterDiff.Width();
 		const int fx = hw % filterDiff.Width();
 		float* const filtData = filterDiffData + hw * filterDiff.Channels() + fb;

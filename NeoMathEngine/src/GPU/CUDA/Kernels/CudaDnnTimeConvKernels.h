@@ -44,6 +44,7 @@ __global__ void BuildTempMatrixKernel( const CCudaTimeConvolutionDescInternal de
 	if( !GetCudaTaskIndex2D( matrixPartHeight, matrixWidth, matrixRow, matrixCol ) ) {
 		return;
 	}
+	PRINT_HEAD2_F( matrixRow, matrixCol, 0, "BuildTempMatrixKernel", input, matrix, matrixPartHeight );
 
 	matrix += matrixRow * matrixWidth + matrixCol;
 
@@ -77,6 +78,7 @@ __global__ void BlobTimeConvolutionBackwardUnpackKernel( const CCudaTimeConvolut
 	if( batch >= inputDiff.ObjectCount() ) {
 		return;
 	}
+	PRINT_HEAD3_F( batch, 0, 0, "BlobTimeConvolutionBackwardUnpackKernel", filterData, inputDiffData, data, inputDiff.ObjectCount() );
 
 	const int objectSize = inputDiff.ObjectSize();
 	const int seqNum = batch / ( inputDiff.BatchWidth() * inputDiff.ListSize() );
@@ -137,6 +139,8 @@ __global__ void BlobTimeConvolutionLearnFilterKernel( CCudaTimeConvolutionDescIn
 
 	int index;
 	if( GetCudaTaskIndex( desc.Filter.BlobSize(), index ) ) {
+		PRINT_HEAD3_F( index, 0, 0, "BlobTimeConvolutionLearnFilterKernel", input, outputDiff, filterDiff, desc.Filter.BlobSize() );
+
 		filterDiff += index;
 		float res = 0;
 
