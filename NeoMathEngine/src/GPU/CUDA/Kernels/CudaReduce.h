@@ -57,7 +57,8 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 		if( !isfinite( sum ) || !isfinite( res ) /*|| !isfinite( sum + res )*/ ) {
 			printf( "ReduceSumXSharedBuffer: sum=%f res=%f laneMask=%d xWarp=%d threadIdx.x=%d threadIdx.y=%d threadIdx.z=%d blockDim.x=%d blockDim.y=%d\n",
 				sum, res, laneMask, xWarp, threadIdx.x, threadIdx.y, threadIdx.z, blockDim.x, blockDim.y );
-			assert( !isnan( sum ) && !isnan( res ) );
+			assert( isfinite( sum ) );
+			assert( isfinite( res ) );
 		}
 		sum += res;
 	}

@@ -98,6 +98,17 @@ void CCudaMathEngine::BroadcastCopy(const CFloatHandle& toHandle, const CConstFl
 		GetRaw( toHandle ), GetRaw( fromHandle ), toDesc, fromDesc, additionalWidth, resultSize );
 }
 
+void VectorFillSpecial( CCudaMathEngine& mathEngine, float* result, int vectorSize )
+{
+	SetCudaDevice( mathEngine.device->DeviceNumber );
+
+	int blockCount;
+	int threadCount;
+	mathEngine.getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorFillHandleCombineCount );
+
+	VectorFillSpecialKernel<<<blockCount, threadCount>>>( result, -18213337617453152112530317347169239040.0f, vectorSize );
+}
+
 void CCudaMathEngine::VectorFill(const CFloatHandle& result, float value, int vectorSize, int num, const CConstFloatHandle* name)
 {
 	ASSERT_EXPR(result.GetMathEngine() == this);

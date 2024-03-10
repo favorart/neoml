@@ -178,11 +178,18 @@ CMemoryHandle CCudaMathEngine::CopyFrom( const CMemoryHandle& handle, size_t siz
 	return result;
 }
 
+void VectorFillSpecial( CCudaMathEngine& mathEngine, float* result, int vectorSize );
+
 CMemoryHandle CCudaMathEngine::Alloc( size_t size )
 {
 	SetCudaDevice( device->DeviceNumber );
 	void* ptr;
 	cudaError_t mallocError = cudaMalloc(&ptr, size);
+	if ( (size % sizeof(float)) == 0 )
+	{
+		const int vectorSize = (int)(size / sizeof( float ));
+		VectorFillSpecial( *this, ( float* )ptr, vectorSize );
+	}
 	if( mallocError != 0 ) {
 		return CMemoryHandle();
 	}

@@ -82,6 +82,21 @@ __global__ void VectorFillKernel(T* mem, T value, int count, int num, const char
 	}
 }
 
+template<class T>
+__global__ void VectorFillSpecialKernel(T* mem, T value, int count)
+{
+	int index;
+	int step;
+	int actionCount = GetCudaTaskCountAndIndex( count, VectorFillCombineCount, index, step );
+
+	mem += index;
+
+	for( int i = 0; i < actionCount; ++i ) {
+		*mem = value;
+		mem += step;
+	}
+}
+
 const int VectorFillHandleCombineCount = 8;
 template<class T>
 __global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name)

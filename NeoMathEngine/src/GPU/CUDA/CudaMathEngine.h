@@ -637,12 +637,12 @@ public:
 	void SetDistributedCommunicator( const ncclUniqueId& uniqueId, const CMathEngineDistributedInfo& info,
 		std::shared_ptr<std::atomic<bool>> isAbort );
 #endif
-protected:
+//protected:
 	// IRawMemoryManager interface methods
 	CMemoryHandle Alloc( size_t size ) override;
 	void Free( const CMemoryHandle& handle ) override;
 
-private:
+//private:
 	CDllLoader loader; // loader to guarantee the correctness of dlls' loads/frees
 	const CCusparse* cusparse; // cusparse library functions
 	const CCublas* cublas; // cublas library functions
