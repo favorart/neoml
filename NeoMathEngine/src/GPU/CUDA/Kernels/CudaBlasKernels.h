@@ -37,20 +37,21 @@ __global__ void SetVectorToMatrixRowsKernel(float* result,
 
 const int AddVectorToMatrixElementsCombine = 4;
 __global__ void AddVectorToMatrixElementsKernel( float* matrix, int height, int width,
-	const int* __restrict__ indices, const float* __restrict__ vector, size_t calls_counter )
+	const int* __restrict__ indices, const float* __restrict__ vector, size_t calls_counter, void* historyKernels )
 {
 	int jPos;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( height, AddVectorToMatrixElementsCombine, jPos, step );
-	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddVectorToMatrixElementsKernel1", vector, matrix, height, calls_counter );
+	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddVectorToMatrixElementsKernel1", vector, matrix,
+		height, calls_counter, historyKernels, AddVectorToMatrixElementsKernel1Id );
 
 	for( int i = 0; i < count; ++i ) {
 		const int index = indices[jPos];
 		if( index >= 0 && index < width ) {
 			float result = matrix[jPos * width + index] += vector[jPos];
-			assert( isfinite( result ) );
-			assert( result > -18002376725743890449408517795774411571.f );
-			assert( result < 18002376725743890449408517795774411571.f );
+
+			WARN2_CNT_F( "AddVectorToMatrixElementsKernel1", vector[jPos], vector, result, matrix,
+				height, width, index, calls_counter, historyKernels );
 		}
 		jPos += step;
 	}
@@ -59,19 +60,20 @@ __global__ void AddVectorToMatrixElementsKernel( float* matrix, int height, int 
 const int AddVectorToMatrixElementsMulCombine = 4;
 __global__ void AddVectorToMatrixElementsKernel( float* __restrict__ matrix, int /*height*/, int width,
 	const int* __restrict__ rowIndices, const int* __restrict__ columnIndices,
-	const float* __restrict__ vector, int vectorSize, size_t calls_counter )
+	const float* __restrict__ vector, int vectorSize, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( vectorSize, AddVectorToMatrixElementsMulCombine, index, step );
 
-	PRINT_HEAD2_CNT_F( index, 0, 0, "AddVectorToMatrixElementsKernel2", vector, matrix, vectorSize, calls_counter );
+	PRINT_HEAD2_CNT_F( index, 0, 0, "AddVectorToMatrixElementsKernel2", vector, matrix,
+		vectorSize, calls_counter, historyKernels, AddVectorToMatrixElementsKernel2Id );
 	for( int i = 0; i < count; ++i ) {
 		float* result = matrix + rowIndices[index] * width + columnIndices[index];
 		atomicAdd( result, vector[index] );
-		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+
+		WARN2_CNT_F( "AddVectorToMatrixElementsKernel2", vector[index], vector, *result, matrix,
+			vectorSize, width, index, calls_counter, historyKernels );
 		index += step;
 	}
 }
@@ -100,19 +102,19 @@ __global__ void SetVectorToMatrixElementsKernel(
 
 const int AddMatrixElementsToVectorCombine = 4;
 __global__ void AddMatrixElementsToVectorKernel( const float* __restrict__ matrix, int height, int width,
-	const int* __restrict__ indices, float* result, size_t calls_counter )
+	const int* __restrict__ indices, float* result, size_t calls_counter, void* historyKernels )
 {
 	int jPos;
 	int step;
 	const int count = GetCudaTaskCountAndIndex( height, AddMatrixElementsToVectorCombine, jPos, step );
 
-	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddMatrixElementsToVectorKernel1", matrix, result, height, /*width,*/ calls_counter);
+	PRINT_HEAD2_CNT_F( jPos, 0, 0, "AddMatrixElementsToVectorKernel1", matrix, result, height, /*width,*/ calls_counter, historyKernels, AddMatrixElementsToVectorKernel1Id );
 	for( int i = 0; i < count; ++i ) {
 		const int index = indices[jPos];
 		if( index >= 0 && index < width ) {
 			result[jPos] += matrix[jPos * width + index];
 
-			WARN2_CNT_F( "AddMatrixElementsToVectorKernel1", matrix[jPos * width + index], matrix, result[jPos], result, height, width, index, /*jPos,*/ calls_counter );
+			WARN2_CNT_F( "AddMatrixElementsToVectorKernel1", matrix[jPos * width + index], matrix, result[jPos], result, height, width, index, /*jPos,*/ calls_counter, historyKernels );
 		}
 		jPos += step;
 	}
@@ -120,17 +122,17 @@ __global__ void AddMatrixElementsToVectorKernel( const float* __restrict__ matri
 
 const int AddMatrixElementsToVectorMulCombine = 4;
 __global__ void AddMatrixElementsToVectorKernel(const float* __restrict__ matrix, int /*height*/, int width,
-	const int* __restrict__ rowIndices, const int* __restrict__ columnIndices, float* result, int vectorSize, size_t calls_counter)
+	const int* __restrict__ rowIndices, const int* __restrict__ columnIndices, float* result, int vectorSize, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(vectorSize, AddMatrixElementsToVectorMulCombine, index, step);
 
-	PRINT_HEAD2_CNT_F( index, 0, 0, "AddMatrixElementsToVectorKernel2", matrix, result, /*rowIndices columnIndices, width,*/ vectorSize, calls_counter );
+	PRINT_HEAD2_CNT_F( index, 0, 0, "AddMatrixElementsToVectorKernel2", matrix, result, /*rowIndices columnIndices, width,*/ vectorSize, calls_counter, historyKernels, AddMatrixElementsToVectorKernel2Id );
 	for(int i = 0; i < count; ++i) {
 		float val = result[index] += matrix[rowIndices[index] * width + columnIndices[index]];
 
-		WARN2_CNT_F( "AddMatrixElementsToVectorKernel2", val, matrix, val, result, vectorSize, width, index, calls_counter );
+		WARN2_CNT_F( "AddMatrixElementsToVectorKernel2", val, matrix, val, result, vectorSize, width, index, calls_counter, historyKernels );
 		index += step;
 	}
 }
@@ -160,7 +162,7 @@ __global__ void AddMatrixElementsToMatrixKernel(const float* __restrict__ matrix
 const int BatchAddVectorToMatrixRowsCombine = 4;
 __global__ void AddVectorToMatrixRowsKernel(int batchSize,
 	const float* __restrict__ matrix, float* result, int matrixHeight,
-	int matrixWidth, const float* __restrict__ vector, size_t calls_counter)
+	int matrixWidth, const float* __restrict__ vector, size_t calls_counter, void* historyKernels)
 {
 	const int yPos = blockIdx.y * blockDim.y + threadIdx.y;
 	if(yPos < batchSize * matrixHeight) {
@@ -171,14 +173,15 @@ __global__ void AddVectorToMatrixRowsKernel(int batchSize,
 		int index;
 		int step;
 		const int count = GetCudaTaskCountAndIndexX(matrixWidth, BatchAddVectorToMatrixRowsCombine, index, step);
+		PRINT_HEAD3_CNT_F( yPos, index, 0, "AddVectorToMatrixRowsKernel", matrix, vector, result,
+			matrixHeight, /*matrixWidth, batchSize,*/ calls_counter, historyKernels, AddVectorToMatrixRowsKernelId );
 
-		PRINT_HEAD3_CNT_F( yPos, index, 0, "AddVectorToMatrixRowsKernel", matrix, vector, result, matrixHeight, /*matrixWidth, batchSize,*/ calls_counter );
 		for(int i = 0; i < count; ++i) {
 			const int matrixIndex = matrixBaseIndex + index;
 			float val = result[matrixIndex] = matrix[matrixIndex] + vector[vectorBaseIndex + index];
 
 			WARN3_CNT_F( "AddVectorToMatrixRowsKernel", matrix[matrixIndex], matrix, vector[vectorBaseIndex + index], vector, val, result,
-				matrixHeight, matrixWidth, index, calls_counter );
+				matrixHeight, matrixWidth, index, calls_counter, historyKernels );
 			index += step;
 		}
 	}
@@ -223,7 +226,7 @@ const int SumMatrixRowsAddCombineCount = 128;
 template<class T>
 __global__ void SumMatrixRowsAddKernel(
 	int batchSize, T* result, const T* __restrict__ matrix,
-	int matrixHeight, int matrixWidth, size_t calls_counter )
+	int matrixHeight, int matrixWidth, size_t calls_counter, void* historyKernels )
 {
 	const int height = ( matrixHeight + SumMatrixRowsAddCombineCount - 1 ) / SumMatrixRowsAddCombineCount;
 
@@ -233,7 +236,8 @@ __global__ void SumMatrixRowsAddKernel(
 	if( !GetCudaTaskIndex3D( batchSize, height, matrixWidth, batchIndex, rowIndex, colIndex ) ) {
 		return;
 	}
-	PRINT_HEAD2_CNT_T( batchIndex, rowIndex, colIndex, "SumMatrixRowsAddKernel", matrix, result, batchSize /*, matrixHeight, matrixWidth*/, calls_counter );
+	PRINT_HEAD2_CNT_T( batchIndex, rowIndex, colIndex, "SumMatrixRowsAddKernel", matrix, result,
+		batchSize /*, matrixHeight, matrixWidth*/, calls_counter, historyKernels, SumMatrixRowsAddKernelId );
 
 	rowIndex *= SumMatrixRowsAddCombineCount;
 	if( rowIndex >= matrixHeight ) {
@@ -257,7 +261,7 @@ __global__ void SumMatrixRowsAddKernel(
 	atomicAdd( val, sum );
 
 	WARN2_CNT_T( "SumMatrixRowsAddKernel", sum, base_matrix, *val, result,
-		matrixHeight, matrixWidth, batchIndex/*, colIndex, rowIndex, rowEndIndex*/, calls_counter );
+		matrixHeight, matrixWidth, batchIndex/*, colIndex, rowIndex, rowEndIndex*/, calls_counter, historyKernels );
 }
 
 const int SumMatrixColumnsCombine = 4;
@@ -333,7 +337,7 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 
 const int MatrixLogSumExpByRowsCombine = 2;
 __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
-	int height, int width, float* result, int widthNorm, size_t calls_counter)
+	int height, int width, float* result, int widthNorm, size_t calls_counter, void* historyKernels)
 {
 	assert( threadIdx.z == 0 );
 
@@ -346,7 +350,8 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixLogSumExpByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixLogSumExpByRowsKernel", matrix, result,
+		height /*, width, widthNorm*/, calls_counter, historyKernels, MatrixLogSumExpByRowsKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
@@ -391,13 +396,13 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 
 		float val = result[yPos] = maxVal + log(sumVal);
 
-		WARN2_CNT_F( "MatrixLogSumExpByRowsKernel", maxVal /*, sumVal*/, base_matrix, val, result, height, width, yPos /*, widthNorm*/, calls_counter );
+		WARN2_CNT_F( "MatrixLogSumExpByRowsKernel", maxVal /*, sumVal*/, base_matrix, val, result, height, width, yPos /*, widthNorm*/, calls_counter, historyKernels );
 	}
 }
 
 const int MatrixSoftmaxByRowsCombine = 2;
 __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
-	int height, int width, float* result, int widthNorm, size_t calls_counter )
+	int height, int width, float* result, int widthNorm, size_t calls_counter, void* historyKernels )
 {
 	assert( threadIdx.z == 0 );
 
@@ -410,7 +415,8 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxByRowsKernel", matrix, result, height /*, width, widthNorm*/, calls_counter );
+	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxByRowsKernel", matrix, result,
+		height /*, width, widthNorm*/, calls_counter, historyKernels, MatrixSoftmaxByRowsKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
 
@@ -464,7 +470,7 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 		for(int i = 0; i < count; ++i) {
 			float val = result[index + i * step] *= sumVal;
 
-			WARN2_CNT_F( "MatrixSoftmaxByRowsKernel", /*maxVal,*/ sumVal, base_matrix, val, result, height, width, index /*, i, step, widthNorm*/, calls_counter );
+			WARN2_CNT_F( "MatrixSoftmaxByRowsKernel", /*maxVal,*/ sumVal, base_matrix, val, result, height, width, index /*, i, step, widthNorm*/, calls_counter, historyKernels );
 		}
 	}
 }
@@ -652,7 +658,7 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ fir
 
 const int FindMaxValueInRowsCombine = 4;
 __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ matrix,
-	int matrixHeight, int matrixWidth, float* result, int* indices, int widthNorm, size_t calls_counter)
+	int matrixHeight, int matrixWidth, float* result, int* indices, int widthNorm, size_t calls_counter, void* historyKernels)
 {
 	assert( threadIdx.z == 0 );
 
@@ -668,7 +674,7 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 	int xPos;
 	if(GetCudaTaskIndex2D(matrixHeight, widthNorm, yPos, xPos)) {
 		PRINT_HEAD2_CNT_F( yPos, xPos, 0, "FindMaxValueWithIndicesInRowsKernel", matrix, result,
-			matrixHeight /*, matrixWidth, widthNorm*/, calls_counter );
+			matrixHeight /*, matrixWidth, widthNorm*/, calls_counter, historyKernels, FindMaxValueWithIndicesInRowsKernelId );
 
 		// Find the maximum in the needed part of the row
 		matrix += yPos * matrixWidth;
@@ -697,7 +703,7 @@ __global__ void FindMaxValueWithIndicesInRowsKernel(const float* __restrict__ ma
 		float val = result[yPos] = maxVal.Value;
 
 		WARN2_CNT_F( "FindMaxValueWithIndicesInRowsKernel", maxVal.Value, base_matrix, val, result,
-			matrixHeight, matrixWidth, yPos /*, xPos, widthNorm */, calls_counter );
+			matrixHeight, matrixWidth, yPos /*, xPos, widthNorm */, calls_counter, historyKernels );
 		indices[yPos] = maxVal.Index;
 	}
 }
@@ -818,7 +824,7 @@ static __global__ void FindMinValueInColumnsKernel( const float* matrixHandle, i
 const int BatchVectorLookupAndCopyCombineBatch = 4;
 template<class TInput, class TLookup>
 __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __restrict__ input, int inputChannels,
-	const TLookup* __restrict__ lookup, int vectorSize, TLookup* output, int outputChannels, int batchNorm, size_t calls_counter)
+	const TLookup* __restrict__ lookup, int vectorSize, TLookup* output, int outputChannels, int batchNorm, size_t calls_counter, void* historyKernels)
 {
 	int b;
 	int index;
@@ -827,7 +833,7 @@ __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __
 	}
 	using T = TLookup;
 	PRINT_HEAD3_CNT_T( b, index, 0, "VectorChannelLookupAndCopyKernel", (T*)input, lookup, output,
-	 vectorSize /*, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter );
+	 vectorSize /*, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter, historyKernels, VectorChannelLookupAndCopyKernelId );
 
 	[[maybe_unused]] const TInput* __restrict__ base_input = input;
 	[[maybe_unused]] const TLookup* __restrict__ base_lookup = lookup;
@@ -846,7 +852,7 @@ __global__ void VectorChannelLookupAndCopyKernel(int batchSize, const TInput* __
 		*output = lookup[tableIndex * vectorSize];
 
 		WARN3_CNT_T( "VectorChannelLookupAndCopyKernel", *((T*)&tableIndex), base_input, lookup[tableIndex * vectorSize], base_lookup, *output, base_output,
-			vectorSize, k, index /*, b, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter );
+			vectorSize, k, index /*, b, inputChannels, batchSize, outputChannels, batchNorm*/, calls_counter, historyKernels );
 		output += outputChannels;
 	}
 }
@@ -1164,18 +1170,19 @@ __global__ void MultiplyVectorByTransposedLookupVectorAndAddToTableKernel(int ba
 }
 
 __global__ void MultiplyDiagMatrixByMatrixKernel(const float* __restrict__ first, int firstSize,
-	const float* __restrict__ second, int secondWidth, float* result, size_t calls_counter )
+	const float* __restrict__ second, int secondWidth, float* result, size_t calls_counter, void* historyKernels )
 {
 	int i;
 	int j;
 	if(GetCudaTaskIndex2D(firstSize, secondWidth, j, i)) {
-		PRINT_HEAD3_CNT_F( i, j, 0, "MultiplyDiagMatrixByMatrixKernel", first, second, result, firstSize, calls_counter );
+		PRINT_HEAD3_CNT_F( i, j, 0, "MultiplyDiagMatrixByMatrixKernel", first, second, result,
+			firstSize, calls_counter, historyKernels, MultiplyDiagMatrixByMatrixKernelId );
 
 		const int index = j * secondWidth + i;
 		result[index] = second[index] * first[j];
 
 		WARN3_CNT_F( "MultiplyDiagMatrixByMatrixKernel", first[j], first, second[index], second, result[index], result,
-			i, j, index, /*, firstSize, secondWidth*/ calls_counter );
+			i, j, index, /*, firstSize, secondWidth*/ calls_counter, historyKernels );
 	}
 }
 
@@ -1245,7 +1252,7 @@ __global__ void TransposeMatrixKernel(int batchSize,
 
 const int MultiplyDiagMatrixByMatrixAndSumCombine = 16;
 __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const float* __restrict__ first,
-	int firstSize, const float* __restrict__ second, int secondWidth, float* result, int batchSizeNorm, size_t calls_counter )
+	int firstSize, const float* __restrict__ second, int secondWidth, float* result, int batchSizeNorm, size_t calls_counter, void* historyKernels )
 {
 	extern __shared__ float buffer[];
 	float& my = buffer[( threadIdx.z * blockDim.y + threadIdx.y ) * blockDim.x + threadIdx.x];
@@ -1255,7 +1262,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 	int column;
 	int row;
 	GetCudaTaskIndex3D( firstSize, secondWidth, batchSizeNorm, row, column, batch );
-	PRINT_HEAD3_CNT_F( batch, column, row, "MultiplyDiagMatrixByMatrixAndSumKernel", first, second, result, firstSize /*, secondWidth, batchSizeNorm, batchSize*/, calls_counter);
+	PRINT_HEAD3_CNT_F( batch, column, row, "MultiplyDiagMatrixByMatrixAndSumKernel", first, second, result,
+		firstSize /*, secondWidth, batchSizeNorm, batchSize*/, calls_counter, historyKernels, MultiplyDiagMatrixByMatrixAndSumKernelId );
 
 	const bool isValidZY = row < firstSize && column < secondWidth;
 
@@ -1269,7 +1277,8 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		for( int i = 0; i < count; ++i ) {
 			my += *currFirst * *currSecond;
 
-			WARN3_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", *currFirst, first, *currSecond, second, my, result, firstSize, secondWidth, batchSize, calls_counter );
+			WARN3_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", *currFirst, first, *currSecond, second, my, result,
+				firstSize, secondWidth, batchSize, calls_counter, historyKernels );
 			currFirst += step * firstSize;
 			currSecond += step * secondWidth * firstSize;
 		}
@@ -1290,7 +1299,7 @@ __global__ void MultiplyDiagMatrixByMatrixAndSumKernel( int batchSize, const flo
 		} else {
 			*currResult += sum;
 		}
-		WARN2_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", sum, first, *currResult, result, firstSize, secondWidth, batchSizeNorm, calls_counter );
+		WARN2_CNT_F( "MultiplyDiagMatrixByMatrixAndSumKernel", sum, first, *currResult, result, firstSize, secondWidth, batchSizeNorm, calls_counter, historyKernels );
 	}
 }
 
@@ -1346,7 +1355,7 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* __restrict__ first
 const int MatrixSpreadRowsCombine = 16;
 template<class T>
 __global__ void MatrixSpreadRowsKernel(const T* __restrict__ source, int height, int width,
-	T* result, const int* __restrict__ indices, int widthNorm, size_t calls_counter )
+	T* result, const int* __restrict__ indices, int widthNorm, size_t calls_counter, void* historyKernels )
 {
 	const int j = blockIdx.y * blockDim.y + threadIdx.y;
 	if( j >= height || indices[j] < 0 ) {
@@ -1356,7 +1365,8 @@ __global__ void MatrixSpreadRowsKernel(const T* __restrict__ source, int height,
 	int i;
 	int step;
 	const int count = GetCudaTaskCountAndIndex(width, MatrixSpreadRowsCombine, i, step);
-	PRINT_HEAD2_CNT_T( i, j, 0, "MatrixSpreadRowsKernel", source, result, height /*, width, widthNorm*/, calls_counter );
+	PRINT_HEAD2_CNT_T( i, j, 0, "MatrixSpreadRowsKernel", source, result,
+		height /*, width, widthNorm*/, calls_counter, historyKernels, MatrixSpreadRowsKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_source = source;
 	[[maybe_unused]] T* base_result = result;
@@ -1366,8 +1376,8 @@ __global__ void MatrixSpreadRowsKernel(const T* __restrict__ source, int height,
 	for(int c = 0; c < count; ++c) {
 		*result = *source;
 
-		WARN2_CNT_T( "MatrixSpreadRowsKernel", *source, ( unsigned long long )base_source, *result, ( unsigned long long )base_result,
-			/*i, j,*/ height, width, step, calls_counter );
+		WARN2_CNT_T( "MatrixSpreadRowsKernel", *source, base_source, *result, base_result,
+			/*i, j,*/ height, width, step, calls_counter, historyKernels );
 		source += step;
 		result += step;
 	}

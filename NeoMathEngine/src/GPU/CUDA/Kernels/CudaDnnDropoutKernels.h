@@ -21,24 +21,25 @@ limitations under the License.
 namespace NeoML {
 
 __global__ void RandomMatrixDropout( const float* first, int firstHeight,
-	int firstWidth, float* res, int seed, float forwardRate, size_t calls_counter )
+	int firstWidth, float* res, int seed, float forwardRate, size_t calls_counter, void* historyKernels )
 {
 	const unsigned int threshold = forwardRate * UINT_MAX;
 	int row;
 	int col;
 	if( GetCudaTaskIndex2D( firstHeight, ( firstWidth + 3 ) / 4, row, col ) ) {
-		PRINT_HEAD2_CNT_F( row, col, 0, "RandomMatrixDropout", first, res, firstHeight, calls_counter );
+		PRINT_HEAD2_CNT_F( row, col, 0, "RandomMatrixDropout", first, res, firstHeight, calls_counter, historyKernels, RandomMatrixDropoutKernelId );
 
 		CCudaRandom random(seed);
 		random.Skip(col);
 		col *= 4;
+		assert( col < firstWidth );
 		const int index = row * firstWidth + col;
 
 		CIntArray<4> generated = random.Next();
-		for(int j = 0; j < 4 && col + j < firstWidth; ++j) {
+		for(int j = 0; j < 4 && ( col + j ) < firstWidth; ++j) {
 			float result = res[index + j] = (generated[j] <= threshold) ? (first[index + j] / forwardRate) : 0.f;
 
-			WARN2_CNT_F( "RandomMatrixDropout", first[index + j], first, result, res, firstHeight, firstWidth, index, /*j, col,*/ calls_counter );
+			WARN2_CNT_F( "RandomMatrixDropout", first[index + j], first, result, res, firstWidth, firstHeight, (index + j), calls_counter, historyKernels );
 		}
 	}
 }

@@ -26,13 +26,12 @@ namespace NeoML {
 const int VectorFillCombineCount = 8;
 
 template<class T>
-__global__ void VectorCopyKernel( T* result, const T* first, int count, int num, const char* name, size_t calls_counter )
+__global__ void VectorCopyKernel( T* result, const T* first, int count, int num, const char* name, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	int actionCount = GetCudaTaskCountAndIndex( count, VectorFillCombineCount, index, step );
-
-	PRINT_HEAD2_CNT_T( index, 0, 0, "VectorCopyKernel", first, result, count, calls_counter );
+	PRINT_HEAD2_CNT_T( index, 0, 0, "VectorCopyKernel", first, result, count, calls_counter, historyKernels, VectorCopyKernelId );
 
 	[[maybe_unused]] T* base_result = result;
 	[[maybe_unused]] const T* base_first = first;
@@ -44,20 +43,19 @@ __global__ void VectorCopyKernel( T* result, const T* first, int count, int num,
 		*result = *first;
 
 		WARN2_CNT_SPEC_T( "VectorCopyKernel", *first, base_first, *result, base_result,
-			count, i, index, num, name, calls_counter ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		result += step;
 		first += step;
 	}
 }
 
 template<class T>
-__global__ void VectorFillKernel(T* mem, T value, int count, int num, const char* name, size_t calls_counter)
+__global__ void VectorFillKernel(T* mem, T value, int count, int num, const char* name, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorFillCombineCount, index, step);
-
-	PRINT_HEAD1_CNT_T( index, 0, 0, "VectorFillKernel", mem, count, calls_counter );
+	PRINT_HEAD1_CNT_T( index, 0, 0, "VectorFillKernel", mem, count, calls_counter, historyKernels, VectorFillKernelId );
 
 	[[maybe_unused]] T* base_mem = mem;
 
@@ -67,7 +65,7 @@ __global__ void VectorFillKernel(T* mem, T value, int count, int num, const char
 		*mem = value;
 
 		WARN2_CNT_SPEC_T( "VectorFillKernel", 0.f, nullptr, *mem, base_mem,
-			count, i, index, num, name, calls_counter ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		mem += step;
 	}
 }
@@ -89,13 +87,12 @@ __global__ void VectorFillSpecialKernel(T* mem, T value, int count)
 
 const int VectorFillHandleCombineCount = 8;
 template<class T>
-__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name, size_t calls_counter)
+__global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ value, int num, const char* name, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorFillHandleCombineCount, index, step);
-
-	PRINT_HEAD1_CNT_T( index, 0, 0, "VectorFillHandleKernel", mem, count, calls_counter );
+	PRINT_HEAD1_CNT_T( index, 0, 0, "VectorFillHandleKernel", mem, count, calls_counter, historyKernels, VectorFillHandleKernelId );
 
 	[[maybe_unused]] T* base_mem = mem;
 
@@ -105,7 +102,7 @@ __global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ 
 		*mem = *value;
 
 		WARN2_CNT_SPEC_T( "VectorFillHandleKernel", 0.f, nullptr, *mem, base_mem,
-			count, i, index, num, name, calls_counter ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		mem += step;
 	}
 }
@@ -658,13 +655,12 @@ __global__ void VectorHSwishDiffKernel( const float* __restrict__ first, const f
 
 const int VectorEltwiseMaxCombineCount = 8;
 __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
-	float* result, int count, size_t calls_counter)
+	float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorEltwiseMaxCombineCount, index, step);
-
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorEltwiseMaxKernel", first, second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorEltwiseMaxKernel", first, second, result, count, calls_counter, historyKernels, VectorEltwiseMaxKernelId );
 
 	[[maybe_unused]] float* base_result = result;
 	[[maybe_unused]] const float* base_first = first;
@@ -680,7 +676,7 @@ __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
 		*result = ( value1 > value2 ) ? value1 : value2;
 
 		WARN3_CNT_F( "VectorEltwiseMaxKernel", value1, base_first, value2, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
@@ -1141,12 +1137,12 @@ __global__ void VectorBernulliKLDerivativeKernel(const float* __restrict__ first
 const int VectorAddCombineCount = 8;
 template<class T>
 __global__ void VectorAddKernel(const T* __restrict__ first, const T* __restrict__ second,
-	T* result, int count, const char* name, int num, size_t calls_counter)
+	T* result, int count, const char* name, int num, size_t calls_counter, void* historyKernels)
 {
 	int index = 0;
 	int step = 0;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorAddCombineCount, index, step);
-	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorAddKernel", first, second, result, count, num, name, calls_counter );
+	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorAddKernel", first, second, result, count, num, name, calls_counter, historyKernels, VectorAddKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] const T* __restrict__ base_second = second;
@@ -1160,7 +1156,7 @@ __global__ void VectorAddKernel(const T* __restrict__ first, const T* __restrict
 		*result = *first + *second;
 
 		WARN3_CNT_SPEC_T( "VectorAddKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, num, name, calls_counter );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, num, name, calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
@@ -1170,12 +1166,12 @@ __global__ void VectorAddKernel(const T* __restrict__ first, const T* __restrict
 const int VectorAddValueCombineCount = 8;
 template<class T>
 __global__ void VectorAddValueKernel( const T* __restrict__ first,
-	T* result, int count, const T* __restrict__ addition, size_t calls_counter )
+	T* result, int count, const T* __restrict__ addition, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorAddValueCombineCount, index, step);
-	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorAddValueKernel", first, addition, result, count, calls_counter );
+	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorAddValueKernel", first, addition, result, count, calls_counter, historyKernels, VectorAddValueKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] T* base_result = result;
@@ -1191,7 +1187,7 @@ __global__ void VectorAddValueKernel( const T* __restrict__ first,
 		*result = *first + *addition;
 
 		WARN3_CNT_T( "VectorAddValueKernel", *first, base_first, *addition, addition, *result, base_result,
-			count, i, index /*, step*/, calls_counter );
+			count, i, index /*, step*/, calls_counter, historyKernels );
 		first += step;
 		result += step;
 	}
@@ -1199,12 +1195,12 @@ __global__ void VectorAddValueKernel( const T* __restrict__ first,
 
 const int VectorSubCombineCount = 8;
 template<class T>
-__global__ void VectorSubKernel( const T* __restrict__ first, const T* __restrict__ second, T* result, int count, size_t calls_counter )
+__global__ void VectorSubKernel( const T* __restrict__ first, const T* __restrict__ second, T* result, int count, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex( count, VectorSubCombineCount, index, step );
-	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorSubKernel 1", first, second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorSubKernel 1", first, second, result, count, calls_counter, historyKernels, VectorSub1KernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] const T* __restrict__ base_second = second;
@@ -1218,7 +1214,7 @@ __global__ void VectorSubKernel( const T* __restrict__ first, const T* __restric
 		*result = *first - *second;
 
 		WARN3_CNT_T( "VectorSubKernel1", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step*/, calls_counter );
+			count, i, index /*, step*/, calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
@@ -1226,12 +1222,12 @@ __global__ void VectorSubKernel( const T* __restrict__ first, const T* __restric
 }
 
 __global__ void VectorSubKernel( const float* __restrict__ first,
-	float second, float* result, int count, size_t calls_counter )
+	float second, float* result, int count, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex( count, VectorSubCombineCount, index, step );
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSubKernel2", first, &second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSubKernel2", first, &second, result, count, calls_counter, historyKernels, VectorSub2KernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_first = first;
 	[[maybe_unused]] float* base_result = result;
@@ -1243,19 +1239,19 @@ __global__ void VectorSubKernel( const float* __restrict__ first,
 		*result = *first - second;
 
 		WARN3_CNT_F( "VectorSubKernel2", *first, base_first, second, &second, *result, base_result,
-			count, i, index /*, step*/, calls_counter );
+			count, i, index /*, step*/, calls_counter, historyKernels );
 		first += step;
 		result += step;
 	}
 }
 
 __global__ void VectorSubKernel( float first,
-	const float* __restrict__ second, float* result, int count, size_t calls_counter )
+	const float* __restrict__ second, float* result, int count, size_t calls_counter, void* historyKernels )
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex( count, VectorSubCombineCount, index, step );
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSubKernel3", &first, second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSubKernel3", &first, second, result, count, calls_counter, historyKernels, VectorSub3KernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_second = second;
 	[[maybe_unused]] float* base_result = result;
@@ -1267,7 +1263,7 @@ __global__ void VectorSubKernel( float first,
 		*result = first - *second;
 
 		WARN3_CNT_F( "VectorSubKernel3", first, &first, *second, base_second, *result, base_result,
-			count, i, index /*, step*/, calls_counter );
+			count, i, index /*, step*/, calls_counter, historyKernels );
 		second += step;
 		result += step;
 	}
@@ -1292,12 +1288,12 @@ __global__ void VectorMultiplyAndSubKernel(const float* __restrict__ first,
 const int VectorMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorMultiplyKernel(const T* __restrict__ first,
-	T* result, int count, const T* __restrict__ multiplier, size_t calls_counter)
+	T* result, int count, const T* __restrict__ multiplier, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorMultiplyCombineCount, index, step);
-	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorMultiplyKernel", first, multiplier, result, count, calls_counter );
+	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorMultiplyKernel", first, multiplier, result, count, calls_counter, historyKernels, VectorMultiplyKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] T* base_result = result;
@@ -1312,7 +1308,7 @@ __global__ void VectorMultiplyKernel(const T* __restrict__ first,
 		*result = *first * (*multiplier);
 
 		WARN3_CNT_T( "VectorMultiplyKernel", *first, base_first, *multiplier, multiplier, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter, historyKernels );
 		first += step;
 		result += step;
 	}
@@ -1345,12 +1341,12 @@ __global__ void VectorNegMultiplyKernel(const float* __restrict__ first,
 const int VectorEltwiseMultiplyCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count, const char* name, int blockCount, int threadCount, size_t calls_counter)
+	const T* __restrict__ second, T* result, int count, const char* name, int blockCount, int threadCount, size_t calls_counter, void* historyKernels)
 {
 	int index = 0;
 	int step = 0;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorEltwiseMultiplyCombineCount, index, step);
-	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorEltwiseMultiplyKernel", first, second, result, count, 1, name, calls_counter );
+	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorEltwiseMultiplyKernel", first, second, result, count, 1, name, calls_counter, historyKernels, VectorEltwiseMultiplyKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] const T* __restrict__ base_second = second;
@@ -1364,7 +1360,7 @@ __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
 		*result = *first * (*second);
 
 		WARN3_CNT_SPEC_T( "VectorEltwiseMultiplyKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x, blockCount, threadCount*/, 1, name, calls_counter );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x, blockCount, threadCount*/, 1, name, calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
@@ -1422,13 +1418,13 @@ __global__ void VectorEltwiseNegMultiplyKernel(const float* __restrict__ first,
 const int VectorEltwiseDivideCombineCount = 8;
 template<class T>
 __global__ void VectorEltwiseDivideKernel(const T* __restrict__ first,
-	const T* __restrict__ second, T* result, int count, size_t calls_counter)
+	const T* __restrict__ second, T* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorEltwiseDivideCombineCount, index, step);
 
-	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorEltwiseDivide", first, second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_T( index, 0, 0, "VectorEltwiseDivide", first, second, result, count, calls_counter, historyKernels, VectorEltwiseDivideKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] const T* __restrict__ base_second = second;
@@ -1442,7 +1438,7 @@ __global__ void VectorEltwiseDivideKernel(const T* __restrict__ first,
 		*result = *first / (*second);
 
 		WARN3_CNT_T( "VectorMinMaxKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step*/, calls_counter );
+			count, i, index /*, step*/, calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
@@ -1462,16 +1458,16 @@ __global__ void VectorEltwisePowerKernel(const float* __restrict__ first,
 	}
 }
 
-__global__ void VectorSqrtKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
+__global__ void VectorSqrtKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
-		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorSqrtKernel", first, result, count, calls_counter );
+		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorSqrtKernel", first, result, count, calls_counter, historyKernels, VectorSqrtKernelId );
 
 		result[index] = sqrtf(first[index]);
 
 		WARN2_CNT_F( "VectorSqrtKernel", first[index], first, result[index], result,
-			count, 0, index, calls_counter );
+			count, 0, index, calls_counter, historyKernels );
 	}
 }
 
@@ -1506,13 +1502,13 @@ __global__ void VectorInvKernel(const float* __restrict__ first, float* result, 
 
 const int VectorMinMaxCombineCount = 8;
 __global__ void VectorMinMaxKernel(const float* __restrict__ first, float* result, int count,
-	const float* __restrict__ minValue, const float* __restrict__ maxValue, size_t calls_counter)
+	const float* __restrict__ minValue, const float* __restrict__ maxValue, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorMinMaxCombineCount, index, step);
 
-	PRINT_HEAD2_CNT_F( index, 0, 0, "VectorMinMaxKernel", first, result, count, calls_counter );
+	PRINT_HEAD2_CNT_F( index, 0, 0, "VectorMinMaxKernel", first, result, count, calls_counter, historyKernels, VectorMinMaxKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_first = first;
 	[[maybe_unused]] float* base_result = result;
@@ -1524,32 +1520,32 @@ __global__ void VectorMinMaxKernel(const float* __restrict__ first, float* resul
 		*result = min(max(*first, *minValue), *maxValue);
 
 		WARN2_CNT_F( "VectorMinMaxKernel", *first, base_first, *result, base_result,
-			count, i, index /*, *minValue, *maxValue, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter );
+			count, i, index /*, *minValue, *maxValue, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter, historyKernels );
 		first += step;
 		result += step;
 	}
 }
 
-__global__ void VectorSigmoidKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
+__global__ void VectorSigmoidKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
-		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorSigmoidKernel", first, result, count, calls_counter );
+		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorSigmoidKernel", first, result, count, calls_counter, historyKernels, VectorSigmoidKernelId );
 
 		assert( isfinite( first[index] ) );
 		result[index] = 1.f / (1.f + ExponentFunc(-first[index]));
 
 		WARN2_CNT_F( "VectorSigmoidKernel", first[index], first, result[index], result,
-			count, 0, index, calls_counter );
+			count, 0, index, calls_counter, historyKernels );
 	}
 }
 
 __global__ void VectorSigmoidDiffKernel(const float* __restrict__ first,
-	const float* __restrict__ second, float* result, int count, size_t calls_counter)
+	const float* __restrict__ second, float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
-		PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSigmoidDiffKernel", first, second, result, count, calls_counter );
+		PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSigmoidDiffKernel", first, second, result, count, calls_counter, historyKernels, VectorSigmoidDiffKernelId );
 
 		assert( isfinite( first[index] ) );
 		const float expVal = ExponentFunc(-first[index]);
@@ -1558,19 +1554,19 @@ __global__ void VectorSigmoidDiffKernel(const float* __restrict__ first,
 		result[index] *= second[index];
 
 		WARN3_CNT_F( "VectorSigmoidDiffKernel", first[index], first, second[index], second, result[index], result,
-			count, 0, index, calls_counter );
+			count, 0, index, calls_counter, historyKernels );
 	}
 }
 
 const int VectorSigmoidDiffOpCombineCount = 4;
 __global__ void VectorSigmoidDiffOpKernel(const float* __restrict__ first, const float* __restrict__ second,
-	float* result, int vectorSize, size_t calls_counter)
+	float* result, int vectorSize, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(vectorSize, VectorSigmoidDiffOpCombineCount, index, step);
 
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSigmoidDiffOpKernel", first, second, result, vectorSize, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSigmoidDiffOpKernel", first, second, result, vectorSize, calls_counter, historyKernels, VectorSigmoidDiffOpKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_first = first;
 	[[maybe_unused]] const float* __restrict__ base_second = second;
@@ -1584,50 +1580,50 @@ __global__ void VectorSigmoidDiffOpKernel(const float* __restrict__ first, const
 		*result = *first * (1.f - *first) * *second;
 
 		WARN3_CNT_F( "VectorSigmoidDiffOpKernel", *first, base_first, *second, base_second, *result, base_result,
-			vectorSize, i, index, /*step,*/ calls_counter );
+			vectorSize, i, index, /*step,*/ calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;
 	}
 }
 
-__global__ void VectorTanhKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter)
+__global__ void VectorTanhKernel(const float* __restrict__ first, float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
-		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorTanhKernel", first, result, count, calls_counter );
+		PRINT_HEAD2_CNT_F( index, 0, 0, "VectorTanhKernel", first, result, count, calls_counter, historyKernels, VectorTanhKernelId );
 
 		result[index] = -1.f  + 2 / (1.f + ExponentFunc(-2 * first[index]));
 
 		WARN2_CNT_F( "VectorTanhKernel", first[index], first, result[index], result,
-			count, 0, index, calls_counter );
+			count, 0, index, calls_counter, historyKernels );
 	}
 }
 
 __global__ void VectorTanhDiffKernel(const float* __restrict__ first,
-	const float* __restrict__ second, float* result, int count, size_t calls_counter)
+	const float* __restrict__ second, float* result, int count, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	if(GetCudaTaskIndex(count, index)) {
-		PRINT_HEAD3_CNT_F( index, 0, 0, "VectorTanhDiffKernel", first, second, result, count, calls_counter );
+		PRINT_HEAD3_CNT_F( index, 0, 0, "VectorTanhDiffKernel", first, second, result, count, calls_counter, historyKernels, VectorTanhDiffKernelId );
 
 		float tanh = -1.f  + 2 / (1.f + ExponentFunc(-2 * first[index]));
 		result[index] = second[index] * (1.f - tanh * tanh);
 
 		WARN3_CNT_F( "VectorTanhDiffKernel", first[index], first, second[index], second, result[index], result,
-			count, 0, index, calls_counter );
+			count, 0, index, calls_counter, historyKernels );
 	}
 }
 
 const int VectorTanhDiffOpCombineCount = 4;
 __global__ void VectorTanhDiffOpKernel(const float* __restrict__ first, const float* __restrict__ second,
-	float* result, int vectorSize, size_t calls_counter)
+	float* result, int vectorSize, size_t calls_counter, void* historyKernels)
 {
 	int index;
 	int step;
 	const int actionCount = GetCudaTaskCountAndIndex(vectorSize, VectorTanhDiffOpCombineCount, index, step);
 
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorTanhDiffOpKernel", first, second, result, vectorSize, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorTanhDiffOpKernel", first, second, result, vectorSize, calls_counter, historyKernels, VectorTanhDiffOpKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_first = first;
 	[[maybe_unused]] const float* __restrict__ base_second = second;
@@ -1641,7 +1637,7 @@ __global__ void VectorTanhDiffOpKernel(const float* __restrict__ first, const fl
 		*result = (1.f - *first * *first) * *second;
 
 		WARN3_CNT_F( "VectorTanhDiffOpKernel", *first, base_first, *second, base_second, *result, base_result,
-			vectorSize, i, index, /*step,*/ calls_counter );
+			vectorSize, i, index, /*step,*/ calls_counter, historyKernels );
 		first += step;
 		second += step;
 		result += step;

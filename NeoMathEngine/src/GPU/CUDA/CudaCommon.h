@@ -26,6 +26,13 @@ limitations under the License.
 
 namespace NeoML {
 
+static constexpr int CudaHistoryKernelsSize = 10000;
+struct CCudaHistoryKernel {
+	size_t counter;
+	int kernel;
+	unsigned long long res_addr;
+};
+
 struct CCudaVectorArray {
 	static const int MaxSize = 16;
 	float* Vectors[MaxSize];
@@ -89,6 +96,57 @@ void SetCudaDevice( int deviceNum );
 
 //------------------------------------------------------------------------------------------------------------
 
+constexpr int AddVectorToMatrixElementsKernel1Id = 1;
+constexpr int AddVectorToMatrixElementsKernel2Id = 2;
+constexpr int AddMatrixElementsToVectorKernel1Id = 3;
+constexpr int AddMatrixElementsToVectorKernel2Id = 4;
+constexpr int AddVectorToMatrixRowsKernelId = 5;
+constexpr int SumMatrixRowsAddKernelId = 6;
+constexpr int MatrixLogSumExpByRowsKernelId = 7;
+constexpr int MatrixSoftmaxByRowsKernelId = 8;
+constexpr int FindMaxValueWithIndicesInRowsKernelId = 9;
+constexpr int VectorChannelLookupAndCopyKernelId = 10;
+constexpr int MultiplyDiagMatrixByMatrixKernelId = 11;
+constexpr int MultiplyDiagMatrixByMatrixAndSumKernelId = 12;
+constexpr int MatrixSpreadRowsKernelId = 13;
+
+constexpr int RandomMatrixDropoutKernelId = 14;
+
+constexpr int BlobMergeByDimKernelId = 15;
+constexpr int BlobSplitByDimKernelId = 16;
+constexpr int BlobGetSubSequenceKernelId = 17;
+
+constexpr int VectorAddKernelId = 18;
+constexpr int VectorAddValueKernelId = 19;
+// 20?
+constexpr int VectorCopyKernelId = 21;
+constexpr int VectorEltwiseDivideKernelId = 22;
+constexpr int VectorEltwiseMaxKernelId = 23;
+constexpr int VectorEltwiseMulKernelId = 24;
+constexpr int VectorFillKernelId = 25;
+constexpr int VectorMinMaxKernelId = 26;
+constexpr int VectorMultiplyKernelId = 27;
+constexpr int VectorSigmoidKernelId = 28;
+constexpr int VectorSigmoidDiffKernelId = 29;
+constexpr int VectorSigmoidDiffOpKernelId = 30;
+constexpr int VectorSqrtKernelId = 31;
+constexpr int VectorSub1KernelId = 32;
+constexpr int VectorSub2KernelId = 33;
+constexpr int VectorSub3KernelId = 34;
+constexpr int VectorTanhKernelId = 35;
+constexpr int VectorTanhDiffKernelId = 36;
+constexpr int VectorTanhDiffOpKernelId = 37;
+constexpr int VectorFillHandleKernelId = 38;
+constexpr int VectorEltwiseMultiplyKernelId = 39;
+
+constexpr int VectorSDotKernelId = 40;
+constexpr int VectorMultiplyAndAddKernelId = 41;
+constexpr int MultiplyMatrixByTransposedMatrix1KernelId = 42;
+constexpr int MultiplyTransposedMatrixByMatrixAndAddKernelId = 43;
+constexpr int MultiplyMatrixByMatrixKernelId = 44;
+
+//------------------------------------------------------------------------------------------------------------
+
 #define CUDA_PRINT_ADDR_WARN_F( first, base_first, second, base_second, result, base_result )   { \
 		if (first) printf( "first=%f (%llx) ", (first), ( unsigned long long )(base_first) ); \
 		if (second) printf( "second=%f (%llx) ", (second), ( unsigned long long )(base_second) ); \
@@ -139,47 +197,81 @@ void SetCudaDevice( int deviceNum );
 
 //------------------------------------------------------------------------------------------------------------
 
-constexpr int min_calls_counter = 0;
-constexpr int MAX_calls_counter = 1000000;
+#define CUDA_PRINT_HISTORY( calls_counter, historyKernels ) { \
+		CCudaHistoryKernel* history = ( CCudaHistoryKernel* )historyKernels; \
+		const int last = ( calls_counter % CudaHistoryKernelsSize ); \
+		const int first = ( ( last + 1 ) % CudaHistoryKernelsSize ); \
+		/*printf( " first= %d last %d \n ", first, last );*/ \
+		printf( "history: {\n\t counter \t kernel \t result \n" ); \
+		for( int i = first; i != last; i = ( i + 1 ) % CudaHistoryKernelsSize ) { \
+			/*printf( "i=%d", i );*/ \
+			if( history[i].counter > 0 ) { \
+				printf( "\t %llu \t %d \t %llx \n", history[i].counter, history[i].kernel, history[i].res_addr ); \
+			} \
+		} \
+		printf( "}\n\n" ); \
+	}
 
-#define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter )   { \
+#define CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ) { \
+		CCudaHistoryKernel& history = ( ( CCudaHistoryKernel* )historyKernels )[calls_counter % CudaHistoryKernelsSize]; \
+		history.kernel = id; \
+		history.counter = calls_counter; \
+		history.res_addr = ( unsigned long long )result; \
+	}
+
+//------------------------------------------------------------------------------------------------------------
+
+constexpr int min_calls_counter = 0;
+constexpr int MAX_calls_counter = 10;
+
+#define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
+			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
 			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				if constexpr( std::is_same_v<T, float> ) { \
 					CUDA_PRINT_F( kernelName, first, second, result, count, num, name, calls_counter ); \
 				} \
+				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
 			} \
 		} \
 	}
 
-#define PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			if constexpr( std::is_same_v<T, float> ) { \
+#define PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, second, result, count, calls_counter, historyKernels, id )   { \
+		if( i == 0 && j == 0 && k == 0 ) { \
+			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
+			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
+				if constexpr( std::is_same_v<T, float> ) { \
+					CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
+				} else if constexpr( std::is_same_v<T, int> ) { \
+					CUDA_PRINT_I( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
+				} else { \
+					printf( "%s(ERR_TYPE) \n", (kernelName) ); \
+				} \
+				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+			} \
+		} \
+	}
+
+#define PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, second, result, count, calls_counter, historyKernels, id )   { \
+		if( i == 0 && j == 0 && k == 0 ) { \
+			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
+			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
-			} else if constexpr( std::is_same_v<T, int> ) { \
-				CUDA_PRINT_I( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
-			} else { \
-				printf( "%s(ERR_TYPE) \n", (kernelName) ); \
+				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
 			} \
-		} \
-	}
-
-#define PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
 		} \
 	}
 
 //------------------------------------------------------------------------------------------------------------
 
-#define PRINT_HEAD2_CNT_T( i, j, k, kernelName, first, result, count, calls_counter )     \
-		PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, /*2*/(T*)0, result, count, calls_counter )
+#define PRINT_HEAD2_CNT_T( i, j, k, kernelName, first, result, count, calls_counter, historyKernels, id )     \
+		PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, /*2*/(T*)0, result, count, calls_counter, historyKernels, id )
 
-#define PRINT_HEAD2_CNT_F( i, j, k, kernelName, first, result, count, calls_counter )     \
-		PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, /*2*/(float*)0, result, count, calls_counter )
+#define PRINT_HEAD2_CNT_F( i, j, k, kernelName, first, result, count, calls_counter, historyKernels, id )     \
+		PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, /*2*/(float*)0, result, count, calls_counter, historyKernels, id )
 
-#define PRINT_HEAD1_CNT_T( i, j, k, kernelName, result, count, calls_counter )     \
-		PRINT_HEAD3_CNT_T( i, j, k, kernelName, /*1*/(T*)0, /*2*/(T*)0, result, count, calls_counter )
+#define PRINT_HEAD1_CNT_T( i, j, k, kernelName, result, count, calls_counter, historyKernels, id )     \
+		PRINT_HEAD3_CNT_T( i, j, k, kernelName, /*1*/(T*)0, /*2*/(T*)0, result, count, calls_counter, historyKernels, id )
 
 //------------------------------------------------------------------------------------------------------------
 
@@ -227,19 +319,21 @@ constexpr int MAX_calls_counter = 1000000;
 
 //------------------------------------------------------------------------------------------------------------
 
-#define WARN3_CNT_SPEC_F( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter )   { \
+#define WARN3_CNT_SPEC_F( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter, historyKernels )   { \
 		if( !isfinite( (result) ) || \
 			(result) < -18002376725743890449408517795774411571.f || \
 			(result) >  18002376725743890449408517795774411571.f ) { \
 			CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, count, num, name, calls_counter, /*h*/0, /*w*/0, i, index ); \
+			CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
 		} \
 	}
 
-#define WARN3_CNT_F( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter )   { \
+#define WARN3_CNT_F( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter, historyKernels )   { \
 		if( !isfinite( (result) ) || \
 			(result) < -18002376725743890449408517795774411571.f || \
 			(result) >  18002376725743890449408517795774411571.f ) { \
 			CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, /*count*/0, /*num*/0, /*name*/(char*)0, calls_counter, h, w, /*i*/0, index ); \
+			CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
 		} \
 		assert( isfinite( (result) ) ); \
 		assert( (result) > -18002376725743890449408517795774411571.f ); \
@@ -247,32 +341,32 @@ constexpr int MAX_calls_counter = 1000000;
 	}
 
 
-#define WARN3_CNT_SPEC_T( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter )   { \
+#define WARN3_CNT_SPEC_T( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter, historyKernels )   { \
 		if constexpr( std::is_same_v<T, float> ) { \
-			WARN3_CNT_SPEC_F( kernelName, first, base_first, float(second), base_second, result, base_result, count, i, index, num, name, calls_counter ); \
+			WARN3_CNT_SPEC_F( kernelName, first, base_first, float(second), base_second, result, base_result, count, i, index, num, name, calls_counter, historyKernels ); \
 		} \
 	}
 
-#define WARN3_CNT_T( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter )   { \
+#define WARN3_CNT_T( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter, historyKernels )   { \
 		if constexpr( std::is_same_v<T, float> ) { \
-			WARN3_CNT_F( kernelName, first, base_first, float(second), base_second, result, base_result, h, w, index, calls_counter ); \
+			WARN3_CNT_F( kernelName, first, base_first, float(second), base_second, result, base_result, h, w, index, calls_counter, historyKernels ); \
 		} \
 	}
 
 //------------------------------------------------------------------------------------------------------------
 
-#define WARN2_CNT_SPEC_F( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter )     \
-		WARN3_CNT_SPEC_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, count, i, index, num, name, calls_counter )
+#define WARN2_CNT_SPEC_F( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter, historyKernels )     \
+		WARN3_CNT_SPEC_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, count, i, index, num, name, calls_counter, historyKernels )
 
-#define WARN2_CNT_F( kernelName, first, base_first, result, base_result, h, w, index, calls_counter )      \
-		WARN3_CNT_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, h, w, index, calls_counter )
+#define WARN2_CNT_F( kernelName, first, base_first, result, base_result, h, w, index, calls_counter, historyKernels )      \
+		WARN3_CNT_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, h, w, index, calls_counter, historyKernels )
 
 
-#define WARN2_CNT_SPEC_T( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter )     \
-		WARN3_CNT_SPEC_T( kernelName, first, base_first, 0, (T*)0, result, base_result, count, i, index, num, name, calls_counter );
+#define WARN2_CNT_SPEC_T( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter, historyKernels )     \
+		WARN3_CNT_SPEC_T( kernelName, first, base_first, 0, (T*)0, result, base_result, count, i, index, num, name, calls_counter, historyKernels );
 
-#define WARN2_CNT_T( kernelName, first, base_first, result, base_result, h, w, index, calls_counter )       \
-		WARN3_CNT_T( kernelName, first, base_first, 0, (T*)0, result, base_result, h, w, index, calls_counter );
+#define WARN2_CNT_T( kernelName, first, base_first, result, base_result, h, w, index, calls_counter, historyKernels )       \
+		WARN3_CNT_T( kernelName, first, base_first, 0, (T*)0, result, base_result, h, w, index, calls_counter, historyKernels );
 
 } // namespace NeoML
 

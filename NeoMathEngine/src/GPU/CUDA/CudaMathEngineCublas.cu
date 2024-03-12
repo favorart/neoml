@@ -31,7 +31,10 @@ limitations under the License.
 
 namespace NeoML {
 
-const int VectorRoundCombineCount = 8;
+const int VectorSDotCombineCount = 8;
+
+//---------------------------------------------------------------------------------------------------------------------
+
 __global__ void VectorRoundKernel( float* result, int count )
 {
 	assert( threadIdx.y == 0 );
@@ -39,7 +42,7 @@ __global__ void VectorRoundKernel( float* result, int count )
 
 	int index;
 	int step;
-	int actionCount = GetCudaTaskCountAndIndex( count, VectorRoundCombineCount, index, step );
+	int actionCount = GetCudaTaskCountAndIndex( count, VectorSDotCombineCount, index, step );
 
 	result += index;
 
@@ -56,15 +59,35 @@ void CCudaMathEngine::vectorRound( const CFloatHandle& resultHandle, int vectorS
 
 	int blockCount;
 	int threadCount;
-	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorRoundCombineCount );
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorSDotCombineCount );
 
 	VectorRoundKernel<<<blockCount, threadCount>>>( GetRaw( resultHandle ), vectorSize );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-const int VectorSDotCombineCount = 8;
-__global__ void VectorSDotKernel( const float* first, const float* second, float* result, int count, size_t calls_counter )
+__global__ void VectorNumerateKernel( const float* first, const float* second, float* result, int count, size_t calls_counter, void* historyKernels, int id )
+{
+	PRINT_HEAD3_CNT_F( threadIdx.x, blockIdx.x, 0, "VectorNumerateKernel", first, second, result, count, calls_counter, historyKernels, id );
+}
+
+void CCudaMathEngine::vectorNumerate( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
+	int vectorSize, size_t calls_counter, void* historyKernels, int id )
+{
+	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
+	SetCudaDevice( device->DeviceNumber );
+
+	int blockCount;
+	int threadCount;
+	getCudaTaskGrid( blockCount, threadCount, 1, VectorSDotCombineCount );
+
+	VectorNumerateKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ),
+		vectorSize, calls_counter, historyKernels, id );
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+__global__ void VectorSDotKernel( const float* first, const float* second, float* result, int count, size_t calls_counter, void* historyKernels )
 {
 	assert( threadIdx.y == 0 );
 	assert( threadIdx.z == 0 );
@@ -72,7 +95,7 @@ __global__ void VectorSDotKernel( const float* first, const float* second, float
 	int index;
 	int step;
 	int actionCount = GetCudaTaskCountAndIndex( count, VectorSDotCombineCount, index, step );
-	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSDotKernel", first, second, result, count, calls_counter );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSDotKernel", first, second, result, count, calls_counter, historyKernels, VectorSDotKernelId );
 
 	unsigned tid = threadIdx.x;
 	extern __shared__ double buffer[];
@@ -104,7 +127,7 @@ __global__ void VectorSDotKernel( const float* first, const float* second, float
 			sum = std::fma( buffer[i], 1., sum );
 		}
 		atomicAdd( result, ( float )sum );
-		WARN3_CNT_F( "VectorSDotKernel", *first, first, *second, second, *result, result, count, tid, index, calls_counter );
+		WARN3_CNT_F( "VectorSDotKernel", *first, first, *second, second, *result, result, count, tid, index, calls_counter, historyKernels );
 	}
 }
 
@@ -121,18 +144,22 @@ void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, con
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	VectorFill( resultHandle, 0.f, 1, 81 );
+	//VectorFill( resultHandle, 0.f, 1, 81 );
 
 	int blockCount;
 	int threadCount;
 	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorSDotCombineCount );
 	
-	VectorSDotKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ), vectorSize, ++calls_counter );
+	//VectorSDotKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ),
+	//	GetRaw( resultHandle ), vectorSize, ++calls_counter, GetRaw(historyKernels) );
 
-	//ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
-	//	GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
+	ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
+		GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
 
-	vectorRound( resultHandle, 1 );
+	//vectorRound( resultHandle, 1 );
+
+	vectorNumerate( firstHandle, secondHandle, resultHandle,
+		vectorSize, ++calls_counter, GetRaw( historyKernels ), VectorSDotKernelId );
 }
 
 void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
@@ -154,6 +181,9 @@ void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle
 		ASSERT_CUDA( cudaMemcpy( result, first, vectorSize * sizeof( float ), cudaMemcpyDeviceToDevice ) );
 	}
 	ASSERT_CUBLAS( cublas->Saxpy( cublasHandle, vectorSize, mult, second, 1, result, 1 ) );
+
+	vectorNumerate( firstHandle, secondHandle, resultHandle,
+		vectorSize, ++calls_counter, GetRaw( historyKernels ), VectorMultiplyAndAddKernelId );
 }
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
@@ -169,6 +199,9 @@ void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle&
 	ASSERT_CUBLAS( cublas->Sgemm( cublasHandle, CUBLAS_OP_T, CUBLAS_OP_N, secondHeight, firstHeight, firstWidth,
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstZero,
 		GetRaw( resultHandle ), resultRowSize ) );
+
+	vectorNumerate( firstHandle, secondHandle, resultHandle,
+		resultRowSize, ++calls_counter, GetRaw( historyKernels ), MultiplyMatrixByTransposedMatrix1KernelId );
 }
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( int batchSize, const CConstFloatHandle& firstHandle,
@@ -200,6 +233,9 @@ void CCudaMathEngine::MultiplyTransposedMatrixByMatrixAndAdd( const CConstFloatH
 	ASSERT_CUBLAS( cublas->Sgemm( cublasHandle, CUBLAS_OP_N, CUBLAS_OP_T, secondWidth, firstWidth, firstHeight,
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstOne,
 		GetRaw( resultHandle ), resultRowSize ) );
+
+	vectorNumerate( firstHandle, secondHandle, resultHandle,
+		firstHeight, ++calls_counter, GetRaw( historyKernels ), MultiplyTransposedMatrixByMatrixAndAddKernelId );
 }
 
 void CCudaMathEngine::MultiplyTransposedMatrixByMatrix( int batchSize, const CConstFloatHandle& firstHandle, int firstHeight,
@@ -236,6 +272,9 @@ void CCudaMathEngine::MultiplyMatrixByMatrix( int batchSize, const CConstFloatHa
 			cudaConstOne, GetRaw( secondHandle ), secondWidth, firstWidth * secondWidth, GetRaw( firstHandle ), firstWidth,
 			firstHeight * firstWidth, cudaConstZero, GetRaw( resultHandle ), secondWidth, secondWidth * firstHeight, batchSize ) );
 	}
+
+	vectorNumerate( firstHandle, secondHandle, resultHandle,
+		firstHeight, ++calls_counter, GetRaw( historyKernels ), MultiplyMatrixByMatrixKernelId );
 }
 
 void CCudaMathEngine::multiplyMatrixByTransposedMatrixAndAdd(const CConstFloatHandle& firstHandle,

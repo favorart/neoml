@@ -75,6 +75,10 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 	memoryPool = std::unique_ptr<CMemoryPool>( new CMemoryPool( device->MemoryLimit, this, true ) );
 	deviceStackRunTime = std::unique_ptr<CDeviceStackAllocator>( new CDeviceStackAllocator( *memoryPool, CudaMemoryAlignment ) );
 	hostStackRunTime = std::unique_ptr<CHostStackAllocator>( new CHostStackAllocator( CudaMemoryAlignment ) );
+
+	auto sz = CudaHistoryKernelsSize * sizeof( CCudaHistoryKernel ) / sizeof( float );
+	historyKernels = HeapAllocTyped<float>( sz );
+	VectorFill( historyKernels, 0.f, sz, 0, 0 );
 }
 
 CCudaMathEngine::~CCudaMathEngine()

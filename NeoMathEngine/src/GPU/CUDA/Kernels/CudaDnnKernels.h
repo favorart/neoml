@@ -32,14 +32,14 @@ struct CCudaBlobDescArray {
 const int BlobMergeByDimCombine = 16;
 
 template<class T>
-__global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T> from, CCudaBlobDesc to, T* toData, int heightNorm, size_t calls_counter )
+__global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T> from, CCudaBlobDesc to, T* toData, int heightNorm, size_t calls_counter, void* historyKernels )
 {
 	int j;
 	int i;
 	if(!GetCudaTaskIndex2D(heightNorm, width, j, i)) {
 		return;
 	}
-	PRINT_HEAD2_CNT_T( i, j, 0, "BlobMergeByDimKernel", toData, from.Data[0], heightNorm, calls_counter );
+	PRINT_HEAD3_CNT_T( i, j, 0, "BlobMergeByDimKernel", from.Data[0], from.Data[1], toData, heightNorm, calls_counter, historyKernels, BlobMergeByDimKernelId );
 
 	j *= BlobMergeByDimCombine;
 	int jLast = j + BlobMergeByDimCombine;
@@ -63,7 +63,7 @@ __global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T
 	for(int k = 0; k < count; ++k) {
 		*curToData = __ldg(fromData);
 
-		WARN2_CNT_T( "BlobMergeByDimKernel", *fromData, from.Data[fromIndex], *curToData, toData, i, j, k, calls_counter ); // height, width, heightNorm, fromIndex, count
+		WARN2_CNT_T( "BlobMergeByDimKernel", *fromData, from.Data[fromIndex], *curToData, toData, height, width, k, calls_counter, historyKernels ); // height, width, heightNorm, fromIndex, count
 		curToData += width;
 		fromData += fromWidth;
 	}
@@ -72,14 +72,14 @@ __global__ void BlobMergeByDimKernel(int height, int width, CCudaBlobDescArray<T
 const int BlobSplitByDimCombine = 16;
 
 template<class T>
-__global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, const T* fromData, CCudaBlobDescArray<T> to, int heightNorm, size_t calls_counter )
+__global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, const T* fromData, CCudaBlobDescArray<T> to, int heightNorm, size_t calls_counter, void* historyKernels )
 {
 	int j;
 	int i;
 	if(!GetCudaTaskIndex2D(heightNorm, width, j, i)) {
 		return;
 	}
-	PRINT_HEAD2_CNT_T( i, j, 0, "BlobSplitByDimKernel", to.Data[0], fromData, heightNorm, calls_counter );
+	PRINT_HEAD3_CNT_T( i, j, 0, "BlobSplitByDimKernel", to.Data[0], to.Data[1], fromData, heightNorm, calls_counter, historyKernels, BlobSplitByDimKernelId );
 
 	j *= BlobSplitByDimCombine;
 	int jLast = j + BlobSplitByDimCombine;
@@ -102,7 +102,7 @@ __global__ void BlobSplitByDimKernel(int height, int width, CCudaBlobDesc from, 
 	for(int k = 0; k < count; ++k) {
 		*toData = __ldg(curFromData);
 
-		WARN2_CNT_T( "BlobSplitByDimKernel", *curFromData, fromData, *toData, to.Data[toIndex], i, j, k, calls_counter ); //height, width, heightNorm, toIndex,
+		WARN2_CNT_T( "BlobSplitByDimKernel", *curFromData, fromData, *toData, to.Data[toIndex], height, width, k, calls_counter, historyKernels ); //height, width, heightNorm, toIndex,
 		curFromData += width;
 		toData += toWidth;
 	}
@@ -145,7 +145,7 @@ __global__ void BlobResizeImageKernel( const CCudaBlobDesc from, const float* __
 
 const int BlobGetSubSequenceCombine = 16;
 __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromData, int* index, CCudaBlobDesc to,
-	float* toData, int startPos, bool isRev, int objectSizeNorm, size_t calls_counter )
+	float* toData, int startPos, bool isRev, int objectSizeNorm, size_t calls_counter, void* historyKernels )
 {
 	int seqPos;
 	int seqNum;
@@ -155,7 +155,7 @@ __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromD
 	if( seqPos >= to.BatchLength() || seqNum >= to.BatchWidth() ) {
 		return;
 	}
-	PRINT_HEAD2_CNT_F( seqPos, seqNum, i, "BlobGetSubSequenceKernel", fromData, toData, to.BatchLength() * to.BatchWidth(), calls_counter );
+	PRINT_HEAD2_CNT_F( seqPos, seqNum, i, "BlobGetSubSequenceKernel", fromData, toData, to.BatchLength() * to.BatchWidth(), calls_counter, historyKernels, BlobGetSubSequenceKernelId );
 
 	const int objectSize = from.ObjectSize() * from.ListSize();
 	const int fromSeqPos = isRev ? startPos - seqPos : startPos + seqPos;
@@ -174,7 +174,7 @@ __global__ void BlobGetSubSequenceKernel( CCudaBlobDesc from, const float* fromD
 	for(int k = 0; k < count; ++k) {
 		curToData[i] = __ldg(curFromData + i);
 
-		WARN2_CNT_F( "BlobGetSubSequenceKernel", *curFromData, fromData, curToData[i], curToData, seqPos, seqNum, i, calls_counter );
+		WARN2_CNT_F( "BlobGetSubSequenceKernel", *curFromData, fromData, curToData[i], curToData, seqPos, seqNum, i, calls_counter, historyKernels );
 		i += step;
 	}
 }

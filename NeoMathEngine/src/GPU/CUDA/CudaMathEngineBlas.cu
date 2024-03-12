@@ -56,7 +56,7 @@ void CCudaMathEngine::AddVectorToMatrixElements(const CFloatHandle& matrix, int 
 	getCudaTaskGrid(blockCount, threadCount, height, AddVectorToMatrixElementsCombine);
 
 	AddVectorToMatrixElementsKernel<<<blockCount, threadCount>>>(GetRaw(matrix),
-		height, width, GetRaw(indices), GetRaw(vector), ++calls_counter);
+		height, width, GetRaw(indices), GetRaw(vector), ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::AddVectorToMatrixElements(const CFloatHandle& matrixHandle, int height, int width,
@@ -74,7 +74,7 @@ void CCudaMathEngine::AddVectorToMatrixElements(const CFloatHandle& matrixHandle
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, AddVectorToMatrixElementsMulCombine);
 
 	AddVectorToMatrixElementsKernel<<<blockCount, threadCount>>>(GetRaw(matrixHandle), height, width,
-		GetRaw(rowIndicesHandle), GetRaw(columnIndicesHandle), GetRaw(vectorHandle), vectorSize, ++calls_counter);
+		GetRaw(rowIndicesHandle), GetRaw(columnIndicesHandle), GetRaw(vectorHandle), vectorSize, ++calls_counter, GetRaw(historyKernels));
 }
 
 // Assigns the values: matrix[rowIndices[i], columnIndices[i]] = vector[i].
@@ -114,7 +114,7 @@ void CCudaMathEngine::AddMatrixElementsToVector(const CConstFloatHandle& matrix,
 	getCudaTaskGrid(blockCount, threadCount, height, AddMatrixElementsToVectorCombine);
 
 	AddMatrixElementsToVectorKernel<<<blockCount, threadCount>>>(GetRaw(matrix),
-		height, width, GetRaw(indices), GetRaw(result), ++calls_counter);
+		height, width, GetRaw(indices), GetRaw(result), ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::AddMatrixElementsToVector(const CConstFloatHandle& matrix, int height, int width,
@@ -132,7 +132,7 @@ void CCudaMathEngine::AddMatrixElementsToVector(const CConstFloatHandle& matrix,
 	getCudaTaskGrid(blockCount, threadCount, vectorSize, AddMatrixElementsToVectorMulCombine);
 
 	AddMatrixElementsToVectorKernel<<<blockCount, threadCount>>>(GetRaw(matrix),
-		height, width, GetRaw(rowIndices), GetRaw(columnIndices), GetRaw(result), vectorSize, ++calls_counter );
+		height, width, GetRaw(rowIndices), GetRaw(columnIndices), GetRaw(result), vectorSize, ++calls_counter, GetRaw(historyKernels) );
 }
 
 void CCudaMathEngine::AddMatrixElementsToMatrix(const CConstFloatHandle& matrix, int height, int width,
@@ -187,7 +187,7 @@ void CCudaMathEngine::AddVectorToMatrixRows(int batchSize,
 
 	AddVectorToMatrixRowsKernel<<<blockCount, threadCount>>>(batchSize,
 		GetRaw(matrixHandle), GetRaw(resultHandle), matrixHeight,
-		matrixWidth, GetRaw(vectorHandle), ++calls_counter);
+		matrixWidth, GetRaw(vectorHandle), ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::AddVectorToMatrixColumns( const CConstFloatHandle& matrixHandle, const CFloatHandle& resultHandle,
@@ -254,7 +254,7 @@ void CCudaMathEngine::SumMatrixRows( int batchSize, const CIntHandle& resultHand
 	getCudaTaskGrid3D( blockCount, threadCount, batchSize, height, matrixWidth );
 
 	SumMatrixRowsAddKernel<<<blockCount, threadCount>>>
-		( batchSize, GetRaw(resultHandle), GetRaw(matrixHandle), matrixHeight, matrixWidth, ++calls_counter );
+		( batchSize, GetRaw(resultHandle), GetRaw(matrixHandle), matrixHeight, matrixWidth, ++calls_counter, GetRaw(historyKernels) );
 }
 
 void CCudaMathEngine::SumMatrixRowsAdd( 
@@ -272,7 +272,7 @@ void CCudaMathEngine::SumMatrixRowsAdd(
 	getCudaTaskGrid3D( blockCount, threadCount, batchSize, height, matrixWidth );
 
 	SumMatrixRowsAddKernel<<<blockCount, threadCount>>>
-		( batchSize, GetRaw(resultHandle), GetRaw(matrixHandle), matrixHeight, matrixWidth, ++calls_counter );
+		( batchSize, GetRaw(resultHandle), GetRaw(matrixHandle), matrixHeight, matrixWidth, ++calls_counter, GetRaw(historyKernels) );
 }
 
 void CCudaMathEngine::SumMatrixColumns(const CFloatHandle& resultHandle, const CConstFloatHandle& matrixHandle,
@@ -318,7 +318,7 @@ void CCudaMathEngine::MatrixLogSumExpByRows(const CConstFloatHandle& matrix, int
 	blockCount.x = 1;
 	const int sharedSize = threadCount.x * threadCount.y * sizeof(float);
 	MatrixLogSumExpByRowsKernel<<<blockCount, threadCount, sharedSize>>>(GetRaw(matrix), height, width,
-		GetRaw(result), widthNorm, ++calls_counter);
+		GetRaw(result), widthNorm, ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::MatrixSoftmaxByRows(const CConstFloatHandle& matrix, int height, int width,
@@ -338,7 +338,7 @@ void CCudaMathEngine::MatrixSoftmaxByRows(const CConstFloatHandle& matrix, int h
 
 	const int sharedSize = threadCount.x * threadCount.y * sizeof(float);
 	MatrixSoftmaxByRowsKernel<<<blockCount, threadCount, sharedSize>>>(GetRaw(matrix), height, width,
-		GetRaw(result), widthNorm, ++calls_counter);
+		GetRaw(result), widthNorm, ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::MatrixSoftmaxDiffOpByRows(const CConstFloatHandle& first, const CConstFloatHandle& second,
@@ -421,7 +421,7 @@ void CCudaMathEngine::FindMaxValueInRows(const CConstFloatHandle& matrixHandle, 
 
 	const int sharedSize = threadCount.y * threadCount.x * sizeof(CValueWithIndex);
 	FindMaxValueWithIndicesInRowsKernel<<<blockCount, threadCount, sharedSize>>>(
-		GetRaw(matrixHandle), matrixHeight, matrixWidth, GetRaw(resultHandle), GetRaw(columnIndices), widthNorm, ++calls_counter);
+		GetRaw(matrixHandle), matrixHeight, matrixWidth, GetRaw(resultHandle), GetRaw(columnIndices), widthNorm, ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::FindMaxValueInRows(const CConstFloatHandle& matrixHandle, int matrixHeight, int matrixWidth,
@@ -642,7 +642,7 @@ void CCudaMathEngine::MultiplyDiagMatrixByMatrix(const CConstFloatHandle& firstH
 	getCudaTaskGrid2D(blockCount, threadCount, firstSize, secondWidth);
 
 	MultiplyDiagMatrixByMatrixKernel<<<blockCount, threadCount>>>
-		(GetRaw(firstHandle), firstSize, GetRaw(secondHandle), secondWidth, GetRaw(resultHandle), ++calls_counter);
+		(GetRaw(firstHandle), firstSize, GetRaw(secondHandle), secondWidth, GetRaw(resultHandle), ++calls_counter, GetRaw(historyKernels));
 }
 
 void CCudaMathEngine::Multiply1DiagMatrixByMatrix(int batchSize, const CConstFloatHandle& firstHandle, int firstSize,
@@ -702,7 +702,7 @@ void CCudaMathEngine::MultiplyDiagMatrixByMatrixAndAdd( int batchSize, const CCo
 	int sharedSize = threadCount.x * threadCount.y * threadCount.z * sizeof( float );
 	MultiplyDiagMatrixByMatrixAndSumKernel<<<blockCount, threadCount, sharedSize>>>( batchSize,
 		GetRaw( firstHandle ), firstSize, GetRaw( secondHandle ), secondWidth, GetRaw( resultHandle ),
-		batchSizeNorm, ++calls_counter );
+		batchSizeNorm, ++calls_counter, GetRaw(historyKernels) );
 }
 
 void CCudaMathEngine::RowMultiplyMatrixByMatrix( const CConstFloatHandle& firstHandle,
@@ -947,7 +947,7 @@ void CCudaMathEngine::matrixSpreadRowsImpl(const T* source, int height, int widt
 	getCudaTaskGrid2D(blockCount, threadCount, height, widthNorm);
 
 	MatrixSpreadRowsKernel<T><<<blockCount, threadCount>>>(source, height, width,
-		GetRaw( result ), index, widthNorm, ++calls_counter);
+		GetRaw( result ), index, widthNorm, ++calls_counter, GetRaw(historyKernels));
 }
 
 template<class TInput, class TLookup>
@@ -965,7 +965,7 @@ void CCudaMathEngine::vectorMultichannelLookupAndCopy(int batchSize, int channel
 		getCudaTaskGrid2D(blockCount, threadCount, batchNorm, lookupDimensions[j].VectorSize);
 
 		VectorChannelLookupAndCopyKernel<<<blockCount, threadCount>>>(batchSize, GetRaw(inputHandle) + j, channelCount,
-			GetRaw(lookupHandles[j]), lookupDimensions[j].VectorSize, GetRaw(outputHandle) + outputChannel, outputChannelsCount, batchNorm, ++calls_counter);
+			GetRaw(lookupHandles[j]), lookupDimensions[j].VectorSize, GetRaw(outputHandle) + outputChannel, outputChannelsCount, batchNorm, ++calls_counter, GetRaw(historyKernels));
 
 		outputChannel += lookupDimensions[j].VectorSize;
 	}

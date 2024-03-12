@@ -63,7 +63,7 @@ void CCudaMathEngine::Dropout( const CDropoutDesc& dropoutDesc,
 
 		getCudaTaskGrid2D(blockCount, threadCount, batchLength, (maskSize + desc.MaskAlign - 1) / desc.MaskAlign);
 		RandomMatrixDropout<<<blockCount, threadCount>>>( GetRaw(inputData), batchLength, maskSize,
-			GetRaw(outputData), desc.Seed, desc.ForwardRate, ++calls_counter );
+			GetRaw(outputData), desc.Seed, desc.ForwardRate, ++calls_counter, GetRaw(historyKernels) );
 		return;
 	}
 

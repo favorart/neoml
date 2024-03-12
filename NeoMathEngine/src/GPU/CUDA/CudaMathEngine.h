@@ -662,6 +662,8 @@ public:
 	std::unique_ptr<CCudaDistributedCommunicator> ncclCommunicator = nullptr;
 #endif
 
+	CFloatHandle historyKernels{};
+
 	IMathEngine& mathEngine() { IMathEngine* engine = this; return *engine; }
 	CCudaDevice* captureCudaDevice( int deviceNumber, size_t memoryLimit );
 	CCudaDevice* captureSpecifiedCudaDevice( int deviceNumber, size_t memoryLimit, bool reuseDevice );
@@ -696,6 +698,8 @@ public:
 		const CFloatHandle* lookupHandles, const CLookupDimension* lookupDimensions, int lookupCount,
 		const CConstFloatHandle& multHandle, const CConstFloatHandle& matrixHandle, int outputChannelsCount );
 	void vectorRound( const CFloatHandle& resultHandle, int vectorSize );
+	void vectorNumerate( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
+		int vectorSize, size_t calls_counter, void* historyKernels, int id );
 
 	template<class T>
 	void blobMergeByDimCuda( int dimNum, const CBlobDesc* from, const CTypedMemoryHandle<T>* fromData, int fromCount,
