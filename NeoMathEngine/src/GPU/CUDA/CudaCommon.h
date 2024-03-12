@@ -89,47 +89,106 @@ void SetCudaDevice( int deviceNum );
 
 //------------------------------------------------------------------------------------------------------------
 
+#define CUDA_PRINT_ADDR_WARN_F( first, base_first, second, base_second, result, base_result )   { \
+		if (first) printf( "first=%f (%llx) ", (first), ( unsigned long long )(base_first) ); \
+		if (second) printf( "second=%f (%llx) ", (second), ( unsigned long long )(base_second) ); \
+		printf( "result=(%llx) ", /*(result),*/ ( unsigned long long )(base_result) ); \
+	}
+
+#define CUDA_PRINT_ADDR_F( first, second, result )   { \
+		if (first) printf( "first=%f (%llx) ", *(first), ( unsigned long long )(first) ); \
+		if (second) printf( "second=%f (%llx) ", *(second), ( unsigned long long )(second) ); \
+		printf( "result=(%llx) ", /*(result),*/ ( unsigned long long )(result) ); \
+	}
+
+#define CUDA_PRINT_ADDR_I( first, second, result )   { \
+		if (first) printf( "first=%d (%llx) ", *(first), ( unsigned long long )(first) ); \
+		if (second) printf( "second=%d (%llx) ", *(second), ( unsigned long long )(second) ); \
+		printf( "result=(%llx) ", /*(result),*/ ( unsigned long long )(result) ); \
+	}
+
+#define CUDA_PRINT_REST( count, num, name, calls_counter, h, w, i, index )   { \
+		if (count) printf( " count=%d ", (count) ); \
+		if (i) printf( "i=%d ", (i) ); \
+		if (h) printf( "h=%d ", (h) ); \
+		if (w) printf( "w=%d ", (w) ); \
+		if (index) printf( "index=%d ", (index) ); \
+		if (num) printf( " !%d! ", (num) ); \
+		if (name) printf( " '%s' ", (name) ); \
+		if (calls_counter) printf( " call=%llu ", ( unsigned long long )(calls_counter) ); \
+		printf( "\n" ); \
+	}
+
+#define CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, count, num, name, calls_counter, h, w, i, index )   { \
+		printf( "%s:  ", (kernelName) ); \
+		CUDA_PRINT_ADDR_WARN_F( first, base_first, second, base_second, result, base_result ); \
+		CUDA_PRINT_REST( count, num, name, calls_counter, h, w, i, index ); \
+	}
+
+#define CUDA_PRINT_F( kernelName, first, second, result, count, num, name, calls_counter )   { \
+		printf( "%s(flt)  ", (kernelName) ); \
+		CUDA_PRINT_ADDR_F( first, second, result ); \
+		CUDA_PRINT_REST( count, num, name, calls_counter, /*h*/0, /*w*/0, /*i*/0, /*index*/0 ); \
+	}
+
+#define CUDA_PRINT_I( kernelName, first, second, result, count, num, name, calls_counter )   { \
+		printf( "%s(int)  ", (kernelName) ); \
+		CUDA_PRINT_ADDR_I( first, second, result ); \
+		CUDA_PRINT_REST( count, num, name, calls_counter, /*h*/0, /*w*/0, /*i*/0, /*index*/0 ); \
+	}
+
+//------------------------------------------------------------------------------------------------------------
+
 constexpr int min_calls_counter = 0;
 constexpr int MAX_calls_counter = 1000000;
 
-#define PRINT_HEAD2_T( i, j, k, kernelName, first, result, count )       { \
+#define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
+			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
+				if constexpr( std::is_same_v<T, float> ) { \
+					CUDA_PRINT_F( kernelName, first, second, result, count, num, name, calls_counter ); \
+				} \
+			} \
+		} \
+	}
+
+#define PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
+		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 			if constexpr( std::is_same_v<T, float> ) { \
-				printf( "%s(flt)  first=%f (%llx) result=(%llx)  count=%d \n", (kernelName), \
-					*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), (count) ); \
+				CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
 			} else if constexpr( std::is_same_v<T, int> ) { \
-				printf( "%s(int)  first=%d (%llx) result=(%llx)  count=%d \n", (kernelName), \
-					*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), (count) ); \
+				CUDA_PRINT_I( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
 			} else { \
 				printf( "%s(ERR_TYPE) \n", (kernelName) ); \
 			} \
 		} \
-    }
+	}
 
-#define PRINT_HEAD2_F(  i, j, k, kernelName, first, result, count )      { \
-		if( i == 0 && j == 0 && k == 0 ) { \
-			printf( "%s(flt)  first=%f (%llx) result=(%llx)  count=%d \n", (kernelName), \
-				*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), (count) ); \
+#define PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
+		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
+			CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
 		} \
 	}
 
-#define PRINT_HEAD2_I(  i, j, k, kernelName, first, result, count )      { \
-		if( i == 0 && j == 0 && k == 0 ) { \
-			printf( "%s(int)  first=%d (%llx) result=(%llx)  count=%d \n", (kernelName), \
-				*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), (count) ); \
-		} \
-	}
+//------------------------------------------------------------------------------------------------------------
+
+#define PRINT_HEAD2_CNT_T( i, j, k, kernelName, first, result, count, calls_counter )     \
+		PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, /*2*/(T*)0, result, count, calls_counter )
+
+#define PRINT_HEAD2_CNT_F( i, j, k, kernelName, first, result, count, calls_counter )     \
+		PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, /*2*/(float*)0, result, count, calls_counter )
+
+#define PRINT_HEAD1_CNT_T( i, j, k, kernelName, result, count, calls_counter )     \
+		PRINT_HEAD3_CNT_T( i, j, k, kernelName, /*1*/(T*)0, /*2*/(T*)0, result, count, calls_counter )
 
 //------------------------------------------------------------------------------------------------------------
 
 #define PRINT_HEAD3_T( i, j, k, kernelName, first, second, result, count )       { \
 		if( i == 0 && j == 0 && k == 0 ) { \
 			if constexpr( std::is_same_v<T, float> ) { \
-				printf( "%s(flt)  first=%f (%llx) second=%f (%llx) result=(%llx)  count=%d \n", (kernelName), \
-					*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), (count) ); \
+				CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, /*calls_counter*/0 ); \
 			} else if constexpr( std::is_same_v<T, int> ) { \
-				printf( "%s(int)  first=%d (%llx) second=%d (%llx) result=(%llx)  count=%d \n", (kernelName), \
-					*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), (count) ); \
+				CUDA_PRINT_I( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, /*calls_counter*/0 ); \
 			} else { \
 				printf( "%s(ERR_TYPE) \n", (kernelName) ); \
 			} \
@@ -138,164 +197,49 @@ constexpr int MAX_calls_counter = 1000000;
 
 #define PRINT_HEAD3_F(  i, j, k, kernelName, first, second, result, count )      { \
 		if( i == 0 && j == 0 && k == 0 ) { \
-			printf( "%s(flt)  first=%f (%llx) second=%f (%llx) result=(%llx)  count=%d \n", (kernelName), \
-				*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), (count) ); \
+			CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, /*calls_counter*/0 ); \
 		} \
 	}
 
-//------------------------------------------------------------------------------------------------------------
-
-#define PRINT_HEAD1_CNT_T( i, j, k, kernelName, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			if constexpr( std::is_same_v<T, float> ) { \
-				printf( "%s(flt)  result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					/**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			} else /*if constexpr( std::is_same_v<T, int> )*/ { \
-				printf( "%s(int)  result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					/**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			/*} else { printf( "%s(ERR_TYPE) \n", (kernelName) );*/ } \
-		} \
-	}
-
-#define PRINT_HEAD1_F( i, j, k, kernelName, result, count )   { \
+#define PRINT_HEAD3_I(  i, j, k, kernelName, first, second, result, count )      { \
 		if( i == 0 && j == 0 && k == 0 ) { \
-			printf( "%s(flt)  result=(%llx)  count=%d \n", (kernelName), \
-				/**(result),*/ ( unsigned long long )(result), (count) ); \
-		} \
-	}
-
-#define PRINT_HEAD1_I( i, j, k, kernelName, result, count )   { \
-		if( i == 0 && j == 0 && k == 0 ) { \
-			printf( "%s(int)  result=(%llx)  count=%d \n", (kernelName), \
-				/**(result),*/ ( unsigned long long )(result), (count) ); \
+			CUDA_PRINT_I( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, /*calls_counter*/0 ); \
 		} \
 	}
 
 //------------------------------------------------------------------------------------------------------------
 
-#define PRINT_HEAD2_CNT_T( i, j, k, kernelName, first, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			if constexpr( std::is_same_v<T, float> ) { \
-				printf( "%s(flt)  first=%f (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			} else /*if constexpr( std::is_same_v<T, int> )*/ { \
-				printf( "%s(int)  first=%d (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			/*} else { printf( "%s(ERR_TYPE) \n", (kernelName) );*/ } \
-		} \
-	}
+#define PRINT_HEAD2_T( i, j, k, kernelName, first, result, count )         \
+		PRINT_HEAD3_T( i, j, k, kernelName, first, /*2*/(T*)0, result, count )
 
-#define PRINT_HEAD2_CNT_F( i, j, k, kernelName, first, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			printf( "%s(flt)  first=%f (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-				*(first), ( unsigned long long )(first), /**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-		} \
-	}
+#define PRINT_HEAD2_F( i, j, k, kernelName, first, result, count )         \
+		PRINT_HEAD3_F( i, j, k, kernelName, first, /*2*/(float*)0, result, count )
 
-//------------------------------------------------------------------------------------------------------------
-
-#define PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			if constexpr( std::is_same_v<T, float> ) { \
-				printf( "%s(flt)  first=%f (%llx) second=%f (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			} else /*if constexpr( std::is_same_v<T, int> )*/ { \
-				printf( "%s(int)  first=%d (%llx) second=%d (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-					*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), \
-					(count), ( unsigned long long )(calls_counter) ); \
-			/*} else { printf( "%s(ERR_TYPE) \n", (kernelName) );*/ } \
-		} \
-	}
-
-#define PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, second, result, count, calls_counter )   { \
-		if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-			printf( "%s(flt)  first=%f (%llx) second=%f (%llx) result=(%llx)  count=%d  call=%llu \n", (kernelName), \
-				*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), \
-				(count), ( unsigned long long )(calls_counter) ); \
-		} \
-	}
-
-#define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter )   { \
-		if constexpr( std::is_same_v<T, float> ) { \
-			if( i == 0 && j == 0 && k == 0 && calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
-				printf( "%s(flt)  first=%f (%llx) second=%f (%llx) result=(%llx)  count=%d  !%d!  '%s'  call=%llu \n", (kernelName), \
-					*(first), ( unsigned long long )(first), *(second), ( unsigned long long )(second), /**(result),*/ ( unsigned long long )(result), \
-					(count), (num), (name), ( unsigned long long )(calls_counter) ); \
-			} \
-		} \
-	}
-
-//------------------------------------------------------------------------------------------------------------
-
-#define WARN2_F( kernelName, first, base_first, result, base_result, h, w, index )   { \
-		if( !isfinite( (result) ) || \
-			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f ) \
-		{ \
-			printf( "%s: first=%f (%llx) result=%f (%llx)  h=%d w=%d index=%d \n", (kernelName), \
-				(first), ( unsigned long long )(base_first), (result), ( unsigned long long )(base_result), \
-				(h), (w), (index) ); \
-		} \
-		assert( isfinite( (result) ) ); \
-		assert( (result) > -18002376725743890449408517795774411571.f ); \
-		assert( (result) <  18002376725743890449408517795774411571.f ); \
-	}
+#define PRINT_HEAD2_I( i, j, k, kernelName, first, result, count )         \
+		PRINT_HEAD3_I( i, j, k, kernelName, first, /*2*/(int*)0, result, count )
 
 
-#define WARN3_F( kernelName, first, base_first, second, base_second, result, base_result, h, w, index )   { \
-		if( !isfinite( (result) ) || \
-			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f ) \
-		{ \
-			printf( "%s: first=%f (%llx) first=%f (%llx) result=%f (%llx)  h=%d w=%d index=%d \n", (kernelName), \
-				(first), ( unsigned long long )(base_first), (second), ( unsigned long long )(base_second), (result), ( unsigned long long )(base_result), \
-				(h), (w), (index) ); \
-		} \
-		assert( isfinite( (result) ) ); \
-		assert( (result) > -18002376725743890449408517795774411571.f ); \
-		assert( (result) <  18002376725743890449408517795774411571.f ); \
-	}
+#define PRINT_HEAD1_F( i, j, k, kernelName, result, count )                \
+		PRINT_HEAD3_F( i, j, k, kernelName, /*1*/(float*)0, /*2*/(float*)0, result, count )
+
+#define PRINT_HEAD1_I( i, j, k, kernelName, result, count )                \
+		PRINT_HEAD3_I( i, j, k, kernelName, /*1*/(int*)0, /*2*/(int*)0, result, count )
 
 //------------------------------------------------------------------------------------------------------------
 
 #define WARN3_CNT_SPEC_F( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter )   { \
 		if( !isfinite( (result) ) || \
 			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f ) \
-		{ \
-			assert( num && name ); \
-			if ( second && base_second ) { \
-				printf( "%s: first=%f (%llx) second=%f (%llx)  result=%f (%llx)  count=%d i=%d index=%d  !%d!  '%s'  call=%llu \n", (kernelName), \
-					(first), ( unsigned long long )(base_first), (second), ( unsigned long long )(base_second), (result), ( unsigned long long )(base_result), \
-					(count), (i), (index), (num), (name), ( unsigned long long )(calls_counter) ); \
-			} else { \
-				printf( "%s: first=%f (%llx) result=%f (%llx)  count=%d i=%d index=%d  !%d!  '%s'  call=%llu \n", (kernelName), \
-					(first), ( unsigned long long )(base_first), (result), ( unsigned long long )(base_result), \
-					(count), (i), (index), (num), (name), ( unsigned long long )(calls_counter) ); \
-			} \
+			(result) >  18002376725743890449408517795774411571.f ) { \
+			CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, count, num, name, calls_counter, /*h*/0, /*w*/0, i, index ); \
 		} \
 	}
 
 #define WARN3_CNT_F( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter )   { \
 		if( !isfinite( (result) ) || \
 			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f ) \
-		{ \
-			if ( second && base_second ) { \
-				printf( "%s: first=%f (%llx) second=%f (%llx)  result=%f (%llx)  h=%d w=%d index=%d  call=%llu \n", (kernelName), \
-					(first), ( unsigned long long )(base_first), (second), ( unsigned long long )(base_second), (result), ( unsigned long long )(base_result), \
-					(h), (w), (index), ( unsigned long long )(calls_counter) ); \
-			} else { \
-				printf( "%s: first=%f (%llx) result=%f (%llx)  h=%d w=%d index=%d  call=%llu \n", (kernelName), \
-					(first), ( unsigned long long )(base_first), (result), ( unsigned long long )(base_result), \
-					(h), (w), (index), ( unsigned long long )(calls_counter) ); \
-			} \
+			(result) >  18002376725743890449408517795774411571.f ) { \
+			CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, /*count*/0, /*num*/0, /*name*/(char*)0, calls_counter, h, w, /*i*/0, index ); \
 		} \
 		assert( isfinite( (result) ) ); \
 		assert( (result) > -18002376725743890449408517795774411571.f ); \
@@ -318,17 +262,17 @@ constexpr int MAX_calls_counter = 1000000;
 //------------------------------------------------------------------------------------------------------------
 
 #define WARN2_CNT_SPEC_F( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter )     \
-		WARN3_CNT_SPEC_F( kernelName, first, base_first, 0.f, nullptr, result, base_result, count, i, index, num, name, calls_counter )
+		WARN3_CNT_SPEC_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, count, i, index, num, name, calls_counter )
 
 #define WARN2_CNT_F( kernelName, first, base_first, result, base_result, h, w, index, calls_counter )      \
-		WARN3_CNT_F( kernelName, first, base_first, 0.f, nullptr, result, base_result, h, w, index, calls_counter )
+		WARN3_CNT_F( kernelName, first, base_first, 0.f, (float*)0, result, base_result, h, w, index, calls_counter )
 
 
 #define WARN2_CNT_SPEC_T( kernelName, first, base_first, result, base_result, count, i, index, num, name, calls_counter )     \
-		WARN3_CNT_SPEC_T( kernelName, first, base_first, 0, nullptr, result, base_result, count, i, index, num, name, calls_counter );
+		WARN3_CNT_SPEC_T( kernelName, first, base_first, 0, (T*)0, result, base_result, count, i, index, num, name, calls_counter );
 
 #define WARN2_CNT_T( kernelName, first, base_first, result, base_result, h, w, index, calls_counter )       \
-		WARN3_CNT_T( kernelName, first, base_first, 0, nullptr, result, base_result, h, w, index, calls_counter );
+		WARN3_CNT_T( kernelName, first, base_first, 0, (T*)0, result, base_result, h, w, index, calls_counter );
 
 } // namespace NeoML
 
