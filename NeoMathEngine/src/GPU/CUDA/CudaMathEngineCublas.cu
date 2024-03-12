@@ -24,10 +24,93 @@ limitations under the License.
 #include <CublasFunctions.h>
 #include <MathEngineCommon.h>
 #include <MemoryHandleInternal.h>
+#include <Kernels/CudaGrid.h>
+#include <cmath>
 
 #include <cuda_runtime_api.h>
 
 namespace NeoML {
+
+const int VectorRoundCombineCount = 8;
+__global__ void VectorRoundKernel( float* result, int count )
+{
+	assert( threadIdx.y == 0 );
+	assert( threadIdx.z == 0 );
+
+	int index;
+	int step;
+	int actionCount = GetCudaTaskCountAndIndex( count, VectorRoundCombineCount, index, step );
+
+	result += index;
+
+	for( int i = 0; i < actionCount; ++i ) {
+		*result = roundf( *result );
+		result += step;
+	}
+}
+
+void CCudaMathEngine::vectorRound( const CFloatHandle& resultHandle, int vectorSize )
+{
+	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
+	SetCudaDevice( device->DeviceNumber );
+
+	int blockCount;
+	int threadCount;
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorRoundCombineCount );
+
+	VectorRoundKernel<<<blockCount, threadCount>>>( GetRaw( resultHandle ), vectorSize );
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+const int VectorSDotCombineCount = 8;
+__global__ void VectorSDotKernel( const float* first, const float* second, float* result, int count, size_t calls_counter )
+{
+	assert( threadIdx.y == 0 );
+	assert( threadIdx.z == 0 );
+
+	int index;
+	int step;
+	int actionCount = GetCudaTaskCountAndIndex( count, VectorSDotCombineCount, index, step );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSDotKernel", first, second, result, count, calls_counter );
+
+	unsigned tid = threadIdx.x;
+	extern __shared__ double buffer[];
+
+	first += index;
+	second += index;
+
+	if( actionCount > 0 ) {
+		double sum = 0;
+		for( int i = 0; i < actionCount; ++i ) {
+			sum = std::fma( ( double )*first, ( double )*second, sum );
+
+			assert( isfinite( sum ) );
+			assert( sum > -18002376725743890449408517795774411571.f );
+			assert( sum < 18002376725743890449408517795774411571.f );
+
+			first += step;
+			second += step;
+		}
+		buffer[tid] = sum;
+	} else {
+		buffer[tid] = 0;
+	}
+
+	__syncthreads();
+	if( tid == 0 ) {
+		double sum = 0;
+		for( int i = 0; i < blockDim.x; ++i ) {
+			sum = std::fma( buffer[i], 1., sum );
+		}
+		atomicAdd( result, ( float )sum );
+		WARN3_CNT_F( "VectorSDotKernel", *first, first, *second, second, *result, result, count, tid, index, calls_counter );
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+extern size_t calls_counter;
 
 void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 	int vectorSize, const CFloatHandle& resultHandle)
@@ -38,8 +121,18 @@ void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, con
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
-		GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
+	VectorFill( resultHandle, 0.f, 1, 81 );
+
+	int blockCount;
+	int threadCount;
+	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorSDotCombineCount );
+	
+	VectorSDotKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ), vectorSize, ++calls_counter );
+
+	//ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
+	//	GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
+
+	vectorRound( resultHandle, 1 );
 }
 
 void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,

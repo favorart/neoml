@@ -695,6 +695,7 @@ public:
 	void vectorMultichannelLookupAndAddToTable( int batchSize, int channelCount, const CTypedMemoryHandle<const T>& inputHandle,
 		const CFloatHandle* lookupHandles, const CLookupDimension* lookupDimensions, int lookupCount,
 		const CConstFloatHandle& multHandle, const CConstFloatHandle& matrixHandle, int outputChannelsCount );
+	void vectorRound( const CFloatHandle& resultHandle, int vectorSize );
 
 	template<class T>
 	void blobMergeByDimCuda( int dimNum, const CBlobDesc* from, const CTypedMemoryHandle<T>* fromData, int fromCount,
