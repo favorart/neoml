@@ -43,7 +43,7 @@ __global__ void VectorCopyKernel( T* result, const T* first, int count, int num,
 		*result = *first;
 
 		WARN2_CNT_SPEC_T( "VectorCopyKernel", *first, base_first, *result, base_result,
-			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels, VectorCopyKernelId ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		result += step;
 		first += step;
 	}
@@ -65,7 +65,7 @@ __global__ void VectorFillKernel(T* mem, T value, int count, int num, const char
 		*mem = value;
 
 		WARN2_CNT_SPEC_T( "VectorFillKernel", 0.f, nullptr, *mem, base_mem,
-			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels, VectorFillKernelId ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		mem += step;
 	}
 }
@@ -102,7 +102,7 @@ __global__ void VectorFillHandleKernel(T* mem, int count, const T* __restrict__ 
 		*mem = *value;
 
 		WARN2_CNT_SPEC_T( "VectorFillHandleKernel", 0.f, nullptr, *mem, base_mem,
-			count, i, index, num, name, calls_counter, historyKernels ); //step, blockIdx.x, blockDim.x, threadIdx.x
+			count, i, index, num, name, calls_counter, historyKernels, VectorFillHandleKernelId ); //step, blockIdx.x, blockDim.x, threadIdx.x
 		mem += step;
 	}
 }
@@ -675,8 +675,8 @@ __global__ void VectorEltwiseMaxKernel(const float* first, const float* second,
 		const float value2 = *second;
 		*result = ( value1 > value2 ) ? value1 : value2;
 
-		WARN3_CNT_F( "VectorEltwiseMaxKernel", value1, base_first, value2, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter, historyKernels );
+		WARN3_CNT_SPEC_F( "VectorEltwiseMaxKernel", value1, base_first, value2, base_second, *result, base_result,
+			count, i, index, 0, (char*)0 /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, calls_counter, historyKernels, VectorEltwiseMaxKernelId );
 		first += step;
 		second += step;
 		result += step;
@@ -1156,7 +1156,7 @@ __global__ void VectorAddKernel(const T* __restrict__ first, const T* __restrict
 		*result = *first + *second;
 
 		WARN3_CNT_SPEC_T( "VectorAddKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, num, name, calls_counter, historyKernels );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x*/, num, name, calls_counter, historyKernels, VectorAddKernelId );
 		first += step;
 		second += step;
 		result += step;
@@ -1346,7 +1346,8 @@ __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
 	int index = 0;
 	int step = 0;
 	const int actionCount = GetCudaTaskCountAndIndex(count, VectorEltwiseMultiplyCombineCount, index, step);
-	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorEltwiseMultiplyKernel", first, second, result, count, 1, name, calls_counter, historyKernels, VectorEltwiseMultiplyKernelId );
+	PRINT_HEAD3_CNT_SPEC_T( index, 0, 0, "VectorEltwiseMultiplyKernel", first, second, result, count, 1, name,
+		calls_counter, historyKernels, VectorEltwiseMultiplyKernelId );
 
 	[[maybe_unused]] const T* __restrict__ base_first = first;
 	[[maybe_unused]] const T* __restrict__ base_second = second;
@@ -1360,7 +1361,8 @@ __global__ void VectorEltwiseMultiplyKernel(const T* __restrict__ first,
 		*result = *first * (*second);
 
 		WARN3_CNT_SPEC_T( "VectorEltwiseMultiplyKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x, blockCount, threadCount*/, 1, name, calls_counter, historyKernels );
+			count, i, index /*, step, blockIdx.x, blockDim.x, threadIdx.x, blockCount, threadCount*/, 1, name,
+			calls_counter, historyKernels, VectorEltwiseMultiplyKernelId );
 		first += step;
 		second += step;
 		result += step;
@@ -1437,8 +1439,8 @@ __global__ void VectorEltwiseDivideKernel(const T* __restrict__ first,
 	for(int i = 0; i < actionCount; ++i) {
 		*result = *first / (*second);
 
-		WARN3_CNT_T( "VectorMinMaxKernel", *first, base_first, *second, base_second, *result, base_result,
-			count, i, index /*, step*/, calls_counter, historyKernels );
+		WARN3_CNT_SPEC_T( "VectorMinMaxKernel", *first, base_first, *second, base_second, *result, base_result,
+			count, i, index, 0, (char*)0 /*, step*/, calls_counter, historyKernels, VectorEltwiseDivideKernelId );
 		first += step;
 		second += step;
 		result += step;
@@ -1466,8 +1468,8 @@ __global__ void VectorSqrtKernel(const float* __restrict__ first, float* result,
 
 		result[index] = sqrtf(first[index]);
 
-		WARN2_CNT_F( "VectorSqrtKernel", first[index], first, result[index], result,
-			count, 0, index, calls_counter, historyKernels );
+		WARN2_CNT_SPEC_F( "VectorSqrtKernel", first[index], first, result[index], result,
+			count, 0, index, 0, (char*)0, calls_counter, historyKernels, VectorSqrtKernelId );
 	}
 }
 

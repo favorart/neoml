@@ -76,9 +76,30 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 	deviceStackRunTime = std::unique_ptr<CDeviceStackAllocator>( new CDeviceStackAllocator( *memoryPool, CudaMemoryAlignment ) );
 	hostStackRunTime = std::unique_ptr<CHostStackAllocator>( new CHostStackAllocator( CudaMemoryAlignment ) );
 
-	auto sz = CudaHistoryKernelsSize * sizeof( CCudaHistoryKernel ) / sizeof( float );
+	auto CudaHistoryKernelsSizeBytes = CudaHistoryKernelsSize * sizeof( CCudaHistoryKernel );
+
+	{
+		printf( "new6 \n" );
+		printf( "CudaHistoryKernelsSize is:                      %llu \n", CudaHistoryKernelsSizeBytes );
+
+		SetCudaDevice( device->DeviceNumber );
+
+		size_t output_size;
+		ASSERT_CUDA( cudaDeviceGetLimit( &output_size, cudaLimitPrintfFifoSize ) );
+		printf( "Size of device-side printf buffer is:           %llu \n", output_size );
+
+		output_size *= 10;
+		output_size += CudaHistoryKernelsSizeBytes;
+		ASSERT_CUDA( cudaDeviceSetLimit( cudaLimitPrintfFifoSize, output_size ) );
+		
+		ASSERT_CUDA( cudaDeviceGetLimit( &output_size, cudaLimitPrintfFifoSize ) );
+		printf( "Size of device-side printf buffer increased to: %llu \n\n", output_size );
+		fflush( stdout );
+	}
+
+	auto sz = CudaHistoryKernelsSizeBytes / sizeof( float );
 	historyKernels = HeapAllocTyped<float>( sz );
-	VectorFill( historyKernels, 0.f, sz, 0, 0 );
+	VectorFill( historyKernels, 0.f, ( int )sz, 0, nullptr );
 }
 
 CCudaMathEngine::~CCudaMathEngine()
