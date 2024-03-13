@@ -79,7 +79,7 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 	auto CudaHistoryKernelsSizeBytes = CudaHistoryKernelsSize * sizeof( CCudaHistoryKernel );
 
 	{
-		printf( "new6 \n" );
+		printf( "new8 \n" );
 		printf( "CudaHistoryKernelsSize is:                      %llu \n", CudaHistoryKernelsSizeBytes );
 
 		SetCudaDevice( device->DeviceNumber );

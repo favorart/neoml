@@ -31,6 +31,9 @@ struct CCudaHistoryKernel {
 	size_t counter;
 	int kernel;
 	unsigned long long res_addr;
+	//unsigned long long cnt;
+	unsigned long long fst_addr;
+	unsigned long long snd_addr;
 };
 
 struct CCudaVectorArray {
@@ -202,22 +205,24 @@ constexpr int MultiplyMatrixByMatrixKernelId = 44;
 		const int last = ( calls_counter % CudaHistoryKernelsSize ); \
 		const int first = ( ( last + 1 ) % CudaHistoryKernelsSize ); \
 		/*printf( " first= %d last %d \n ", first, last );*/ \
-		printf( "history: {\n\t i \t counter \t kernel \t result \n" ); \
+		printf( "history: {\n\t i \t counter \t kernel \t result \t count \n" ); \
 		for( int i = first; i != last; i = ( i + 1 ) % CudaHistoryKernelsSize ) { \
 			/*printf( "i=%d", i );*/ \
 			if( history[i].counter > 0 ) { \
-				printf( "\t %5d \t %10llu \t %3d \t %llx \n", i, history[i].counter, history[i].kernel, history[i].res_addr ); \
+				printf( "\t %5d \t %10llu \t %3d \t %8llx \t %8llx \t %8llx \n", i, history[i].counter, history[i].kernel, history[i].res_addr, history[i].fst_addr, history[i].snd_addr ); \
 			} \
 		} \
-		printf( "\t last  \t %10llu \t %3d \t %llx \n", history[last].counter, history[last].kernel, history[last].res_addr ); \
+		printf( "\t last  \t %10llu \t %3d \t %8llx \t %8llx \t %8llx \n", history[last].counter, history[last].kernel, history[last].res_addr, history[last].fst_addr, history[last].snd_addr ); \
 		printf( "}\n\n" ); \
 	}
 
-#define CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ) { \
+#define CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ) { \
 		CCudaHistoryKernel& history = ( ( CCudaHistoryKernel* )historyKernels )[calls_counter % CudaHistoryKernelsSize]; \
 		history.kernel = id; \
 		history.counter = calls_counter; \
 		history.res_addr = ( unsigned long long )result; \
+		history.fst_addr = ( unsigned long long )first; \
+		history.snd_addr = ( unsigned long long )second; \
 	}
 
 //------------------------------------------------------------------------------------------------------------
@@ -227,7 +232,7 @@ constexpr int MAX_calls_counter = 10;
 
 #define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
-			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
+			CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ); \
 			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				if constexpr( std::is_same_v<T, float> ) { \
 					CUDA_PRINT_F( kernelName, first, second, result, count, num, name, calls_counter ); \
@@ -239,7 +244,7 @@ constexpr int MAX_calls_counter = 10;
 
 #define PRINT_HEAD3_CNT_T( i, j, k, kernelName, first, second, result, count, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
-			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
+			CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ); \
 			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				if constexpr( std::is_same_v<T, float> ) { \
 					CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
@@ -255,7 +260,7 @@ constexpr int MAX_calls_counter = 10;
 
 #define PRINT_HEAD3_CNT_F( i, j, k, kernelName, first, second, result, count, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
-			CUDA_INIT_HISTORY( result, calls_counter, historyKernels, id ); \
+			CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ); \
 			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
 				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
