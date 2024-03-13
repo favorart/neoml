@@ -602,7 +602,7 @@ void CVulkanMathEngine::VectorSub(const CConstFloatHandle& firstHandle,
 
 void CVulkanMathEngine::VectorMultiplyAndAdd(const CConstFloatHandle& firstHandle,
 	const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
-	int vectorSize, const CConstFloatHandle& multHandle)
+	int vectorSize, const CConstFloatHandle& multHandle, int)
 {
 	CMemoryHandle bufs[4] = { firstHandle, secondHandle, resultHandle, multHandle };
 	size_t sizes[4] = { vectorSize * sizeof(float), vectorSize * sizeof(float),

@@ -77,7 +77,7 @@ void CCpuMathEngine::VectorLog(const CConstFloatHandle& firstHandle, const CFloa
 }
 
 void CCpuMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-	const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle )
+	const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle, int )
 {
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
 	ASSERT_EXPR( secondHandle.GetMathEngine() == this );

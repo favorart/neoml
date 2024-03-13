@@ -182,7 +182,7 @@ public:
 	void VectorSub( float first, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
 		int vectorSize ) override;
 	void VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle ) override;
+		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle, int num ) override;
 	void VectorMultiplyAndSub( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle ) override;
 	void VectorMultiply( const CConstFloatHandle& firstHandle,
@@ -699,7 +699,7 @@ public:
 		const CConstFloatHandle& multHandle, const CConstFloatHandle& matrixHandle, int outputChannelsCount );
 	void vectorRound( const CFloatHandle& resultHandle, int vectorSize );
 	void vectorNumerate( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
-		int firstSize, int secondSize, int resultSize, size_t calls_counter, void* historyKernels, int id );
+		int firstSize, int secondSize, int resultSize, int num, size_t calls_counter, void* historyKernels, int id );
 
 	template<class T>
 	void blobMergeByDimCuda( int dimNum, const CBlobDesc* from, const CTypedMemoryHandle<T>* fromData, int fromCount,

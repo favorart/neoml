@@ -257,7 +257,7 @@ public:
 	// result = first + mult * second
 	// You may NOT pass the same handle as secondHandle and resultHandle parameters
 	virtual void VectorMultiplyAndAdd(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle) = 0;
+		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle, int num ) = 0;
 	// result = first - mult * second
 	// You may NOT pass the same handle as secondHandle and resultHandle parameters
 	virtual void VectorMultiplyAndSub(const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,

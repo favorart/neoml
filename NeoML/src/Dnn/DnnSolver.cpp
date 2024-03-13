@@ -479,11 +479,11 @@ void CDnnSimpleGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjec
 			gradientHistory[i]->GetData(), dataSize, tempVariables->GetData( {TV_MomentDecayRateVar} ) );
 		MathEngine().VectorMultiplyAndAdd( gradientHistory[i]->GetData(), paramDiffBlobs[i]->GetData(), 
 			gradientHistory[i]->GetData(), dataSize,
-			tempVariables->GetData( { isInCompatibilityMode ? TV_OpMomentDecayRateVar : TV_RateVar } ) );
+			tempVariables->GetData( { isInCompatibilityMode ? TV_OpMomentDecayRateVar : TV_RateVar } ), 1 );
 
 		if(regL2 > 0) {
 			MathEngine().VectorMultiplyAndAdd( gradientHistory[i]->GetData(), paramBlobs[i]->GetData(),
-				gradientHistory[i]->GetData(), dataSize, tempVariables->GetData( {TV_OpRegL2MomentDecayRateVar} ) );
+				gradientHistory[i]->GetData(), dataSize, tempVariables->GetData( {TV_OpRegL2MomentDecayRateVar} ), 2 );
 		}
 		if(regL1 > 0) {
 			MathEngine().VectorL1DiffAdd( gradientHistory[i]->GetData(), paramBlobs[i]->GetData(),
@@ -494,7 +494,7 @@ void CDnnSimpleGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjec
 		// Add regularization and gradient
 		if( isInCompatibilityMode ) {
 			MathEngine().VectorMultiplyAndAdd( paramBlobs[i]->GetData(), gradientHistory[i]->GetData(),
-				paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( { TV_RateVar } ) );
+				paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( { TV_RateVar } ), 3 );
 		} else {
 			MathEngine().VectorAdd( paramBlobs[i]->GetData(), gradientHistory[i]->GetData(),
 				paramBlobs[i]->GetData(), dataSize, 28 );
@@ -571,7 +571,7 @@ static CDnnBlob* addRegularization( IMathEngine& mathEngine, CDnnBlob* diffBlob,
 {
 	if( regL2 > 0 ) {
 		mathEngine.VectorMultiplyAndAdd( diffBlob->GetData(), params->GetData(),
-			temporaryBlob->GetData(), params->GetDataSize(), l2Reg );
+			temporaryBlob->GetData(), params->GetDataSize(), l2Reg, 4 );
 		diffBlob = temporaryBlob;
 	}
 	if( regL1 > 0 ) {
@@ -642,14 +642,14 @@ void CDnnAdaptiveGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		MathEngine().VectorMultiply(moment->GetData(), moment->GetData(), dataSize,
 			tempVariables->GetData( {TV_MomentDecayRateVar} ));
 		MathEngine().VectorMultiplyAndAdd(moment->GetData(), paramDiffBlob->GetData(),
-			moment->GetData(), dataSize, tempVariables->GetData( {TV_OpMomentDecayRateVar} ));
+			moment->GetData(), dataSize, tempVariables->GetData( {TV_OpMomentDecayRateVar} ), 5);
 		// Calculate the historical average squared gradient
 		MathEngine().VectorEltwiseMultiply(paramDiffBlob->GetData(), paramDiffBlob->GetData(),
 			temporaryBlob->GetData(), dataSize);
 		MathEngine().VectorMultiply(secondMoment->GetData(), secondMoment->GetData(), dataSize,
 			tempVariables->GetData( {TV_SecondMomentDecayRateVar} ));
 		MathEngine().VectorMultiplyAndAdd(secondMoment->GetData(), temporaryBlob->GetData(), 
-			secondMoment->GetData(), dataSize, tempVariables->GetData( {TV_OpSecondMomentDecayRateVar} ));
+			secondMoment->GetData(), dataSize, tempVariables->GetData( {TV_OpSecondMomentDecayRateVar} ), 6);
 		if( IsAmsGradEnabled() ) {
 			// Update the maximum of the average
 			CDnnBlob* secondMomentMaxAverage = gradientHistory[i + paramDiffBlobs.Size() * GHT_SecondMomentMaxAverage];
@@ -674,7 +674,7 @@ void CDnnAdaptiveGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		}
 		// Add the gradient
 		MathEngine().VectorMultiplyAndAdd(paramBlobs[i]->GetData(), temporaryBlob->GetData(),
-			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( {TV_RateVar} ));
+			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( {TV_RateVar} ), 7);
 	}
 }
 
@@ -806,14 +806,14 @@ void CDnnNesterovGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		MathEngine().VectorMultiply( moment->GetData(), moment->GetData(), dataSize,
 			tempVariables->GetData( {TV_MomentDecayRateVar}) );
 		MathEngine().VectorMultiplyAndAdd( moment->GetData(), paramDiffBlob->GetData(),
-			moment->GetData(), dataSize, tempVariables->GetData( {TV_OpMomentDecayRateVar} ) );
+			moment->GetData(), dataSize, tempVariables->GetData( {TV_OpMomentDecayRateVar} ), 8 );
 		// Calculate the historical average squared gradient
 		MathEngine().VectorEltwiseMultiply( paramDiffBlob->GetData(), paramDiffBlob->GetData(),
 			temporaryBlob->GetData(), dataSize );
 		MathEngine().VectorMultiply( secondMoment->GetData(), secondMoment->GetData(), dataSize,
 			tempVariables->GetData( {TV_SecondMomentDecayRateVar} ) );
 		MathEngine().VectorMultiplyAndAdd( secondMoment->GetData(), temporaryBlob->GetData(),
-			secondMoment->GetData(), dataSize, tempVariables->GetData( {TV_OpSecondMomentDecayRateVar} ) );
+			secondMoment->GetData(), dataSize, tempVariables->GetData( {TV_OpSecondMomentDecayRateVar} ), 9 );
 
 		// Calculate the auxiliary variables (notations taken from the reference paper)
 		// m with a dash
@@ -821,7 +821,7 @@ void CDnnNesterovGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		MathEngine().VectorMultiply( paramDiffBlob->GetData(), mBar, dataSize,
 			tempVariables->GetData( {TV_MBarGradMultVar} ) );
 		MathEngine().VectorMultiplyAndAdd( mBar, moment->GetData(), mBar, dataSize,
-			tempVariables->GetData( {TV_MBarMomentMultVar} ) );
+			tempVariables->GetData( {TV_MBarMomentMultVar} ), 10 );
 
 		// sqrt(n with a hat) + eps
 		if( IsAmsGradEnabled() ) {
@@ -849,7 +849,7 @@ void CDnnNesterovGradientSolver::TrainLayer( const CBaseLayer* layer, const CObj
 		}
 		// Update parameters
 		MathEngine().VectorMultiplyAndAdd( paramBlobs[i]->GetData(), temporaryBlob->GetData(),
-			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( {TV_RateVar} ) );
+			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( {TV_RateVar} ), 11 );
 	}
 }
 
@@ -980,7 +980,7 @@ void CDnnLambGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjectA
 		MathEngine().VectorMultiply( moment->GetData(), moment->GetData(), dataSize, 
 			tempVariables->GetData( { TV_MomentDecayRateVar } ) );
 		MathEngine().VectorMultiplyAndAdd( moment->GetData(), paramDiffBlob->GetData(),
-			moment->GetData(), dataSize, tempVariables->GetData( { TV_OpMomentDecayRateVar } ) );
+			moment->GetData(), dataSize, tempVariables->GetData( { TV_OpMomentDecayRateVar } ), 12 );
 
 		// Calculate the historical average squared gradient
 		MathEngine().VectorEltwiseMultiply( paramDiffBlob->GetData(), paramDiffBlob->GetData(),
@@ -996,7 +996,7 @@ void CDnnLambGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjectA
 		MathEngine().VectorMultiply( secondMoment->GetData(), secondMoment->GetData(), dataSize,
 			tempVariables->GetData( { TV_SecondMomentDecayRateVar } ) );
 		MathEngine().VectorMultiplyAndAdd( secondMoment->GetData(), tempBlob->GetData(),
-			secondMoment->GetData(), dataSize, tempVariables->GetData( { TV_OpSecondMomentDecayRateVar } ) );
+			secondMoment->GetData(), dataSize, tempVariables->GetData( { TV_OpSecondMomentDecayRateVar } ), 13 );
 
 		// square root of the second moment
 		MathEngine().VectorSqrt( secondMoment->GetData(), tempBlob->GetData(), dataSize );
@@ -1012,7 +1012,7 @@ void CDnnLambGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjectA
 		// weightDecay
 		if( weightDecayParamIndexes.Has( i ) && layerWeighDecay > 0 ) {
 			MathEngine().VectorMultiplyAndAdd( tempBlob->GetData(), paramBlobs[i]->GetData(),
-				tempBlob->GetData(), tempBlob->GetDataSize(), tempVariables->GetData( { TV_WeightDecayVar } ) );
+				tempBlob->GetData(), tempBlob->GetDataSize(), tempVariables->GetData( { TV_WeightDecayVar } ), 14 );
 		}
 
 		if( useTrustRatio ) {
@@ -1024,7 +1024,7 @@ void CDnnLambGradientSolver::TrainLayer( const CBaseLayer* layer, const CObjectA
 
 		// adding gradient
 		MathEngine().VectorMultiplyAndAdd( paramBlobs[i]->GetData(), tempBlob->GetData(),
-			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( { TV_RateVar } ) );
+			paramBlobs[i]->GetData(), dataSize, tempVariables->GetData( { TV_RateVar } ), 15 );
 	}
 }
 

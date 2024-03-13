@@ -176,7 +176,7 @@ public:
 	void VectorSub( float first,
 		const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle, int vectorSize ) override;
 	void VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
-		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle ) override;
+		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle, int num = 0 ) override;
 	void VectorMultiplyAndSub( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
 		const CFloatHandle& resultHandle, int vectorSize, const CConstFloatHandle& multHandle ) override;
 	void VectorMultiply( const CConstFloatHandle& firstHandle,

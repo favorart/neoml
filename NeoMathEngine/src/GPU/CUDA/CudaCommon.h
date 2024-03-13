@@ -376,7 +376,7 @@ static __device__ int SectionFlag = 0;
 		/*assert( (result) <  18002376725743890449408517795774411571.f );*/ \
 	}
 
-#define WARN3_CNT_NORES_F( kernelName, result, base_result, count, id, index, calls_counter, historyKernels )   { \
+#define WARN3_CNT_NORES_F( kernelName, result, base_result, count, id, index, num, calls_counter, historyKernels )   { \
 		if( !isfinite( (result) ) || \
 			(result) < -18002376725743890449408517795774411571.f || \
 			(result) >  18002376725743890449408517795774411571.f )  \
@@ -384,7 +384,7 @@ static __device__ int SectionFlag = 0;
 			if ( id != VectorSDotKernelId ) { \
 				while ( true ) { \
 					if( atomicExch( &SectionFlag, 1 ) == 0 ) { \
-						CUDA_PRINT_WARN( kernelName, 0.f, (float*)0, 0.f, (float*)0, result, base_result, count, /*num*/0, /*name*/(char*)0, calls_counter, /*h*/0, /*w*/0, id, index ); \
+						CUDA_PRINT_WARN( kernelName, 0.f, (float*)0, 0.f, (float*)0, result, base_result, count, num, /*name*/(char*)0, calls_counter, /*h*/0, /*w*/0, id, index ); \
 						atomicExch( &SectionFlag, 0 ); \
 						break; \
 					} \

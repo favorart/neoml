@@ -292,7 +292,7 @@ void CBatchNormalizationLayer::updateSlowParams(bool isInit)
 	MathEngine().VectorMultiply(slowAverage, slowAverage, objectSize, residual->GetData());
 	MathEngine().VectorMultiplyAndSub(slowAverage, average, slowAverage, objectSize, slowConvergenceRate->GetData());
 	MathEngine().VectorMultiply(slowVariance, slowVariance, objectSize, residual->GetData());
-	MathEngine().VectorMultiplyAndAdd(slowVariance, variance, slowVariance, objectSize, varianceMult->GetData());
+	MathEngine().VectorMultiplyAndAdd(slowVariance, variance, slowVariance, objectSize, varianceMult->GetData(), 16);
 
 	isFinalParamDirty = true;
 }

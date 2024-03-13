@@ -138,7 +138,7 @@ void CFocalLossLayer::calculateGradient( CFloatHandle correctClassProbabilityPer
 		entropyPerBatchHandle, batchSize );
 	// diffPart: (1 - P_t )^focalForce / P_t - focalForce(1 - P_t )^(focalForce - 1) log(P_t)
 	MathEngine().VectorMultiplyAndAdd( diffPart, entropyPerBatchHandle,
-		diffPart, batchSize, focalForce->GetData() );
+		diffPart, batchSize, focalForce->GetData(), 17 );
 
 	// diffPart: - (1 - P_t )^focalForce / P_t + focalForce(1 - P_t )^(focalForce - 1) log(P_t)
 	MathEngine().VectorMultiply( diffPart, diffPart, batchSize, minusOne->GetData() );
