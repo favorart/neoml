@@ -66,23 +66,43 @@ void CCudaMathEngine::vectorRound( const CFloatHandle& resultHandle, int vectorS
 
 //---------------------------------------------------------------------------------------------------------------------
 
-__global__ void VectorNumerateKernel( const float* first, const float* second, float* result, int count, size_t calls_counter, void* historyKernels, int id )
+__global__ void VectorNumerateKernel( const float* first, const float* second, float* result,
+	int firstSize, int secondSize, int resultSize, size_t calls_counter, void* historyKernels, int id )
 {
-	PRINT_HEAD3_CNT_F( threadIdx.x, blockIdx.x, 0, "VectorNumerateKernel", first, second, result, count, calls_counter, historyKernels, id );
+	assert( threadIdx.y == 0 );
+	assert( threadIdx.z == 0 );
+
+	int index;
+	int step;
+	int actionCount = GetCudaTaskCountAndIndex( firstSize + secondSize + resultSize, VectorSDotCombineCount, index, step );
+	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorNumerateKernel", first, second, result, resultSize, calls_counter, historyKernels, id );
+
+	int shift = index;
+	for( int i = 0; i < actionCount; ++i ) {
+		if( shift < firstSize ) {
+			WARN3_CNT_NORES_F( "VectorNumerateKernel first", first[shift], first, firstSize, id, shift, calls_counter, historyKernels );
+		} else if( shift < ( firstSize + secondSize ) ) {
+			WARN3_CNT_NORES_F( "VectorNumerateKernel second", second[shift - firstSize], second, secondSize, id, shift, calls_counter, historyKernels );
+		} else {
+			WARN3_CNT_SPEC_F( "VectorNumerateKernel", /*1*/0.f, 0, /*2*/0.f, 0, result[shift - ( firstSize + secondSize )], result, resultSize,
+				id, shift, /*num*/0, /*name*/( char* )0, calls_counter, historyKernels, id );
+		}
+		shift += step;
+	}
 }
 
 void CCudaMathEngine::vectorNumerate( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
-	int vectorSize, size_t calls_counter, void* historyKernels, int id )
+	int firstSize, int secondSize, int resultSize, size_t calls_counter, void* historyKernels, int id )
 {
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
 	int blockCount;
 	int threadCount;
-	getCudaTaskGrid( blockCount, threadCount, 1, VectorSDotCombineCount );
+	getCudaTaskGrid( blockCount, threadCount, firstSize + secondSize + resultSize, VectorSDotCombineCount );
 
 	VectorNumerateKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ), GetRaw( resultHandle ),
-		vectorSize, calls_counter, historyKernels, id );
+		firstSize, secondSize, resultSize, calls_counter, historyKernels, id );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -159,7 +179,7 @@ void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, con
 	//vectorRound( resultHandle, 1 );
 
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		vectorSize, ++calls_counter, GetRaw( historyKernels ), VectorSDotKernelId );
+		vectorSize, vectorSize, 1, ++calls_counter, GetRaw( historyKernels ), VectorSDotKernelId );
 }
 
 void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
@@ -183,7 +203,7 @@ void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle
 	ASSERT_CUBLAS( cublas->Saxpy( cublasHandle, vectorSize, mult, second, 1, result, 1 ) );
 
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		vectorSize, ++calls_counter, GetRaw( historyKernels ), VectorMultiplyAndAddKernelId );
+		vectorSize, vectorSize, vectorSize, ++calls_counter, GetRaw( historyKernels ), VectorMultiplyAndAddKernelId );
 }
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
@@ -200,8 +220,11 @@ void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle&
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstZero,
 		GetRaw( resultHandle ), resultRowSize ) );
 
+	assert( resultRowSize == secondHeight );
+	assert( secondRowSize == firstWidth );
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		resultRowSize, ++calls_counter, GetRaw( historyKernels ), MultiplyMatrixByTransposedMatrix1KernelId );
+		firstHeight * firstWidth, firstWidth * secondHeight, firstHeight * secondHeight,
+		++calls_counter, GetRaw(historyKernels), MultiplyMatrixByTransposedMatrix1KernelId );
 }
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( int batchSize, const CConstFloatHandle& firstHandle,
@@ -234,8 +257,11 @@ void CCudaMathEngine::MultiplyTransposedMatrixByMatrixAndAdd( const CConstFloatH
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstOne,
 		GetRaw( resultHandle ), resultRowSize ) );
 
+	assert( secondRowSize == secondWidth );
+	assert( resultRowSize == secondWidth );
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		firstHeight, ++calls_counter, GetRaw( historyKernels ), MultiplyTransposedMatrixByMatrixAndAddKernelId );
+		firstHeight * firstWidth, firstHeight * secondWidth, firstWidth * secondWidth,
+		++calls_counter, GetRaw( historyKernels ), MultiplyTransposedMatrixByMatrixAndAddKernelId );
 }
 
 void CCudaMathEngine::MultiplyTransposedMatrixByMatrix( int batchSize, const CConstFloatHandle& firstHandle, int firstHeight,
@@ -274,7 +300,8 @@ void CCudaMathEngine::MultiplyMatrixByMatrix( int batchSize, const CConstFloatHa
 	}
 
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		firstHeight, ++calls_counter, GetRaw( historyKernels ), MultiplyMatrixByMatrixKernelId );
+		batchSize * firstHeight * firstWidth, batchSize * firstWidth * secondWidth, batchSize * firstHeight * secondWidth,
+		++calls_counter, GetRaw( historyKernels ), MultiplyMatrixByMatrixKernelId );
 }
 
 void CCudaMathEngine::multiplyMatrixByTransposedMatrixAndAdd(const CConstFloatHandle& firstHandle,

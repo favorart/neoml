@@ -699,7 +699,7 @@ public:
 		const CConstFloatHandle& multHandle, const CConstFloatHandle& matrixHandle, int outputChannelsCount );
 	void vectorRound( const CFloatHandle& resultHandle, int vectorSize );
 	void vectorNumerate( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle, const CFloatHandle& resultHandle,
-		int vectorSize, size_t calls_counter, void* historyKernels, int id );
+		int firstSize, int secondSize, int resultSize, size_t calls_counter, void* historyKernels, int id );
 
 	template<class T>
 	void blobMergeByDimCuda( int dimNum, const CBlobDesc* from, const CTypedMemoryHandle<T>* fromData, int fromCount,
