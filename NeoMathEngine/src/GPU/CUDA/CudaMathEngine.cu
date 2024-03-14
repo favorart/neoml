@@ -55,11 +55,14 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 
 	// Cublas.
 	ASSERT_CUBLAS( cublas->Create( &cublasHandle ) );
-	cublasMath_t cublasMath = CUBLAS_DEFAULT_MATH;
+	cublasMath_t cublasMath = CUBLAS_PEDANTIC_MATH;
+	printf( "CUBLAS_PEDANTIC_MATH \n" );
 	if( ( flags & GpuMathEngineCublasUseTensorCoresTF32Flag ) != 0 ) {
 		cublasMath = CUBLAS_TF32_TENSOR_OP_MATH;
+		printf( "CUBLAS_TF32_TENSOR_OP_MATH \n" );
 	} else if( ( flags & GpuMathEngineCublasUseTensorCoresHalfFlag ) != 0 ) {
 		cublasMath = CUBLAS_TENSOR_OP_MATH;
+		printf( "CUBLAS_TENSOR_OP_MATH \n" );
 	}
 	ASSERT_CUBLAS( cublas->SetMathMode( cublasHandle, cublasMath ) );
 	ASSERT_CUBLAS( cublas->SetAtomicsMode( cublasHandle, CUBLAS_ATOMICS_ALLOWED ) );
@@ -79,7 +82,7 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 	auto CudaHistoryKernelsSizeBytes = CudaHistoryKernelsSize * sizeof( CCudaHistoryKernel );
 
 	{
-		printf( "new8 \n" );
+		printf( "new.27 PEDANTIC \n" );
 		printf( "CudaHistoryKernelsSize is:                      %llu \n", CudaHistoryKernelsSizeBytes );
 
 		SetCudaDevice( device->DeviceNumber );
