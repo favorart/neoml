@@ -31,9 +31,9 @@ struct CCudaHistoryKernel {
 	size_t counter;
 	int kernel;
 	unsigned long long res_addr;
-	//unsigned long long cnt;
 	unsigned long long fst_addr;
 	unsigned long long snd_addr;
+	unsigned long long cnt;
 };
 
 struct CCudaVectorArray {
@@ -150,6 +150,55 @@ constexpr int MultiplyMatrixByMatrixKernelId = 44;
 
 //------------------------------------------------------------------------------------------------------------
 
+__device__ constexpr const char* const StringKernelId[45] = { "", /*0*/
+	"AddVectorToMatrixElementsKernel(1)", /*1*/
+	"AddVectorToMatrixElementsKernel(2)", /*2*/
+	"AddMatrixElementsToVectorKernel(1)", /*3*/
+	"AddMatrixElementsToVectorKernel(2)", /*4*/
+	"AddVectorToMatrixRowsKernel", /*5*/
+	"SumMatrixRowsAddKernel", /*6*/
+	"MatrixLogSumExpByRowsKernel", /*7*/
+	"MatrixSoftmaxByRowsKernel", /*8*/
+	"FindMaxValueWithIndicesInRowsKernel", /*9*/
+	"VectorChannelLookupAndCopyKernel", /*10*/
+	"MultiplyDiagMatrixByMatrixKernel", /*11*/
+	"MultiplyDiagMatrixByMatrixAndSumKernel", /*12*/
+	"MatrixSpreadRowsKernel", /*13*/
+	"RandomMatrixDropoutKernel", /*14*/
+	"BlobMergeByDimKernel", /*15*/
+	"BlobSplitByDimKernel", /*16*/
+	"BlobGetSubSequenceKernel", /*17*/
+	"VectorAddKernel", /*18*/
+	"VectorAddValueKernel", /*19*/
+	"", /*20?*/
+	"VectorCopyKernel", /*21*/
+	"VectorEltwiseDivideKernel", /*22*/
+	"VectorEltwiseMaxKernel", /*23*/
+	"VectorEltwiseMulKernel", /*24*/
+	"VectorFillKernel", /*25*/
+	"VectorMinMaxKernel", /*26*/
+	"VectorMultiplyKernel", /*27*/
+	"VectorSigmoidKernel", /*28*/
+	"VectorSigmoidDiffKernel", /*29*/
+	"VectorSigmoidDiffOpKernel", /*30*/
+	"VectorSqrtKernel", /*31*/
+	"VectorSubKernel(1)", /*32*/
+	"VectorSubKernel(2)", /*33*/
+	"VectorSubKernel(3)", /*34*/
+	"VectorTanhKernel", /*35*/
+	"VectorTanhDiffKernel", /*36*/
+	"VectorTanhDiffOpKernel", /*37*/
+	"VectorFillHandleKernel", /*38*/
+	"VectorEltwiseMultiplyKernel", /*39*/
+	"VectorSDotKernel", /*40*/
+	"VectorMultiplyAndAddKernel", /*41*/
+	"MultiplyMatrixByTransposedMatrix1Kernel", /*42*/
+	"MultiplyTransposedMatrixByMatrixAndAddKernel", /*43*/
+	"MultiplyMatrixByMatrixKernel" /*44*/
+};
+
+//------------------------------------------------------------------------------------------------------------
+
 #define CUDA_PRINT_ADDR_WARN_F( first, base_first, second, base_second, result, base_result )   { \
 		if (first) printf( "first=%f (%llx) ", (first), ( unsigned long long )(base_first) ); \
 		if (second) printf( "second=%f (%llx) ", (second), ( unsigned long long )(base_second) ); \
@@ -200,21 +249,26 @@ constexpr int MultiplyMatrixByMatrixKernelId = 44;
 
 //------------------------------------------------------------------------------------------------------------
 
+static __device__ size_t LastPrintCounter = 0;
+
 #define CUDA_PRINT_HISTORY( calls_counter, historyKernels ) { \
+	if ( LastPrintCounter < calls_counter ) { \
 		CCudaHistoryKernel* history = ( CCudaHistoryKernel* )historyKernels; \
 		const int last = ( calls_counter % CudaHistoryKernelsSize ); \
-		const int first = ( ( last + 1 ) % CudaHistoryKernelsSize ); \
-		/*printf( " first= %d last %d \n ", first, last );*/ \
-		printf( "history: {\n\t i \t counter \t kernel \t result \t count \n" ); \
+		const int first = ( ( LastPrintCounter + 1 ) % CudaHistoryKernelsSize ); \
+		printf( "history: {\n\t %10s \t %10s \t %10s \t %10s \t %8s \t %s \n", "counter", "result", "first", "second", "count", "kernel" ); \
 		for( int i = first; i != last; i = ( i + 1 ) % CudaHistoryKernelsSize ) { \
-			/*printf( "i=%d", i );*/ \
 			if( history[i].counter > 0 ) { \
-				printf( "\t %5d \t %10llu \t %3d \t %8llx \t %8llx \t %8llx \n", i, history[i].counter, history[i].kernel, history[i].res_addr, history[i].fst_addr, history[i].snd_addr ); \
+				printf( "\t %10llu \t %10llx \t %10llx \t %10llx \t %8llu \t %s \n", \
+					history[i].counter, history[i].res_addr, history[i].fst_addr, history[i].snd_addr, history[i].cnt, StringKernelId[history[i].kernel] ); \
 			} \
 		} \
-		printf( "\t last  \t %10llu \t %3d \t %8llx \t %8llx \t %8llx \n", history[last].counter, history[last].kernel, history[last].res_addr, history[last].fst_addr, history[last].snd_addr ); \
+		printf( "\t %10llu \t %10llx \t %10llx \t %10llx \t %8llu \t %s \n", \
+			history[last].counter, history[last].res_addr, history[last].fst_addr, history[last].snd_addr, history[last].cnt, StringKernelId[history[last].kernel] ); \
 		printf( "}\n\n" ); \
-	}
+		LastPrintCounter = calls_counter; \
+	} \
+}
 
 #define CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ) { \
 		CCudaHistoryKernel& history = ( ( CCudaHistoryKernel* )historyKernels )[calls_counter % CudaHistoryKernelsSize]; \
@@ -223,12 +277,13 @@ constexpr int MultiplyMatrixByMatrixKernelId = 44;
 		history.res_addr = ( unsigned long long )result; \
 		history.fst_addr = ( unsigned long long )first; \
 		history.snd_addr = ( unsigned long long )second; \
+		history.cnt = ( unsigned long long )count; \
 	}
 
 //------------------------------------------------------------------------------------------------------------
 
 constexpr int min_calls_counter = 1;
-constexpr int MAX_calls_counter = 10;
+constexpr int MAX_calls_counter = 2;
 
 #define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
@@ -325,6 +380,7 @@ constexpr int MAX_calls_counter = 10;
 
 //------------------------------------------------------------------------------------------------------------
 
+static __device__ int OnceCounterFlag = 0;
 static __device__ int SectionFlag = 0;
 
 #define WARN3_CNT_SPEC_F( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter, historyKernels, id )   { \
@@ -339,9 +395,11 @@ static __device__ int SectionFlag = 0;
 					&& id != VectorEltwiseDivideKernelId     \
 					&& id != VectorSqrtKernelId              \
 					&& id != VectorSDotKernelId              \
-					&& id != VectorEltwiseMaxKernelId )      \
+					&& id != VectorEltwiseMaxKernelId        \
+					&& OnceCounterFlag < calls_counter )     \
 				{ \
 					CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+					OnceCounterFlag = calls_counter; \
 					atomicExch( &SectionFlag, 0 ); \
 					/*while( true );*/ \
 				} else { \
@@ -364,7 +422,10 @@ static __device__ int SectionFlag = 0;
 			while ( true ) { \
 			if( atomicExch( &SectionFlag, 1 ) == 0 ) { \
 				CUDA_PRINT_WARN( kernelName, first, base_first, second, base_second, result, base_result, /*count*/0, /*num*/0, /*name*/(char*)0, calls_counter, h, w, /*i*/0, index ); \
-				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+				if ( OnceCounterFlag < calls_counter ) { \
+					CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+					OnceCounterFlag = calls_counter; \
+				} \
 				atomicExch( &SectionFlag, 0 ); \
 				break; \
 				/*while( true );*/ \

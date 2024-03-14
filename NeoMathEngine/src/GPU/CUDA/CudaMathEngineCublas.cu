@@ -69,6 +69,7 @@ void CCudaMathEngine::vectorRound( const CFloatHandle& resultHandle, int vectorS
 __global__ void VectorNumerateKernel( const float* first, const float* second, float* result,
 	int firstSize, int secondSize, int resultSize, int num, size_t calls_counter, void* historyKernels, int id )
 {
+	//PRINT_HEAD3_CNT_F( threadIdx.x, blockIdx.x, 0, "VectorNumerateKernel", first, second, result, resultSize, calls_counter, historyKernels, id );
 	assert( threadIdx.y == 0 );
 	assert( threadIdx.z == 0 );
 
