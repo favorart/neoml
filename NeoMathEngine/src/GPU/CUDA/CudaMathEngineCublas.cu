@@ -209,7 +209,7 @@ void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
 	int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
-	const CFloatHandle& resultHandle, int resultRowSize, int )
+	const CFloatHandle& resultHandle, int resultRowSize, int, int num )
 {
 	// printf( "MultiplyMatrixByTransposedMatrix1 \n" ); // !!! HAVE !!!
 	ASSERT_EXPR( firstHandle.GetMathEngine() == this );
@@ -221,11 +221,12 @@ void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle&
 		cudaConstOne, GetRaw( secondHandle ), secondRowSize, GetRaw( firstHandle ), firstRowSize, cudaConstZero,
 		GetRaw( resultHandle ), resultRowSize ) );
 
+	assert( num > 0 );
 	assert( resultRowSize == secondHeight );
 	assert( secondRowSize == firstWidth );
 	vectorNumerate( firstHandle, secondHandle, resultHandle,
 		firstHeight * firstWidth, firstWidth * secondHeight, firstHeight * secondHeight,
-		/*num*/0, ++calls_counter, GetRaw(historyKernels), MultiplyMatrixByTransposedMatrix1KernelId );
+		num, ++calls_counter, GetRaw(historyKernels), MultiplyMatrixByTransposedMatrix1KernelId );
 }
 
 void CCudaMathEngine::MultiplyMatrixByTransposedMatrix( int batchSize, const CConstFloatHandle& firstHandle,

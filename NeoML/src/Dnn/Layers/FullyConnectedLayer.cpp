@@ -91,7 +91,7 @@ void CFullyConnectedLayer::RunOnce()
 		MathEngine().MultiplyMatrixByTransposedMatrix(
 			/*first*/inputData, firstHeight, firstWidth, firstWidth,
 			/*second*/weightData, secondHeight, secondWidth,
-			/*result*/outputData, resultWidth, /*unused*/0 );
+			/*result*/outputData, resultWidth, /*unused*/0, 7 );
 
 		if( !isZeroFreeTerm ) {
 			MathEngine().AddVectorToMatrixRows( /*batchSize*/1, outputData,

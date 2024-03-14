@@ -528,7 +528,7 @@ public:
 	// Multiplies a matrix by another matrix, transposed; the result will be of firstHeight * secondHeight size
 	virtual void MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
 		int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
-		const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize ) = 0;
+		const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize, int num ) = 0;
 	// Multiplies matrices from two batches, stored one after another in firstHandle, secondHandle parameters
 	virtual void MultiplyMatrixByTransposedMatrix( int batchSize, const CConstFloatHandle& firstHandle, int firstHeight,
 		int firstWidth, const CConstFloatHandle& secondHandle, int secondHeight, const CFloatHandle& resultHandle,

@@ -745,7 +745,7 @@ void CKMeansMxMTThreadTask::Run( int /*threadIndex*/, const int* startIndices, c
 	const CFloatHandle& result = Result + startIndices[TFirstHeight] * SecondHeight + startIndices[TSecondHeight];
 
 	MathEngine.MultiplyMatrixByTransposedMatrix( first, counts[TFirstHeight], FirstWidth, FirstWidth/*RowSize*/,
-		second, counts[TSecondHeight], FirstWidth/*RowSize*/, result, SecondHeight/*RowSize*/, 0/*resBufferSize*/ );
+		second, counts[TSecondHeight], FirstWidth/*RowSize*/, result, SecondHeight/*RowSize*/, 0/*resBufferSize*/, 8 );
 }
 
 } // namespace

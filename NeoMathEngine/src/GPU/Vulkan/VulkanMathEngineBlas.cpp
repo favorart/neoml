@@ -144,7 +144,7 @@ void CVulkanMathEngine::TransposeMatrix( int batchSize, const CConstIntHandle& f
 
 void CVulkanMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
 	int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
-	const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize )
+	const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize, int )
 {
 	if( device->Type == VDT_Adreno ) {
 		batchMultiplyMatrixByMatrixAdreno( false, 1, firstHandle,

@@ -87,7 +87,7 @@ void CCudaMathEngine::Blob3dConvolution( const C3dConvolutionDesc& convDesc,
 				desc.Source.ObjectCount() * desc.Result.Height() * desc.Result.Width() * desc.Result.Depth(),
 				desc.Filter.ObjectSize(), desc.Filter.ObjectSize(), filter,
 				desc.Filter.ObjectCount(), desc.Filter.ObjectSize(), result,
-				desc.Filter.ObjectCount(), desc.Result.BlobSize() );
+				desc.Filter.ObjectCount(), desc.Result.BlobSize(), 1 );
 		}
 		return;
 	}
@@ -121,7 +121,7 @@ void CCudaMathEngine::Blob3dConvolution( const C3dConvolutionDesc& convDesc,
 				curTempMatrixHeight, desc.Filter.ObjectSize(), desc.Filter.ObjectSize(),
 				filter, desc.Filter.ObjectCount(), desc.Filter.ObjectSize(),
 				result + tempMatrixHeightIndex * desc.Filter.ObjectCount(),
-				desc.Filter.ObjectCount(), desc.Result.BlobSize() );
+				desc.Filter.ObjectCount(), desc.Result.BlobSize(), 2 );
 		}
 		tempMatrixHeightIndex += curTempMatrixHeight;
 	}

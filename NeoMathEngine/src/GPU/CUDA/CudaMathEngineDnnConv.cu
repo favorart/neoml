@@ -107,7 +107,7 @@ void CCudaMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 				source.ObjectCount() * result.Height() * result.Width(),
 				filter.ObjectSize(), filter.ObjectSize(), filterData,
 				filter.ObjectCount(), filter.ObjectSize(), resultData,
-				filter.ObjectCount(), result.BlobSize() );
+				filter.ObjectCount(), result.BlobSize(), 3 );
 		}
 		return;
 	}
@@ -132,7 +132,7 @@ void CCudaMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 		MultiplyMatrixByTransposedMatrix( tempMatrix, curTempMatrixHeight, filter.ObjectSize(), filter.ObjectSize(),
 			filterData, filter.ObjectCount(), filter.ObjectSize(),
 			resultData + tempMatrixHeightIndex * filter.ObjectCount(),
-			filter.ObjectCount(), curTempMatrixHeight * filter.ObjectCount() );
+			filter.ObjectCount(), curTempMatrixHeight * filter.ObjectCount(), 4 );
 
 		tempMatrixHeightIndex += curTempMatrixHeight;
 	}

@@ -905,7 +905,7 @@ void CCpuMathEngine::batchMultiplyMatrixByTransposedMatrix( int batchSize, const
 
 void CCpuMathEngine::MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
 	int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
-	const CFloatHandle& resultHandle, int resultRowSize, int )
+	const CFloatHandle& resultHandle, int resultRowSize, int, int )
 {
 	CCpuExecutionScope scope;
 

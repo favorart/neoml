@@ -346,7 +346,7 @@ public:
 		const CConstFloatHandle& firstHandle, int firstSize, const CLookupVector& secondVector ) override;
 	void MultiplyMatrixByTransposedMatrix( const CConstFloatHandle& firstHandle, int firstHeight,
 		int firstWidth, int firstRowSize, const CConstFloatHandle& secondHandle, int secondHeight, int secondRowSize,
-		const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize ) override;
+		const CFloatHandle& resultHandle, int resultRowSize, int resultBufferSize, int num ) override;
 	void MultiplyMatrixByTransposedMatrix( int batchSize, const CConstFloatHandle& firstHandle,
 		int firstHeight, int firstWidth, const CConstFloatHandle& secondHandle, int secondHeight,
 		const CFloatHandle& resultHandle, int resultBufferSize ) override;

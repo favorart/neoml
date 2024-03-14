@@ -83,7 +83,7 @@ void CCudaMathEngine::BlobTimeConvolution( const CTimeConvolutionDesc& convDesc,
 		MultiplyMatrixByTransposedMatrix(sourceData,
 			source.BatchLength() * source.BatchWidth(), source.ObjectSize(), source.ObjectSize(),
 			filterData, filter.ObjectCount(), source.ObjectSize(),
-			resultData + desc.PaddingFront * filter.ObjectCount(), filter.ObjectCount(), result.BlobSize());
+			resultData + desc.PaddingFront * filter.ObjectCount(), filter.ObjectCount(), result.BlobSize(), 5);
 	} else {
 		// Convolution through temp matrix
 		const int tempMatrixWidth = filter.ObjectSize();
@@ -107,7 +107,7 @@ void CCudaMathEngine::BlobTimeConvolution( const CTimeConvolutionDesc& convDesc,
 				tempMatrixWidth, GetRaw( tempMatrixPart.GetHandle() ), matrixRowIndex );
 			MultiplyMatrixByTransposedMatrix(tempMatrixPart, currPartHeight, tempMatrixWidth, tempMatrixWidth,
 				filterData, filter.ObjectCount(), tempMatrixWidth,
-				currResult, filter.ObjectCount(), result.BlobSize());
+				currResult, filter.ObjectCount(), result.BlobSize(), 6);
 
 			matrixRowIndex += currPartHeight;
 			currResult += currPartHeight * filter.ObjectCount();

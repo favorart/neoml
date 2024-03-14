@@ -216,7 +216,7 @@ void CLoraFullyConnectedLayer::RunOnce()
 		MathEngine().MultiplyMatrixByTransposedMatrix(
 			/*first*/inputData, inputHeight, inputWidth, inputWidth,
 			/*second*/weightsData, weightsHeight, weightsWidth,
-			/*result*/outputData, outputWidth, /*unused*/0 );
+			/*result*/outputData, outputWidth, /*unused*/0, 9 );
 
 		if( freeTermsBase != nullptr ) {
 			MathEngine().AddVectorToMatrixRows( /*batchSize*/1, outputData,
