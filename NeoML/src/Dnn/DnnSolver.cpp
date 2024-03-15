@@ -286,8 +286,9 @@ void CDnnSolver::clipGradients(const CObjectArray<CDnnBlob>& paramDiffBlobs)
 		assert( !isnan( gradVar.GetValue() ) );
 		assert( !isnan( tempVar.GetValue() ) );
 
-		if( gradVar.GetValue() > (  18002376725743890449408517795774411571.f ) || tempVar.GetValue() > (  18002376725743890449408517795774411571.f ) ||
-			gradVar.GetValue() < ( -18002376725743890449408517795774411571.f ) || tempVar.GetValue() < ( -18002376725743890449408517795774411571.f ) )
+		constexpr float BigFloatNumber = 18002376725743890.f; // 18002376725743890449408517795774411571.f;
+		if( gradVar.GetValue() > (  BigFloatNumber ) || tempVar.GetValue() > (  BigFloatNumber ) ||
+			gradVar.GetValue() < ( -BigFloatNumber ) || tempVar.GetValue() < ( -BigFloatNumber ) )
 		{
 			printf( "clipGradients: epoch=%llu grad=%f temp=%f 19\n\n", myEpoch, gradVar.GetValue(), tempVar.GetValue() );
 			fflush( stdout );

@@ -130,8 +130,8 @@ __global__ void VectorSDotKernel( const float* first, const float* second, float
 			sum = std::fma( ( double )*first, ( double )*second, sum );
 
 			assert( isfinite( sum ) );
-			assert( sum > -18002376725743890449408517795774411571.f );
-			assert( sum < 18002376725743890449408517795774411571.f );
+			assert( sum > -BigFloatNumber );
+			assert( sum <  BigFloatNumber );
 
 			first += step;
 			second += step;

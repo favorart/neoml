@@ -30,8 +30,8 @@ __global__ void SetVectorToMatrixRowsKernel(float* result,
 
 		result[index] = vector[index % matrixWidth];
 		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		assert( result[index] > -BigFloatNumber );
+		assert( result[index] <  BigFloatNumber );
 	}
 }
 
@@ -94,8 +94,8 @@ __global__ void SetVectorToMatrixElementsKernel(
 	for( int i = 0; i < count; ++i ) {
 		float result = matrix[rowIndices[index] * width + columnIndices[index]] = vector[index];
 		assert( isfinite( result ) );
-		assert( result > -18002376725743890449408517795774411571.f );
-		assert( result < 18002376725743890449408517795774411571.f );
+		assert( result > -BigFloatNumber );
+		assert( result <  BigFloatNumber );
 		index += step;
 	}
 }
@@ -152,8 +152,8 @@ __global__ void AddMatrixElementsToMatrixKernel(const float* __restrict__ matrix
 		if(index >= 0 && index < width) {
 			float val = result[jPos * width + index] += matrix[jPos * width + index];
 			assert( isfinite( val ) );
-			assert( val > -18002376725743890449408517795774411571.f );
-			assert( val < 18002376725743890449408517795774411571.f );
+			assert( val > -BigFloatNumber );
+			assert( val <  BigFloatNumber );
 		}
 		jPos += step;
 	}
@@ -200,8 +200,8 @@ __global__ void AddVectorToMatrixColumnsKernel( const T* __restrict__ matrix, T*
 		result[index] = matrix[index] + vector[j];
 		if constexpr( std::is_same_v<T, float> ) {
 			assert( isfinite( result[index] ) );
-			assert( result[index] > -18002376725743890449408517795774411571.f );
-			assert( result[index] < 18002376725743890449408517795774411571.f );
+			assert( result[index] > -BigFloatNumber );
+			assert( result[index] <  BigFloatNumber );
 		}
 	}
 }
@@ -217,8 +217,8 @@ __global__ void SubVectorFromMatrixColumnsKernel(const float* __restrict__ matri
 		const int index = matrixWidth * j + i;
 		result[index] = matrix[index] - vector[j];
 		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		assert( result[index] > -BigFloatNumber );
+		assert( result[index] <  BigFloatNumber );
 	}
 }
 
@@ -253,8 +253,8 @@ __global__ void SumMatrixRowsAddKernel(
 	for(int j = rowIndex + 1; j < rowEndIndex; ++j) {
 		matrix += matrixWidth;
 		sum += *matrix;
-		//assert( sum > -18002376725743890449408517795774411571.f );
-		//assert( sum <  18002376725743890449408517795774411571.f );
+		//assert( sum > -BigFloatNumber );
+		//assert( sum <  BigFloatNumber );
 	}
 
 	auto *val = result + batchIndex * matrixWidth + colIndex;
@@ -330,8 +330,8 @@ __global__ void SumMatrixColumnsKernel(float* result, const float* __restrict__ 
 		}
 		assert( isfinite( *acc ) );
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 	}
 }
 
@@ -520,8 +520,8 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
 			auto val = result[index + i * step] =
 				first[index + i * step] * (second[index + i * step] - dotProd);
 			assert( isfinite( val ) );
-			assert( val > -18002376725743890449408517795774411571.f );
-			assert( val < 18002376725743890449408517795774411571.f );
+			assert( val > -BigFloatNumber );
+			assert( val <  BigFloatNumber );
 		}
 	}
 }
@@ -596,8 +596,8 @@ __global__ void MatrixSoftmaxByColumnsKernel(const float* __restrict__ matrix,
 		for(int i = 0; i < count; ++i) {
 			auto val = result[index + i * step] *= sumVal;
 			assert( isfinite( val ) );
-			assert( val > -18002376725743890449408517795774411571.f );
-			assert( val < 18002376725743890449408517795774411571.f );
+			assert( val > -BigFloatNumber );
+			assert( val <  BigFloatNumber );
 		}
 	}
 }
@@ -650,8 +650,8 @@ __global__ void MatrixSoftmaxDiffOpByColumnsKernel(const float* __restrict__ fir
 			auto val = result[index + i * step] =
 				first[index + i * step] * (second[index + i * step] - dotProd);
 			assert( isfinite( val ) );
-			assert( val > -18002376725743890449408517795774411571.f );
-			assert( val < 18002376725743890449408517795774411571.f );
+			assert( val > -BigFloatNumber );
+			assert( val <  BigFloatNumber );
 		}
 	}
 }
@@ -747,8 +747,8 @@ __global__ void FindMaxValueInRowsKernel(const float* __restrict__ matrix,
 	if(yPos < matrixHeight && threadIdx.x == 0) {
 		result[yPos] = maxVal;
 		assert( isfinite( result[yPos] ) );
-		assert( result[yPos] > -18002376725743890449408517795774411571.f );
-		assert( result[yPos] < 18002376725743890449408517795774411571.f );
+		assert( result[yPos] > -BigFloatNumber );
+		assert( result[yPos] <  BigFloatNumber );
 	}
 }
 
@@ -793,8 +793,8 @@ __global__ void FindMaxValueInColumnsKernel( int batchSize, const float* __restr
 	if( batchIndex < batchSize && colIndex < width && threadIdx.x == 0 ) {
 		auto val = result[batchIndex * width + colIndex] = maxVal.Value;
 		assert( isfinite( val ) );
-		assert( val > -18002376725743890449408517795774411571.f );
-		assert( val < 18002376725743890449408517795774411571.f );
+		assert( val > -BigFloatNumber );
+		assert( val <  BigFloatNumber );
 		indices[batchIndex * width + colIndex] = maxVal.Index;
 	}
 }
@@ -879,8 +879,8 @@ __global__ void BatchVectorChannelCopyKernel(int batchSize, const TInput* __rest
 		*output = *input;
 		if constexpr( std::is_same_v<TLookup, float> ) {
 			assert( isfinite( *output ) );
-			assert( *output > -18002376725743890449408517795774411571.f );
-			assert( *output < 18002376725743890449408517795774411571.f );
+			assert( *output > -BigFloatNumber );
+			assert( *output <  BigFloatNumber );
 		}
 		input += inputChannels;
 		output += outputChannels;
@@ -915,8 +915,8 @@ __global__ void VectorChannelLookupAndAddToTableKernel(int batchSize, const T* _
 		atomicAdd( res, *matrix * mult);
 
 		assert( isfinite( *res ));
-		assert( *res > -18002376725743890449408517795774411571.f );
-		assert( *res < 18002376725743890449408517795774411571.f );
+		assert( *res > -BigFloatNumber );
+		assert( *res <  BigFloatNumber );
 		matrix += outputChannel;
 	}
 }
@@ -935,8 +935,8 @@ __global__ void LookupAndSumKernel( const int* __restrict__ indices, int batchSi
 		if( *indices >= 0 ) {
 			*result = table[*indices * vectorSize];
 			assert( isfinite( *result ) );
-			assert( *result > -18002376725743890449408517795774411571.f );
-			assert( *result < 18002376725743890449408517795774411571.f );
+			assert( *result > -BigFloatNumber );
+			assert( *result <  BigFloatNumber );
 		} else {
 			*result = 0.f;
 		}
@@ -945,8 +945,8 @@ __global__ void LookupAndSumKernel( const int* __restrict__ indices, int batchSi
 			if( *indices >= 0 ) {
 				*result += table[*indices * vectorSize];
 				assert( isfinite( *result ) );
-				assert( *result > -18002376725743890449408517795774411571.f );
-				assert( *result < 18002376725743890449408517795774411571.f );
+				assert( *result > -BigFloatNumber );
+				assert( *result <  BigFloatNumber );
 			}
 		}
 	}
@@ -966,8 +966,8 @@ __global__ void LookupAndAddToTableKernel( const int* __restrict__ indices, int 
 			float* res = table + *indices * vectorSize + vectorCoord;
 			atomicAdd( res, *( additions + batch * vectorSize + vectorCoord ) );
 			assert( isfinite( *res ) );
-			assert( *res > -18002376725743890449408517795774411571.f );
-			assert( *res < 18002376725743890449408517795774411571.f );
+			assert( *res > -BigFloatNumber );
+			assert( *res <  BigFloatNumber );
 		}
 	}
 }
@@ -989,8 +989,8 @@ __global__ void EnumBinarizationKernel(int batchSize, const T* __restrict__ inpu
 		}
 		result[index] = ((int)input[batch] == pos) ? 1 : 0;
 		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		assert( result[index] > -BigFloatNumber );
+		assert( result[index] <  BigFloatNumber );
 		index += step;
 	}
 }
@@ -1016,8 +1016,8 @@ __global__ void BitSetBinarizationKernel(int batchSize, int bitSetElementCount,
 
 		result[index] = inputElement & ( 1 << bitIndex ) ? 1.0f : 0.0f;
 		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		assert( result[index] > -BigFloatNumber );
+		assert( result[index] <  BigFloatNumber );
 	}
 }
 
@@ -1072,8 +1072,8 @@ __global__ void MultiplyLookupMatrixByLookupVectorKernel(int batchSize, const fl
 			result[yPos] = sum;
 		}
 		assert( isfinite( result[yPos] ) );
-		assert( result[yPos] > -18002376725743890449408517795774411571.f );
-		assert( result[yPos] < 18002376725743890449408517795774411571.f );
+		assert( result[yPos] > -BigFloatNumber );
+		assert( result[yPos] <  BigFloatNumber );
 	}
 }
 
@@ -1133,8 +1133,8 @@ __global__  void MultiplyTransposedLookupMatrixByVectorKernel(int batchSize, con
 			result[resultIndex] = sum;
 		}
 		assert( isfinite( result[resultIndex] ) );
-		assert( result[resultIndex] > -18002376725743890449408517795774411571.f );
-		assert( result[resultIndex] < 18002376725743890449408517795774411571.f );
+		assert( result[resultIndex] > -BigFloatNumber );
+		assert( result[resultIndex] <  BigFloatNumber );
 	}
 }
 
@@ -1211,8 +1211,8 @@ __global__ void Multiply1DiagMatrixByMatrixKernel(int batchSize, const float* __
 	for(int c = 0; c < count; ++c) {
 		*result = mult * (*second);
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 		second += matrixSize;
 		result += matrixSize;
 	}
@@ -1243,8 +1243,8 @@ __global__ void TransposeMatrixKernel(int batchSize,
 
 		if constexpr( std::is_same_v<T, float> ) {
 			assert( isfinite( result[j] ) );
-			assert( result[j] > -18002376725743890449408517795774411571.f );
-			assert( result[j] < 18002376725743890449408517795774411571.f );
+			assert( result[j] > -BigFloatNumber );
+			assert( result[j] <  BigFloatNumber );
 		}
 		index += step;
 	}
@@ -1331,8 +1331,8 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* __restrict__ first
 		for(int i = 0; i < count; ++i) {
 			*acc += (*first) * (*second);
 			assert( isfinite( *acc ) );
-			assert( *acc > -18002376725743890449408517795774411571.f );
-			assert( *acc < 18002376725743890449408517795774411571.f );
+			assert( *acc > -BigFloatNumber );
+			assert( *acc <  BigFloatNumber );
 			first += step;
 			second += step;
 		}
@@ -1347,8 +1347,8 @@ __global__ void RowMultiplyMatrixByMatrixKernel( const float* __restrict__ first
 		}
 		atomicAdd(result + row, tmpRes);
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 	}
 }
 
@@ -1401,8 +1401,8 @@ __global__ void MatrixSpreadRowsAddKernel(const float* __restrict__ source, int 
 	for(int c = 0; c < count; ++c) {
 		atomicAdd(result, source[sourceIndex]);
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 		sourceIndex += step;
 		result += step;
 	}
@@ -1428,8 +1428,8 @@ __global__ void AddDiagMatrixToMatrixKernel( const float* __restrict__ diagMatri
 			*result += diagMatrix[row];
 		}
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 		matrix++;
 		result++;
 	}
@@ -1453,8 +1453,8 @@ __global__ void MatrixColumnsEltwiseDivideKernel( const float* __restrict__ matr
 	for( int i = col; i < min( matrixWidth, col + MatrixColumnsEltwiseDivideCombine ); i++ ) {
 		*result++ = *matrix++ / vector[row];
 		assert( isfinite( *result ) );
-		assert( *result > -18002376725743890449408517795774411571.f );
-		assert( *result < 18002376725743890449408517795774411571.f );
+		assert( *result > -BigFloatNumber );
+		assert( *result <  BigFloatNumber );
 	}
 }
 
@@ -1476,8 +1476,8 @@ __global__ void MultiplyMatrixByDiagMatrixKernel( int batchSize, const float* __
 		const int col = ( index % matrixSize ) % width;
 		result[index] = first[b * firstMatrixOffset + row * width + col] * second[b * secondMatrixOffset + col];
 		assert( isfinite( result[index] ) );
-		assert( result[index] > -18002376725743890449408517795774411571.f );
-		assert( result[index] < 18002376725743890449408517795774411571.f );
+		assert( result[index] > -BigFloatNumber );
+		assert( result[index] <  BigFloatNumber );
 		index += step;
 	}
 }

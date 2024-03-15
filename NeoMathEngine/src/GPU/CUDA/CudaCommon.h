@@ -99,6 +99,10 @@ void SetCudaDevice( int deviceNum );
 
 //------------------------------------------------------------------------------------------------------------
 
+constexpr float BigFloatNumber = 18002376725743890.f; // 18002376725743890449408517795774411571.f;
+
+//------------------------------------------------------------------------------------------------------------
+
 constexpr int AddVectorToMatrixElementsKernel1Id = 1;
 constexpr int AddVectorToMatrixElementsKernel2Id = 2;
 constexpr int AddMatrixElementsToVectorKernel1Id = 3;
@@ -385,8 +389,8 @@ static __device__ int SectionFlag = 0;
 
 #define WARN3_CNT_SPEC_F( kernelName, first, base_first, second, base_second, result, base_result, count, i, index, num, name, calls_counter, historyKernels, id )   { \
 		if( !isfinite( (result) ) || \
-			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f )  \
+			(result) < -BigFloatNumber || \
+			(result) >  BigFloatNumber )  \
 		{ \
 			while ( true ) { \
 			if( atomicExch( &SectionFlag, 1 ) == 0 ) {   \
@@ -410,14 +414,14 @@ static __device__ int SectionFlag = 0;
 			} \
 		} \
 		/*assert( isfinite( (result) ) );*/ \
-		/*assert( (result) > -18002376725743890449408517795774411571.f );*/ \
-		/*assert( (result) <  18002376725743890449408517795774411571.f );*/ \
+		/*assert( (result) > -BigFloatNumber );*/ \
+		/*assert( (result) <  BigFloatNumber );*/ \
 	}
 
 #define WARN3_CNT_F( kernelName, first, base_first, second, base_second, result, base_result, h, w, index, calls_counter, historyKernels )   { \
 		if( !isfinite( (result) ) || \
-			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f )  \
+			(result) < -BigFloatNumber || \
+			(result) >  BigFloatNumber )  \
 		{ \
 			while ( true ) { \
 			if( atomicExch( &SectionFlag, 1 ) == 0 ) { \
@@ -433,14 +437,14 @@ static __device__ int SectionFlag = 0;
 			} \
 		} \
 		/*assert( isfinite( (result) ) );*/ \
-		/*assert( (result) > -18002376725743890449408517795774411571.f );*/ \
-		/*assert( (result) <  18002376725743890449408517795774411571.f );*/ \
+		/*assert( (result) > -BigFloatNumber );*/ \
+		/*assert( (result) <  BigFloatNumber );*/ \
 	}
 
 #define WARN3_CNT_NORES_F( kernelName, result, base_result, count, id, index, num, calls_counter, historyKernels )   { \
 		if( !isfinite( (result) ) || \
-			(result) < -18002376725743890449408517795774411571.f || \
-			(result) >  18002376725743890449408517795774411571.f )  \
+			(result) < -BigFloatNumber || \
+			(result) >  BigFloatNumber )  \
 		{ \
 			if ( id != VectorSDotKernelId ) { \
 				while ( true ) { \
@@ -453,8 +457,8 @@ static __device__ int SectionFlag = 0;
 			} \
 		} \
 		/*assert( isfinite( (result) ) );*/ \
-		/*assert( (result) > -18002376725743890449408517795774411571.f );*/ \
-		/*assert( (result) <  18002376725743890449408517795774411571.f );*/ \
+		/*assert( (result) > -BigFloatNumber );*/ \
+		/*assert( (result) <  BigFloatNumber );*/ \
 	}
 
 

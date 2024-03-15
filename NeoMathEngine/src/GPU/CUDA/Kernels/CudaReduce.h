@@ -63,8 +63,8 @@ inline __device__ float ReduceSumXSharedBuffer(float* buffer)
 		sum += res;
 	}
 	assert( isfinite( sum ) );
-	assert( sum > -18002376725743890449408517795774411571.f );
-	assert( sum < 18002376725743890449408517795774411571.f );
+	assert( sum > -BigFloatNumber );
+	assert( sum <  BigFloatNumber );
 
 	return sum;
 }
