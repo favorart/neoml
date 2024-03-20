@@ -204,21 +204,21 @@ __device__ constexpr const char* const StringKernelId[45] = { "", /*0*/
 //------------------------------------------------------------------------------------------------------------
 
 #define CUDA_PRINT_ADDR_WARN_F( first, base_first, second, base_second, result, base_result )   { \
-		if (first) printf( "first=%f (%llx) ", (first), ( unsigned long long )(base_first) ); \
-		if (second) printf( "second=%f (%llx) ", (second), ( unsigned long long )(base_second) ); \
-		printf( "result=%f (%llx) ", (result), ( unsigned long long )(base_result) ); \
+		if (first) printf( "first=%f ", (first)/*, ( unsigned long long )(base_first)*/ ); \
+		if (second) printf( "second=%f ", (second)/*, ( unsigned long long )(base_second)*/ ); \
+		/*printf( "result=%f (%llx) ", (result), ( unsigned long long )(base_result) );*/ \
 	}
 
 #define CUDA_PRINT_ADDR_F( first, second, result )   { \
-		if (first) printf( "first=%f (%llx) ", *(first), ( unsigned long long )(first) ); \
-		if (second) printf( "second=%f (%llx) ", *(second), ( unsigned long long )(second) ); \
-		printf( "result=(%llx) ", /*(result),*/ ( unsigned long long )(result) ); \
+		if (first) printf( "first=%f ", *(first)/*, ( unsigned long long )(first)*/ ); \
+		if (second) printf( "second=%f ", *(second)/*, ( unsigned long long )(second)*/ ); \
+		/*printf( "result=(%llx) ", *(result), ( unsigned long long )(result) );*/ \
 	}
 
 #define CUDA_PRINT_ADDR_I( first, second, result )   { \
-		if (first) printf( "first=%d (%llx) ", *(first), ( unsigned long long )(first) ); \
-		if (second) printf( "second=%d (%llx) ", *(second), ( unsigned long long )(second) ); \
-		printf( "result=(%llx) ", /*(result),*/ ( unsigned long long )(result) ); \
+		if (first) printf( "first=%d ", *(first)/*, ( unsigned long long )(first)*/ ); \
+		if (second) printf( "second=%d ", *(second)/*, ( unsigned long long )(second)*/ ); \
+		/*printf( "result=(%llx) ", *(result), ( unsigned long long )(result) );*/ \
 	}
 
 #define CUDA_PRINT_REST( count, num, name, calls_counter, h, w, i, index )   { \
@@ -287,7 +287,7 @@ static __device__ size_t LastPrintCounter = 0;
 //------------------------------------------------------------------------------------------------------------
 
 constexpr int min_calls_counter = 1;
-constexpr int MAX_calls_counter = 2;
+constexpr int MAX_calls_counter = 1'000'000;
 
 #define PRINT_HEAD3_CNT_SPEC_T( i, j, k, kernelName, first, second, result, count, num, name, calls_counter, historyKernels, id )   { \
 		if( i == 0 && j == 0 && k == 0 ) { \
@@ -296,8 +296,9 @@ constexpr int MAX_calls_counter = 2;
 				if constexpr( std::is_same_v<T, float> ) { \
 					CUDA_PRINT_F( kernelName, first, second, result, count, num, name, calls_counter ); \
 				} \
-				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+				/*CUDA_PRINT_HISTORY( calls_counter, historyKernels );*/ \
 			} \
+			assert( calls_counter <= MAX_calls_counter ); \
 		} \
 	}
 
@@ -312,8 +313,9 @@ constexpr int MAX_calls_counter = 2;
 				} else { \
 					printf( "%s(ERR_TYPE) \n", (kernelName) ); \
 				} \
-				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+				/*CUDA_PRINT_HISTORY( calls_counter, historyKernels );*/ \
 			} \
+			assert( calls_counter <= MAX_calls_counter ); \
 		} \
 	}
 
@@ -322,8 +324,9 @@ constexpr int MAX_calls_counter = 2;
 			CUDA_INIT_HISTORY( first, second, result, count, calls_counter, historyKernels, id ); \
 			if( calls_counter > min_calls_counter && calls_counter <= MAX_calls_counter ) { \
 				CUDA_PRINT_F( kernelName, first, second, result, count, /*num*/0, /*name*/(char*)0, calls_counter ); \
-				CUDA_PRINT_HISTORY( calls_counter, historyKernels ); \
+				/*CUDA_PRINT_HISTORY( calls_counter, historyKernels );*/ \
 			} \
+			assert( calls_counter <= MAX_calls_counter ); \
 		} \
 	}
 
