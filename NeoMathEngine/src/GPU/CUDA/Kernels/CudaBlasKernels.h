@@ -350,7 +350,7 @@ __global__ void MatrixLogSumExpByRowsKernel(const float* __restrict__ matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixLogSumExpByRowsKernel", matrix, result,
+	PRINT_HEAD2_CNT_F( index, ( threadIdx.y + threadIdx.x ), ( blockIdx.z + blockIdx.y + blockIdx.x ), "MatrixLogSumExpByRowsKernel", matrix, result,
 		height /*, width, widthNorm*/, calls_counter, historyKernels, MatrixLogSumExpByRowsKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
@@ -415,7 +415,7 @@ __global__ void MatrixSoftmaxByRowsKernel(const float* matrix,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD2_CNT_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxByRowsKernel", matrix, result,
+	PRINT_HEAD2_CNT_F( index, ( threadIdx.y + threadIdx.x ), ( blockIdx.z + blockIdx.y + blockIdx.x ), "MatrixSoftmaxByRowsKernel", matrix, result,
 		height /*, width, widthNorm*/, calls_counter, historyKernels, MatrixSoftmaxByRowsKernelId );
 
 	[[maybe_unused]] const float* __restrict__ base_matrix = matrix;
@@ -490,7 +490,7 @@ __global__ void MatrixSoftmaxDiffOpByRowsKernel(const float* __restrict__ first,
 	int index;
 	int step;
 	const int count = GetCudaTaskCountAndIndexX(width, combineCount, index, step);
-	PRINT_HEAD3_F( index, threadIdx.y * blockDim.x + threadIdx.x, blockIdx.x, "MatrixSoftmaxDiffOpByRowsKernel", first, second, result, width /*, height, widthNorm*/ );
+	PRINT_HEAD3_F( index, ( threadIdx.y + threadIdx.x ), ( blockIdx.z + blockIdx.y + blockIdx.x ), "MatrixSoftmaxDiffOpByRowsKernel", first, second, result, width /*, height, widthNorm*/ );
 
 	int xPos;
 	int yPos;

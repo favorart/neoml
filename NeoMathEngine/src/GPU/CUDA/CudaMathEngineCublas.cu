@@ -108,14 +108,14 @@ void CCudaMathEngine::vectorNumerate( const CConstFloatHandle& firstHandle, cons
 
 //---------------------------------------------------------------------------------------------------------------------
 
-__global__ void VectorSDotKernel( const float* first, const float* second, float* result, int count, size_t calls_counter, void* historyKernels )
+__global__ void VectorSDotKernel( const float* first, const float* second, float* result, int count, size_t calls_counter, void* historyKernels, int threadCount )
 {
 	assert( threadIdx.y == 0 );
 	assert( threadIdx.z == 0 );
 
 	int index;
 	int step;
-	int actionCount = GetCudaTaskCountAndIndex( count, VectorSDotCombineCount, index, step );
+	int actionCount = GetCudaTaskCountAndIndex( count, ( count + threadCount - 1 ) / threadCount, index, step );
 	PRINT_HEAD3_CNT_F( index, 0, 0, "VectorSDotKernel", first, second, result, count, calls_counter, historyKernels, VectorSDotKernelId );
 
 	unsigned tid = threadIdx.x;
@@ -147,8 +147,10 @@ __global__ void VectorSDotKernel( const float* first, const float* second, float
 		for( int i = 0; i < blockDim.x; ++i ) {
 			sum = std::fma( buffer[i], 1., sum );
 		}
-		atomicAdd( result, ( float )sum );
-		WARN3_CNT_F( "VectorSDotKernel", *first, first, *second, second, *result, result, count, tid, index, calls_counter, historyKernels );
+		*result = ( float )sum;
+		//atomicAdd( result, ( float )sum );
+		WARN2_CNT_SPEC_F( "VectorSDotKernel", /*1*/0.f, (float*)0, *result, result,
+			count, tid, index, /*num*/0, /*name*/(char*)0, calls_counter, historyKernels, VectorSDotKernelId );
 	}
 }
 
@@ -165,22 +167,23 @@ void CCudaMathEngine::VectorDotProduct(const CConstFloatHandle& firstHandle, con
 	ASSERT_EXPR( resultHandle.GetMathEngine() == this );
 	SetCudaDevice( device->DeviceNumber );
 
-	//VectorFill( resultHandle, 0.f, 1, 81 );
+	VectorFill( resultHandle, 0.f, 1, 81 );
 
 	int blockCount;
 	int threadCount;
 	getCudaTaskGrid( blockCount, threadCount, vectorSize, VectorSDotCombineCount );
-	
-	//VectorSDotKernel<<<blockCount, threadCount>>>( GetRaw( firstHandle ), GetRaw( secondHandle ),
-	//	GetRaw( resultHandle ), vectorSize, ++calls_counter, GetRaw(historyKernels) );
 
-	ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
-		GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
+	const int sharedSize = threadCount * sizeof( double );
+	VectorSDotKernel<<</*blockCount*/1, threadCount, sharedSize>>>( GetRaw( firstHandle ), GetRaw( secondHandle ),
+		GetRaw( resultHandle ), vectorSize, ++calls_counter, GetRaw(historyKernels), threadCount );
+
+	//ASSERT_CUBLAS( cublas->Sdot( cublasHandle, vectorSize, GetRaw( firstHandle ), 1,
+	//	GetRaw( secondHandle ), 1, GetRaw( resultHandle ) ) );
 
 	//vectorRound( resultHandle, 1 );
 
-	vectorNumerate( firstHandle, secondHandle, resultHandle,
-		vectorSize, vectorSize, 1, /*num*/0, ++calls_counter, GetRaw( historyKernels ), VectorSDotKernelId );
+	//vectorNumerate( firstHandle, secondHandle, resultHandle,
+	//	vectorSize, vectorSize, 1, /*num*/0, ++calls_counter, GetRaw( historyKernels ), VectorSDotKernelId );
 }
 
 void CCudaMathEngine::VectorMultiplyAndAdd( const CConstFloatHandle& firstHandle, const CConstFloatHandle& secondHandle,
