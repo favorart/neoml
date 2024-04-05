@@ -1,4 +1,4 @@
-/* Copyright © 2017-2024 ABBYY Production LLC
+/* Copyright © 2017-2020 ABBYY Production LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,33 +36,29 @@ void CTiedEmbeddingsLayer::SetChannelIndex( int val )
 	channelIndex = val;
 }
 
-static const int CnnTiedEmbeddingsLayerVersion = 2001;
+static const int CnnTiedEmbeddingsLayerVersion = 2000;
 
 void CTiedEmbeddingsLayer::Serialize( CArchive& archive )
 {
-	int version = archive.SerializeVersion(CnnTiedEmbeddingsLayerVersion, CDnn::ArchiveMinSupportedVersion);
+	archive.SerializeVersion( CnnTiedEmbeddingsLayerVersion, CDnn::ArchiveMinSupportedVersion );
 	CBaseLayer::Serialize( archive );
 
-	if (version < 2001 && archive.IsLoading()) {
-		CString embeddingLayerName;
-		archive.Serialize(embeddingLayerName);
-		embeddingPath = { embeddingLayerName };
-	}
-	else {
-		archive.Serialize(embeddingPath);
-	}
-
+	archive.Serialize( embeddingsLayerName );
 	archive.Serialize( channelIndex );
 }
 
 void CTiedEmbeddingsLayer::Reshape()
 {
 	CheckInputs();
-	const CMultichannelLookupLayer* embeddingsLayer = getLookUpLayer();
 
+	CheckLayerArchitecture( GetDnn()->HasLayer( embeddingsLayerName ),
+		"Network does not contain embeddings layer with that name." );
+	const CMultichannelLookupLayer* embeddingsLayer = dynamic_cast<CMultichannelLookupLayer*>(
+		GetDnn()->GetLayer( embeddingsLayerName ).Ptr() );
 	CheckLayerArchitecture( embeddingsLayer != 0, "The layer is not an embedding layer." );
 
-	const int embeddingsChannelsCount = embeddingsLayer->GetDimensions().Size();
+	const int embeddingsChannelsCount = CheckCast<CMultichannelLookupLayer>(
+		GetDnn()->GetLayer( embeddingsLayerName ) )->GetDimensions().Size();
 	CheckLayerArchitecture( channelIndex < embeddingsChannelsCount,
 		"Wrong channgel index for embeddings" );
 
@@ -133,7 +129,9 @@ void CTiedEmbeddingsLayer::LearnOnce()
 		diffBlob->Clear( 2900, &strName );
 	}
 
-	CMultichannelLookupLayer* embeddingsLayer = getLookUpLayer();
+	CMultichannelLookupLayer* embeddingsLayer =
+		CheckCast<CMultichannelLookupLayer>( GetDnn()->GetLayer( embeddingsLayerName ) );
+
 	CObjectArray<CDnnBlob> totalDiffBlobs;
 	const int channelsCount = embeddingsLayer->GetDimensions().Size();
 	for( int i = 0; i < channelsCount; i++ ) {
@@ -154,15 +152,9 @@ const CDnnBlob* CTiedEmbeddingsLayer::getEmbeddingsTable() const
 {
 	NeoAssert( channelIndex >= 0 );
 
-	return getLookUpLayer()->GetEmbeddings( channelIndex );
-}
-
-CMultichannelLookupLayer* CTiedEmbeddingsLayer::getLookUpLayer() const
-{
-	CMultichannelLookupLayer* embeddingsLayer;
-	embeddingsLayer = CheckCast<CMultichannelLookupLayer>(
-		const_cast<CDnn*>(GetDnn())->GetLayer(embeddingPath).Ptr());
-	return embeddingsLayer;
+	const CMultichannelLookupLayer* embeddingsLayer =
+		CheckCast<CMultichannelLookupLayer>( GetDnn()->GetLayer( embeddingsLayerName ) );
+	return embeddingsLayer->GetEmbeddings( channelIndex );
 }
 
 CLayerWrapper<CTiedEmbeddingsLayer> TiedEmbeddings( const char* name, int channel )

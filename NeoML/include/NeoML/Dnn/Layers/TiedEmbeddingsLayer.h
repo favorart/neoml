@@ -1,4 +1,4 @@
-/* Copyright © 2017-2024 ABBYY Production LLC
+/* Copyright © 2017-2020 ABBYY Production LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ limitations under the License.
 
 namespace NeoML {
 
-class CMultichannelLookupLayer;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Tied embeddings layer.  https://arxiv.org/pdf/1608.05859.pdf
@@ -33,18 +31,10 @@ public:
 
 	void Serialize( CArchive& archive ) override;
 	
-	// Methods to get/set embeddings layer name from which we take the matrix.
+	// Embeddings layer name from which we take the matrix.
 	// Only CMultichannelLookupLayer is supported.
-	// Use this method if the lookupLayer is in the same level of the dnn (in the same composite layer)
-	const char* GetEmbeddingsLayerName() const { return embeddingPath.Last(); }
-	void SetEmbeddingsLayerName(const char* name) { embeddingPath = { name }; }
-
-	// Methods to get/set embeddings layer path from which we take the matrix.
-	// Only CMultichannelLookupLayer is supported.
-	// Use this method if the lookupLayer is in the nested level of the dnn (in some nested composite layer)
-	const CArray<CString>& GetEmbeddingsLayerPath() const { return embeddingPath; }
-	void SetEmbeddingsLayerPath(const CArray<CString>& path) { path.CopyTo(embeddingPath); }
-
+	const char* GetEmbeddingsLayerName() const { return embeddingsLayerName; }
+	void SetEmbeddingsLayerName( const char* name ) { embeddingsLayerName = name; }
 	// Channel index in embeddings layer.
 	int GetChannelIndex() const { return channelIndex; }
 	void SetChannelIndex( int val );
@@ -58,15 +48,12 @@ protected:
 	int BlobsForLearn() const override { return TInputBlobs; }
 
 private:
-	// Path for embedding layer from which matrix is taken
-	// Now it contains the path as array
-	// So in case of no composite layer it is gonna be { "embeddingName" }
-	CArray<CString> embeddingPath;
+	// Embedding layer name from which we take the matrix.
+	CString embeddingsLayerName;
 	// Channel index in embedding layer.
 	int channelIndex;
 
 	const CDnnBlob* getEmbeddingsTable() const;
-	CMultichannelLookupLayer* getLookUpLayer() const;
 };
 
 // Tied embeddings.
