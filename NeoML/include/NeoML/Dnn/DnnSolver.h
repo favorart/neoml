@@ -119,6 +119,8 @@ private:
 
 	// Telling the compiler that we intentionally using two-parameter Serialize instead of one declared in IObject
 	using IObject::Serialize;
+	// Convert maps from the previous serialization format
+	void loadPrevVersionDnnSolverMaps( CArchive& archive, const CDnn& dnn );
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

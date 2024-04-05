@@ -320,6 +320,78 @@ static CString concatLayerPath( const CArray<CString>& path )
 	return layerPath;
 }
 
+static const CBaseLayer* getLayer( const CDnn& dnn, const CArray<CString>& path )
+{
+	NeoAssert( path.Size() > 0 );
+	if( path.Size() == 1 ) {
+		return dnn.GetLayer( path[0] );
+	}
+	else {
+		NeoAssert( dnn.HasLayer( path[0] ) );
+		const CCompositeLayer* composite = CheckCast<CCompositeLayer>( dnn.GetLayer( path[0] ) );
+		for (int i = 1; i < path.Size() - 1; ++i) {
+			NeoAssert( composite->HasLayer( path[i] ) );
+			composite = CheckCast<CCompositeLayer>( composite->GetLayer( path[i] ) );
+		}
+		NeoAssert( composite->HasLayer( path.Last() ) );
+		return composite->GetLayer( path.Last() );
+	}
+}
+
+void CDnnSolver::loadPrevVersionDnnSolverMaps( CArchive& archive, const CDnn& dnn )
+{
+	CMap<CString, CArray<CString>> layerPrevIdToPath;
+	auto mapLayerIdToPath = [&layerPrevIdToPath]( const CDnnLayerGraph& dnn, auto& mapLayerIdToPath ) -> void
+	{
+		CArray<const char*> layerNames;
+		dnn.GetLayerList( layerNames );
+		for( const char* layerName : layerNames ) {
+			const CBaseLayer* layer = dnn.GetLayer( layerName );
+			const CString layerPath = layer->GetPath( "" );
+			printf( "layerPath = %s \n", layerPath.Ptr() );
+			CArray<CString>& path = layerPrevIdToPath.GetOrCreateValue( layerPath );
+			layer->GetPath( path );
+			NeoAssert( path.Size() );
+			const CCompositeLayer* composite = dynamic_cast<const CCompositeLayer*>( layer );
+			if( composite != nullptr ) {
+				mapLayerIdToPath( *composite, mapLayerIdToPath );
+			}
+		}
+	};
+	mapLayerIdToPath( dnn, mapLayerIdToPath );
+
+	auto convertOldIdToLayerPath = [&]( const CBaseLayer** layer )
+	{
+		CString layerId;
+		archive >> layerId;
+		printf( "layerId = %s \n", layerId.Ptr() );
+		fflush( stdout );
+		const CArray<CString>& path = layerPrevIdToPath[layerId];
+		if( layer != nullptr ) {
+			*layer = getLayer( dnn, path );
+		}
+		return concatLayerPath( path );
+	};
+
+	int size;
+	archive >> size;
+	for( int i = 0; i < size; ++i ) {
+		const CBaseLayer* layerTemp = nullptr;
+		const CString layerPath = convertOldIdToLayerPath( &layerTemp );
+
+		CDiffBlobSum& blobSum = layerToParamDiffBlobsSum.GetOrCreateValue( layerPath );
+		archive >> blobSum.Count;
+		SerializeBlobs( mathEngine, archive, blobSum.Sum );
+		blobSum.LayerOwner = layerTemp;
+	}
+
+	archive >> size;
+	for( int i = 0; i < size; ++i ) {
+		const CString layerPath = convertOldIdToLayerPath( nullptr );
+		SerializeBlobs( mathEngine, archive, layerToGradientHistory.GetOrCreateValue( layerPath ) );
+	}
+}
+
 static const int DnnSolverVersion = 2;
 
 void CDnnSolver::Serialize( CArchive& archive, const CDnn& dnn )
@@ -355,9 +427,9 @@ void CDnnSolver::Serialize( CArchive& archive, const CDnn& dnn )
 		layersToReduce.DeleteAll();
 		reduceOrder.DeleteAll();
 
-		int size;
-		archive >> size;
 		if( version >= 2 ) {
+			int size;
+			archive >> size;
 			for( int i = 0; i < size; ++i ) {
 				CArray<CString> path;
 				archive.Serialize( path );
@@ -367,7 +439,7 @@ void CDnnSolver::Serialize( CArchive& archive, const CDnn& dnn )
 				CDiffBlobSum& blobSum = layerToParamDiffBlobsSum.GetOrCreateValue( layerPath );
 				archive >> blobSum.Count;
 				SerializeBlobs( mathEngine, archive, blobSum.Sum );
-				blobSum.LayerOwner = dnn.GetLayer( path );
+				blobSum.LayerOwner = getLayer( dnn, path );
 
 				bool hasGradientHistory;
 				archive >> hasGradientHistory;
@@ -376,44 +448,7 @@ void CDnnSolver::Serialize( CArchive& archive, const CDnn& dnn )
 				}
 			}
 		} else {
-			CMap<CString, CArray<CString>> layerPrevIdToPath;
-			{
-				CArray<const char*> layerNames;
-				dnn.GetLayerList( layerNames );
-				for( const char* layerName : layerNames ) {
-					const CBaseLayer* layer = dnn.GetLayer( layerName );
-					CArray<CString>& path = layerPrevIdToPath.GetOrCreateValue( layer->GetPath( "" ) );
-					layer->GetPath( path );
-					NeoAssert( path.Size() );
-				}
-			}
-
-			auto convertOldIdToLayerPath = [&]( const CBaseLayer** layer )
-			{
-				CString layerId;
-				archive >> layerId;
-				const CArray<CString>& path = layerPrevIdToPath[layerId];
-				if( layer != nullptr ) {
-					*layer = dnn.GetLayer( path );
-				}
-				return concatLayerPath( path );
-			};
-
-			for( int i = 0; i < size; ++i ) {
-				const CBaseLayer* layerTemp = nullptr;
-				const CString layerPath = convertOldIdToLayerPath( &layerTemp );
-
-				CDiffBlobSum& blobSum = layerToParamDiffBlobsSum.GetOrCreateValue( layerPath );
-				archive >> blobSum.Count;
-				SerializeBlobs( mathEngine, archive, blobSum.Sum );
-				blobSum.LayerOwner = layerTemp;
-			}
-
-			archive >> size;
-			for( int i = 0; i < size; ++i ) {
-				const CString layerPath = convertOldIdToLayerPath( nullptr );
-				SerializeBlobs( mathEngine, archive, layerToGradientHistory.GetOrCreateValue( layerPath ) );
-			}
+			loadPrevVersionDnnSolverMaps( archive, dnn );
 		}
 		archive >> learningRate >> regularizationL1 >> regularizationL2 >> maxGradientNorm;
 		if( version >= 1 ) {

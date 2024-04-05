@@ -58,7 +58,7 @@ inline bool CBaseLayer::IsBackwardNeeded() const
 
 inline CString CBaseLayer::GetPath( const char* sep ) const
 {
-	return ( dnn == nullptr || dnn->owner == nullptr ) ? name : ( dnn->owner->GetPath() + sep + name );
+	return ( dnn == nullptr || dnn->owner == nullptr ) ? name : ( dnn->owner->GetPath( sep ) + sep + name );
 }
 
 inline void CBaseLayer::GetPath( CArray<CString>& path ) const
