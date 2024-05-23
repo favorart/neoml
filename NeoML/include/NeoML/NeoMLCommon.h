@@ -29,13 +29,15 @@ bool NEOML_API ThrowInternalError( TInternalErrorType errorType, const char* fun
 
 #ifdef _DEBUG
 
-#define NeoAssert( expr ) \
+#define NeoAssertMsg( expr, text ) \
 if( !( expr ) ) { \
 	FineDebugBreak();	\
-	if( NeoML::ThrowInternalError( IET_Assert, __FUNCTION__, "", __UNICODEFILE__, __LINE__, 0 ) ) \
+	if( NeoML::ThrowInternalError( IET_Assert, __FUNCTION__, text, __UNICODEFILE__, __LINE__, 0 ) ) \
 		FineBreakPoint(); \
 } else \
 	( ( void )1 )
+
+#define NeoAssert( expr ) NeoAssertMsg(expr, "")
 
 #define NeoPresume( expr ) \
 if( !( expr ) ) { \
@@ -47,11 +49,13 @@ if( !( expr ) ) { \
 
 #else // Release
 
-#define NeoAssert( expr ) \
+#define NeoAssertMsg( expr, text ) \
 if( !( expr ) ) { \
-	NeoML::ThrowInternalError( IET_Assert, __FUNCTION__, "", __UNICODEFILE__, __LINE__, 0 ); \
+	NeoML::ThrowInternalError( IET_Assert, __FUNCTION__, text, __UNICODEFILE__, __LINE__, 0 ); \
 } else \
 	( ( void )1 )
+
+#define NeoAssert( expr ) NeoAssertMsg(expr, "")
 
 // Presume turned off in release version
 #define NeoPresume( expr ) while( 0 )( ( void )1 )
