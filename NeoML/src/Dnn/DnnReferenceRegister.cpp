@@ -36,13 +36,12 @@ CDnnReferenceRegister::CDnnReferenceRegister(CDnn* _originalDnn) :
 
 CDnnReferenceRegister::~CDnnReferenceRegister()
 {
-	if(originalDnn == nullptr) {
-		NeoAssertMsg(referenceCounter == 0,
-			"delete reference dnns before original dnn");
-	}
+	NeoAssertMsg( originalDnn != nullptr || referenceCounter == 0,
+		"CDnnReferenceRegister: delete reference dnns before original dnn" );
 
-	if(referenceCounter == -1 && --(originalDnn->referenceDnnRegister.referenceCounter) == 0
-		&& originalDnn->referenceDnnRegister.learningState)
+	if( referenceCounter == -1
+		&& --( originalDnn->referenceDnnRegister.referenceCounter ) == 0
+		&& originalDnn->referenceDnnRegister.learningState )
 	{
 		originalDnn->EnableLearning();
 	}
@@ -52,8 +51,9 @@ CDnnReferenceRegister::~CDnnReferenceRegister()
 	}
 }
 
-CDnnReferenceRegister& CDnnReferenceRegister::operator=(CDnnReferenceRegister&& other) {
-	if(this != &other) {
+CDnnReferenceRegister& CDnnReferenceRegister::operator=( CDnnReferenceRegister&& other )
+{
+	if( this != &other ) {
 		learningState = other.learningState;
 		referenceCounter = other.referenceCounter;
 		originalDnn = other.originalDnn;

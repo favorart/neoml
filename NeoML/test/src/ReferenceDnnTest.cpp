@@ -49,7 +49,8 @@ static CDnn* createDnn(CRandom& random)
 	return net;
 }
 
-static void initializeBlob(CDnnBlob* blob, CRandom& random, int min, int max) {
+static void initializeBlob(CDnnBlob* blob, CRandom& random, int min, int max)
+{
 	for(int j = 0; j < blob->GetDataSize(); ++j) {
 		blob->GetData().SetValueAt(j, static_cast<float>(random.Uniform(min, max)));
 	}
@@ -58,11 +59,10 @@ static void initializeBlob(CDnnBlob* blob, CRandom& random, int min, int max) {
 static void getTestDnns(CArray<CDnn*>& dnns, CArray<CRandom>& randoms, bool useReference, const int& numOfThreads)
 {
 	for(int i = 0; i < numOfThreads; ++i) {
-		bool ifCreateNewDnn = (i == 0 || !useReference);
-		if(ifCreateNewDnn) {
-			dnns.Add(createDnn(randoms[i]));
+		if( i == 0 || !useReference ) {
+			dnns.Add( createDnn(randoms[i]) );
 		} else {
-			dnns.Add( dnns[i-1]->CreateReferenceDnn());
+			dnns.Add( dnns[i-1]->CreateReferenceDnn() );
 		}
 
 		CPtr<CDnnBlob> srcBlob = CDnnBlob::CreateTensor(MathEngine(), CT_Float, { 1, 1, 1, 8, 20, 30, 10 });
@@ -134,15 +134,16 @@ TEST(ReferenceDnnTest, ReferenceDnnInferenceTest)
 	getTestDnns(dnns, randoms, true, numOfThreads);
 	runMultithreadInference(dnns, numOfThreads);
 
-	for(int i = 0; i < numOfThreads - 1; ++i) {
-		EXPECT_TRUE(CompareBlobs(
-			*(static_cast<CSourceLayer*>(dnns[i]->GetLayer("in").Ptr())->GetBlob()),
-			*(static_cast<CSourceLayer*>(dnns[i + 1]->GetLayer("in").Ptr())->GetBlob()))
+	CPtr<CDnnBlob> sourceBlob = static_cast<CSourceLayer*>( dnns[0]->GetLayer( "in" ).Ptr() )->GetBlob();
+	CPtr<CDnnBlob> sinkBlob = static_cast<CSourceLayer*>( dnns[0]->GetLayer( "sink" ).Ptr() )->GetBlob();
+
+	for(int i = 1; i < numOfThreads; ++i) {
+		EXPECT_TRUE(CompareBlobs(*sourceBlob,
+			*(static_cast<CSourceLayer*>(dnns[i]->GetLayer("in").Ptr())->GetBlob()))
 		);
 
-		EXPECT_TRUE(CompareBlobs(
-			*(static_cast<CSinkLayer*>(dnns[i]->GetLayer("sink").Ptr())->GetBlob()),
-			*(static_cast<CSinkLayer*>(dnns[i + 1]->GetLayer("sink").Ptr())->GetBlob()))
+		EXPECT_TRUE(CompareBlobs(*sinkBlob,
+			*(static_cast<CSinkLayer*>(dnns[i]->GetLayer("sink").Ptr())->GetBlob()))
 		);
 	}
 
