@@ -34,44 +34,49 @@ static void runDnn(int, void* params)
 	taskParams->net->RunOnce();
 }
 
-static CDnn* createDnn(CRandom& random)
+static CDnn* createDnn(CRandom& random, float dropoutRate = 0.1f)
 {
 	CDnn* net = new CDnn(random, MathEngine());
 
 	CBaseLayer* layer = Source(*net, "in");
 	layer = FullyConnected(50)("fc1", layer);
-	layer = Dropout(0.1f)("dp1", layer);
+	layer = Dropout(dropoutRate)("dp1", layer);
 	layer = FullyConnected(200)("fc2", layer);
-	layer = Dropout(0.1f)("dp2", layer);
+	layer = Dropout(dropoutRate)("dp2", layer);
 	layer = FullyConnected(10)("fc3", layer);
 	layer = Sink(layer, "sink");
 
 	return net;
 }
 
-static void initializeBlob(CDnnBlob* blob, CRandom& random, int min, int max)
+static void initializeBlob(CDnnBlob* blob, CRandom& random, double min, double max)
 {
 	for(int j = 0; j < blob->GetDataSize(); ++j) {
 		blob->GetData().SetValueAt(j, static_cast<float>(random.Uniform(min, max)));
 	}
 }
 
-static void getTestDnns(CArray<CDnn*>& dnns, CArray<CRandom>& randoms, bool useReference, const int& numOfThreads)
+static void getTestDnns( CArray<CDnn*>& dnns, CArray<CRandom>& randoms, bool useReference, const int& numOfThreads )
 {
-	for(int i = 0; i < numOfThreads; ++i) {
+	CObjectArray<CSourceLayer> sourceLayers;
+	sourceLayers.SetSize( numOfThreads );
+
+	for( int i = 0; i < numOfThreads; ++i ) {
 		if( i == 0 || !useReference ) {
 			dnns.Add( createDnn(randoms[i]) );
 		} else {
 			dnns.Add( dnns[i-1]->CreateReferenceDnn() );
 		}
 
-		CPtr<CDnnBlob> srcBlob = CDnnBlob::CreateTensor(MathEngine(), CT_Float, { 1, 1, 1, 8, 20, 30, 10 });
-		static_cast<CSourceLayer*>(dnns[i]->GetLayer("in").Ptr())->SetBlob(srcBlob);
+		sourceLayers[i] = CheckCast<CSourceLayer>( dnns[i]->GetLayer( "in" ).Ptr() );
+		CPtr<CDnnBlob> blob = CDnnBlob::CreateTensor( MathEngine(), CT_Float, { 1, 1, 1, 8, 20, 30, 10 } );
+		sourceLayers[i]->SetBlob( blob );
+
+		dnns[i]->RunOnce(); // reshaped
 	}
 
-	for(int i = 0; i < numOfThreads; ++i) {
-		auto srcLayer = static_cast<CSourceLayer*>(dnns[i]->GetLayer("in").Ptr());
-		initializeBlob(srcLayer->GetBlob(), dnns[i]->Random(), 0, 1);
+	for( int i = 0; i < numOfThreads; ++i ) {
+		initializeBlob( sourceLayers[i]->GetBlob(), dnns[i]->Random(), /*min*/0., /*max*/1. );
 	}
 }
 
@@ -108,10 +113,9 @@ static void perfomanceTest(bool useReference, const int numOfThreads=4)
 	runMultithreadInference(dnns, numOfThreads);
 
 	counters->Synchronise();
-	std::cerr
+	GTEST_LOG_(INFO)
 		<< '\n' << "Time: " << (double((*counters)[0].Value) / 1000000) << " ms."
 		<< '\t' << "Peak.Mem: " << (double(MathEngine().GetPeakMemoryUsage()) / 1024 / 1024) << " MB \n";
-
 
 	delete counters;
 	// delete references first
@@ -131,7 +135,7 @@ TEST(ReferenceDnnTest, ReferenceDnnInferenceTest)
 	CArray<CDnn*> dnns;
 	CArray<CRandom> randoms = { CRandom(0x123) };
 
-	getTestDnns(dnns, randoms, true, numOfThreads);
+	getTestDnns(dnns, randoms, /*useReference*/true, numOfThreads);
 	runMultithreadInference(dnns, numOfThreads);
 
 	CPtr<CDnnBlob> sourceBlob = static_cast<CSourceLayer*>( dnns[0]->GetLayer( "in" ).Ptr() )->GetBlob();
@@ -158,6 +162,7 @@ TEST(ReferenceDnnTest, CDnnReferenceRegisterTest)
 {
 	// Implement scenario - learn dnn, use multihtread inference, learn again
 	const int numOfThreads = 4;
+	const int interations = 10;
 
 	CArray<CReferenceDnnTestParam> taskParams;
 	CArray<CDnn*> dnns;
@@ -179,7 +184,7 @@ TEST(ReferenceDnnTest, CDnnReferenceRegisterTest)
 	CPtr<CDnnSimpleGradientSolver> solver = new CDnnSimpleGradientSolver(MathEngine());
 	dnns[0]->SetSolver(solver);
 
-	for(int i = 0; i < 10; ++i) {
+	for(int i = 0; i < interations; ++i) {
 		dnns[0]->RunAndLearnOnce();
 	}
 
@@ -207,7 +212,7 @@ TEST(ReferenceDnnTest, CDnnReferenceRegisterTest)
 	dnns[0]->AddLayer(*loss);
 
 	EXPECT_TRUE(dnns[0]->IsLearningEnabled());
-	for(int i = 0; i < 10; ++i) {
+	for(int i = 0; i < interations; ++i) {
 		dnns[0]->RunAndLearnOnce();
 	}
 	delete dnns[0];

@@ -303,23 +303,25 @@ size_t CBaseLayer::GetTrainableParametersSize() const
 
 void CBaseLayer::transferParamsBlob(CBaseLayer& dist) const
 {
-	dist.paramBlobs.SetSize(paramBlobs.Size());
-
-	// Create reference copy of dist.paramBlobs with shared buffer
-	// Takes a pointer to parent's blob to access memory
-	for(int j = 0; j < dist.paramBlobs.Size(); ++j) {
-		dist.paramBlobs[j] = CDnnBlob::CreateWindowBlob(paramBlobs[j], paramBlobs[j]->GetDesc().BatchLength());
-	}
-
-	CCompositeLayer* compositeTo = dynamic_cast<CCompositeLayer*>(&dist);
-	if(compositeTo != nullptr) {
-		const CCompositeLayer* compositeFrom = CheckCast<const CCompositeLayer>(this);
+	CCompositeLayer* compositeTo = dynamic_cast<CCompositeLayer*>( &dist );
+	if( compositeTo != nullptr ) {
+		const CCompositeLayer* compositeFrom = CheckCast<const CCompositeLayer>( this );
 
 		CArray<const char*> fromLayers;
-		compositeFrom->GetLayerList(fromLayers);
-		for(int k = 0; k < fromLayers.Size(); ++k) {
-			const char* layerName = fromLayers[k];
-			compositeFrom->GetLayer(layerName)->transferParamsBlob(*compositeTo->GetLayer(layerName));
+		compositeFrom->GetLayerList( fromLayers );
+		for( const char* layerName : fromLayers ) {
+			compositeFrom->GetLayer( layerName )->transferParamsBlob( *compositeTo->GetLayer( layerName ) );
+		}
+	} else {
+		NeoAssertMsg( dist.paramBlobs.Size() == paramBlobs.Size(), "It isn't a copy of the layer" );
+
+		NeoAssertMsg( !dist.IsLearnable() || paramBlobs.Size() > 0,
+			"The origin dnn should be trained and reshaped to create a reference dnn" );
+		// Create reference copy of dist.paramBlobs with shared buffer
+		// Takes a pointer to parent's blob to access memory
+		for( int j = 0; j < dist.paramBlobs.Size(); ++j ) {
+			NeoAssertMsg( paramBlobs[j] != nullptr, "All trainable paramBlobs should exist" );
+			dist.paramBlobs[j] = CDnnBlob::CreateWindowBlob( paramBlobs[j], paramBlobs[j]->GetDesc().BatchLength() );
 		}
 	}
 }
