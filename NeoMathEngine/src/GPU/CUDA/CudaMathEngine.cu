@@ -55,11 +55,15 @@ CCudaMathEngine::CCudaMathEngine( const CCusparse* _cusparse, const CCublas* _cu
 
 	// Cublas.
 	ASSERT_CUBLAS( cublas->Create( &cublasHandle ) );
-	cublasMath_t cublasMath = CUBLAS_DEFAULT_MATH;
+	cublasMath_t cublasMath = CUBLAS_PEDANTIC_MATH;
 	if( ( flags & GpuMathEngineCublasUseTensorCoresTF32Flag ) != 0 ) {
 		cublasMath = CUBLAS_TF32_TENSOR_OP_MATH;
+		printf("SetMathMode CUBLAS_TF32_TENSOR_OP_MATH\n\n");
 	} else if( ( flags & GpuMathEngineCublasUseTensorCoresHalfFlag ) != 0 ) {
 		cublasMath = CUBLAS_TENSOR_OP_MATH;
+		printf("SetMathMode CUBLAS_TENSOR_OP_MATH\n\n");
+	} else {
+		printf("SetMathMode CUBLAS_PEDANTIC_MATH\n\n");
 	}
 	ASSERT_CUBLAS( cublas->SetMathMode( cublasHandle, cublasMath ) );
 	ASSERT_CUBLAS( cublas->SetAtomicsMode( cublasHandle, CUBLAS_ATOMICS_ALLOWED ) );
