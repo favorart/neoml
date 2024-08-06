@@ -1,0 +1,39 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: seanmiddleditch/gha-setup-ninja@master # gtests
+
+    - name: install intel-mkl
+      #timeout-minutes: 5
+      run: sudo apt install intel-mkl
+
+    - name: configure debug
+      run: cmake -G Ninja /home/runner/work/neoml/neoml/NeoML -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/runner/work/neoml/build.debug
+    - name: make debug
+      run: cmake --build . --target install
+
+    - name: configure release
+      run: cmake -G Ninja /home/runner/work/neoml/neoml/NeoML -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/home/runner/work/neoml/build.release
+    - name: make release
+      run: cmake --build . --target install
+
+    - name: test NeoMathEngine release
+      run: |
+          cd /home/runner/work/neoml/build.release/bin
+          ./NeoMathEngineFullTestDesktop
+    - name: test NeoML release
+      run: |
+          cd /home/runner/work/neoml/build.release/bin
+          ./NeoMLTest
